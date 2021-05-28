@@ -1,0 +1,6 @@
+build/
+dist/
+JackFramework.egg-info/
+/*__pycache__*/
+sftp-config*.json
+*.pyc
