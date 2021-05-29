@@ -32,3 +32,10 @@ import JackFramework.Contrib.Activation as act
 
 # template
 from JackFramework import UserTemplate
+
+
+__VERSION = '0.1.0'
+
+
+def version():
+    return __VERSION
