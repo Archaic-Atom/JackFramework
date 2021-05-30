@@ -17,7 +17,7 @@ class Loss(object):
 
     @ staticmethod
     def smooth_l1(res: tensor, gt: tensor,
-                  mask_threshold_min: int, mask_threshold_max: int)-> tensor:
+                  mask_threshold_min: int, mask_threshold_max: int) -> tensor:
         mask = (gt > mask_threshold_min) & (gt < mask_threshold_max)
         mask.detach_()
         total_num = mask.int().sum() + LOSS_EPSILON

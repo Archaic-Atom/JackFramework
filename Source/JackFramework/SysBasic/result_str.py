@@ -13,10 +13,8 @@ class ResultStr(object):
 
     def training_result_str(self, epoch: int, loss: list, acc: list,
                             duration: float, training=True) -> str:
-        loss_str = self.loss2str(loss,
-                                 decimal_places=DEFAULT_MAX_DECIMAL_PLACES)
-        acc_str = self.acc2str(acc,
-                               decimal_places=DEFAULT_MAX_DECIMAL_PLACES)
+        loss_str = self.loss2str(loss, decimal_places=DEFAULT_MAX_DECIMAL_PLACES)
+        acc_str = self.acc2str(acc, decimal_places=DEFAULT_MAX_DECIMAL_PLACES)
 
         training_state = ""
         if training:
@@ -30,7 +28,7 @@ class ResultStr(object):
         return info_str
 
     def training_intermediate_result(self, epoch: int, loss: list,
-                                     acc: list)->str:
+                                     acc: list) -> str:
         loss_str = self.loss2str(loss, decimal_places=3)
         acc_str = self.acc2str(acc, decimal_places=3)
 
@@ -40,7 +38,7 @@ class ResultStr(object):
         return info_str
 
     def loss2str(self, loss: list, info_str: str = None,
-                 decimal_places: int = DEFAULT_MIN_DECIMAL_PLACES)->str:
+                 decimal_places: int = DEFAULT_MIN_DECIMAL_PLACES) -> str:
         if info_str is None:
             info_str = []
             info_str = self.__gen_info_str("l", len(loss))
@@ -50,7 +48,7 @@ class ResultStr(object):
         return res
 
     def acc2str(self, acc: list, info_str: str = None,
-                decimal_places: int = DEFAULT_MIN_DECIMAL_PLACES)->str:
+                decimal_places: int = DEFAULT_MIN_DECIMAL_PLACES) -> str:
         if info_str is None:
             info_str = []
             info_str = self.__gen_info_str("a", len(acc))
@@ -58,7 +56,7 @@ class ResultStr(object):
         res = self.__data2str(acc, info_str, decimal_places)
         return res
 
-    def __gen_info_str(self, info_str: str, num: int)-> str:
+    def __gen_info_str(self, info_str: str, num: int) -> str:
         res = []
         for i in range(num):
             res.append(info_str + str(i))
@@ -74,5 +72,5 @@ class ResultStr(object):
                 (": %." + str(decimal_places) + "f") % data[i] + char_interval
 
         char_offset = len(char_interval)
-        res = res[:len(res)-char_offset]
+        res = res[:len(res) - char_offset]
         return res

@@ -15,7 +15,7 @@ class ModelHandlerTemplate(object):
         pass
 
     @abstractmethod
-    def interence(self, model: list, input_data: list, model_id: int)-> list:
+    def interence(self, model: list, input_data: list, model_id: int) -> list:
         pass
 
     @abstractmethod
@@ -25,7 +25,7 @@ class ModelHandlerTemplate(object):
         pass
 
     @abstractmethod
-    def lr_scheduler(self, sch: object, ave_loss: float, sch_id: int)->None:
+    def lr_scheduler(self, sch: object, ave_loss: float, sch_id: int) -> None:
         pass
 
     @abstractmethod

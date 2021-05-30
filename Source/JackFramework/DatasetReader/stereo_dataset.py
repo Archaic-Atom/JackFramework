@@ -24,7 +24,8 @@ class StereoDataset(Dataset):
     """docstring for DFCStereoDataset"""
     _DEPTH_DIVIDING = 256.0
 
-    def __init__(self, args: object, list_path: str, is_training: bool = False) -> None:
+    def __init__(self, args: object, list_path: str,
+                 is_training: bool = False) -> None:
         self.__args = args
         self.__is_training = is_training
         self.__list_path = list_path
@@ -33,13 +34,15 @@ class StereoDataset(Dataset):
         self.__left_img_path = input_dataframe["left_img"].values
         self.__right_img_path = input_dataframe["right_img"].values
 
-        self.__img_read_func, self.__label_read_func = self.__read_func(args.dataset)
+        self.__img_read_func, self.__label_read_func = self.__read_func(
+            args.dataset)
 
         if is_training:
             self.__gt_dsp_path = input_dataframe["gt_disp"].values
             self.__get_path = self._get_training_path
             self.__data_steam = list(
-                zip(self.__left_img_path, self.__right_img_path, self.__gt_dsp_path))
+                zip(self.__left_img_path,
+                    self.__right_img_path, self.__gt_dsp_path))
         else:
             self.__get_path = self._get_testing_path
             self.__data_steam = list(
@@ -59,11 +62,11 @@ class StereoDataset(Dataset):
         ImgHandler.write_pfm(path, img)
         path = args.resultImgDir + name + '.txt'
         with open(path, 'w') as f:
-            f.write("runtime "+str(ttimes))
+            f.write("runtime " + str(ttimes))
             f.close()
 
     def save_middlebury_test_data(self, img: np.array,
-                                  name: str, ttimes: str)-> None:
+                                  name: str, ttimes: str) -> None:
         args = self.__args
         folder_name = args.resultImgDir + name + '/'
         FileHandler.mkdir(folder_name)
@@ -77,7 +80,8 @@ class StereoDataset(Dataset):
             f.write(str(ttimes))
             f.close()
 
-    def crop_test_img(self, img: np.array, top_pad: int, left_pad: int) -> np.array:
+    def crop_test_img(self, img: np.array,
+                      top_pad: int, left_pad: int) -> np.array:
         if top_pad > 0 and left_pad > 0:
             img = img[top_pad:, : -left_pad]
         elif top_pad > 0:
@@ -98,7 +102,7 @@ class StereoDataset(Dataset):
         return img
 
         # save the png file
-    def _save_png_img(self, path: str, img: np.array)->None:
+    def _save_png_img(self, path: str, img: np.array) -> None:
         cv2.imwrite(path, img)
 
     def __getitem__(self, idx: int):
@@ -106,14 +110,16 @@ class StereoDataset(Dataset):
         return self._get_data(left_img_path, right_img_path, gt_dsp_path)
 
     def _get_training_path(self, idx: int) -> list:
-        return self.__left_img_path[idx], self.__right_img_path[idx], self.__gt_dsp_path[idx]
+        return self.__left_img_path[idx],\
+            self.__right_img_path[idx], self.__gt_dsp_path[idx]
 
     def _get_testing_path(self, idx: int) -> list:
         return self.__left_img_path[idx], self.__right_img_path[idx], None
 
     def _get_data(self, left_img_path, right_img_path, gt_dsp_path):
         if self.__is_training:
-            return self._read_training_data(left_img_path, right_img_path, gt_dsp_path)
+            return self._read_training_data(left_img_path,
+                                            right_img_path, gt_dsp_path)
         return self._read_testing_data(left_img_path, right_img_path)
 
     def _read_training_data(self, left_img_path: str,
@@ -129,8 +135,10 @@ class StereoDataset(Dataset):
 
         org_x, org_y = DataAugmentation.random_org(
             left_img.shape[1], left_img.shape[0], width, hight)
-        left_img = DataAugmentation.img_slice_3d(left_img, org_x, org_y, width, hight)
-        right_img = DataAugmentation.img_slice_3d(right_img, org_x, org_y, width, hight)
+        left_img = DataAugmentation.img_slice_3d(
+            left_img, org_x, org_y, width, hight)
+        right_img = DataAugmentation.img_slice_3d(
+            right_img, org_x, org_y, width, hight)
 
         left_img = DataAugmentation.standardize(left_img)
         right_img = DataAugmentation.standardize(right_img)
@@ -139,7 +147,8 @@ class StereoDataset(Dataset):
         if gt_dsp_path is not None:
             # print(gt_dsp_path)
             gt_dsp = np.array(self.__label_read_func(gt_dsp_path))
-            gt_dsp = DataAugmentation.img_slice_2d(gt_dsp, org_x, org_y, width, hight)
+            gt_dsp = DataAugmentation.img_slice_2d(
+                gt_dsp, org_x, org_y, width, hight)
 
         left_img = left_img.transpose(2, 0, 1)
         right_img = right_img.transpose(2, 0, 1)
@@ -160,10 +169,12 @@ class StereoDataset(Dataset):
         left_pad = args.imgWidth - right_img.shape[1]
 
         # pading
-        left_img = np.lib.pad(left_img, ((top_pad, 0), (0, left_pad),
-                                         (0, 0)), mode='constant', constant_values=0)
-        right_img = np.lib.pad(right_img, ((top_pad, 0), (0, left_pad),
-                                           (0, 0)), mode='constant', constant_values=0)
+        left_img = np.lib.pad(left_img, ((
+            top_pad, 0), (0, left_pad), (0, 0)),
+            mode='constant', constant_values=0)
+        right_img = np.lib.pad(right_img, ((
+            top_pad, 0), (0, left_pad), (0, 0)),
+            mode='constant', constant_values=0)
 
         left_img = left_img.transpose(2, 0, 1)
         right_img = right_img.transpose(2, 0, 1)
@@ -181,17 +192,17 @@ class StereoDataset(Dataset):
     def __len__(self):
         return len(self.__data_steam)
 
-    def _read_png_disp(self, path: str)->tensor:
+    def _read_png_disp(self, path: str) -> tensor:
         gt_dsp = ImgHandler.read_single_channle_img(path)
-        gt_dsp = np.ascontiguousarray(gt_dsp, dtype=np.float32)/float(StereoDataset._DEPTH_DIVIDING)
+        gt_dsp = np.ascontiguousarray(
+            gt_dsp, dtype=np.float32) / float(StereoDataset._DEPTH_DIVIDING)
         return gt_dsp
 
-    def _read_pfm_disp(self, path: str)->tensor:
+    def _read_pfm_disp(self, path: str) -> tensor:
         gt_dsp, _ = ImgHandler.read_pfm(path)
-        #gt_dsp = np.ascontiguousarray(gt_dsp, dtype=np.float32)/float(StereoDataset._DEPTH_DIVIDING)
         return gt_dsp
 
-    def __read_func(self, dataset_name: str)->object:
+    def __read_func(self, dataset_name: str) -> object:
         img_read_func = None
         label_read_func = None
         for case in Switch(dataset_name):

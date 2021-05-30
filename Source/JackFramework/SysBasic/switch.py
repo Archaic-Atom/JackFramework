@@ -2,7 +2,7 @@
 
 
 class Switch(object):
-    def __init__(self, value: str)->object:
+    def __init__(self, value: str) -> object:
         self.__value = value
         self.__fall = False
 

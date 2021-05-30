@@ -16,25 +16,25 @@ class DataHandlerTemplate(object):
         pass
 
     @abstractmethod
-    def get_val_dataset(self, path: str)-> object:
+    def get_val_dataset(self, path: str) -> object:
         # return val dataset
         pass
 
     @abstractmethod
-    def split_data(self, batch_data: tuple, is_training: bool)->list:
+    def split_data(self, batch_data: tuple, is_training: bool) -> list:
         # return input_data, label_data
         pass
 
     @abstractmethod
     def show_train_result(self, epoch: int, loss:
                           list, acc: list,
-                          duration: float)->None:
+                          duration: float) -> None:
         pass
 
     @abstractmethod
     def show_val_result(self, epoch: int, loss:
                         list, acc: list,
-                        duration: float)->None:
+                        duration: float) -> None:
         pass
 
     @abstractmethod

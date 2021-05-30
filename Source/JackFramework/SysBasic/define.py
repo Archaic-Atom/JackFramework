@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-
-
 # default program's setting
 # the path's define, you can change the content
 # output's path
@@ -20,9 +18,9 @@ USER_DIRECTORY = './Source/UserModelImplementation/'
 
 # defaut program's name
 # Dataset's name
-DATASET_NAME = 'MSD'
+DATASET_NAME = 'Default_Dataset'
 # Model's name
-MODEL_NAME = 'MSDNet'
+MODEL_NAME = 'Default_Model'
 # Checkpoint's list file
 CHECK_POINT_LIST_NAME = 'checkpoint.list'
 # Checkpoint's name
@@ -44,7 +42,9 @@ TEST_NUM = 1
 MAX_EPOCHS = 100
 # IP
 IP = 'localhost'
+# Port
 PORT = '8886'
+# dist
 DIST = True
 
 # learning setting
@@ -61,3 +61,5 @@ DATA_LOADER_NUM = 4
 
 IMG_NUM = 4500
 VAL_IMG_NUM = 0
+
+VERSION = '0.1.0'

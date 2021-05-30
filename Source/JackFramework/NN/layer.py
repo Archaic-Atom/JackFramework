@@ -16,27 +16,27 @@ class Layer(object):
     def __init__(self):
         super().__init__()
 
-    def __new__(cls, *args: str, **kwargs: str)->object:
+    def __new__(cls, *args: str, **kwargs: str) -> object:
         if cls.__LAYER is None:
             cls.__LAYER = object.__new__(cls)
         return cls.__LAYER
 
     @staticmethod
-    def set_norm_layer_func(norm_func: object)-> None:
+    def set_norm_layer_func(norm_func: object) -> None:
         Layer.__NORM_LAYER_FUNC = norm_func
 
     @staticmethod
-    def set_act_layer_func(act_func: object)-> None:
+    def set_act_layer_func(act_func: object) -> None:
         Layer.__ACT_LATER_FUNC = act_func
 
     @staticmethod
-    def act_layer()->object:
+    def act_layer() -> object:
         if Layer.__ACT_LATER_FUNC is not None:
             return Layer.__ACT_LATER_FUNC()
         return nn.ReLU(inplace=True)
 
     @staticmethod
-    def norm_layer(out_channels: int)->object:
+    def norm_layer(out_channels: int) -> object:
         if Layer.__NORM_LAYER_FUNC is not None:
             return Layer.__NORM_LAYER_FUNC(out_channels)
         return Ops.gn(8, out_channels)

@@ -2,6 +2,9 @@
 import os
 import sys
 
+# sys setting
+from JackFramework.SysBasic import define as sys_define
+
 # custom lib
 from JackFramework.SysBasic.loghander import LogHandler as log
 from JackFramework.SysBasic.switch import Switch
@@ -34,8 +37,5 @@ import JackFramework.Contrib.Activation as act
 from JackFramework import UserTemplate
 
 
-__VERSION = '0.1.0'
-
-
 def version():
-    return __VERSION
+    return sys_define.VERSION

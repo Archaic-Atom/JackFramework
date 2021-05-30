@@ -17,7 +17,7 @@ class ModelSaver(object):
         super().__init__()
 
     @staticmethod
-    def get_check_point_path(path: str)->str:
+    def get_check_point_path(path: str) -> str:
         checkpoint_path = None
         if os.path.isfile(path):
             log.info("Begin loading checkpoint from this file: '{}'".format(path))
@@ -35,7 +35,7 @@ class ModelSaver(object):
         return checkpoint_path
 
     @staticmethod
-    def load_model(model: object, file_path: str, rank: object = None)->None:
+    def load_model(model: object, file_path: str, rank: object = None) -> None:
         if rank is not None:
             map_location = {'cuda:%d' % 0: 'cuda:%d' % rank}
         else:
@@ -43,9 +43,9 @@ class ModelSaver(object):
 
         checkpoint = torch.load(file_path, map_location)
 
-        #model_dict = model.state_dict()
-        #pretrained_dict = {k: v for k, v in checkpoint['state_dict'].items() if k in model_dict}
-        #ignore_block = ['module.feature_extraction.block_1']
+        # model_dict = model.state_dict()
+        # pretrained_dict = {k: v for k, v in checkpoint['state_dict'].items() if k in model_dict}
+        # ignore_block = ['module.feature_extraction.block_1']
 
         # for k, v in checkpoint['state_dict'].items():
         #    print(k)
@@ -53,13 +53,13 @@ class ModelSaver(object):
         # pretrained_dict = {k: v for k,
         #                   v in checkpoint['state_dict'].items() if k not in ignore_block}
         # model_dict.update(pretrained_dict)
-        #model.load_state_dict(model_dict, strict=True)
+        # model.load_state_dict(model_dict, strict=True)
 
         model.load_state_dict(checkpoint['state_dict'], strict=True)
         log.info("Model loaded successfully")
 
     @staticmethod
-    def load_opt(opt: object, file_path: str, rank: object = None)->None:
+    def load_opt(opt: object, file_path: str, rank: object = None) -> None:
         if rank is not None:
             map_location = {'cuda:%d' % 0: 'cuda:%d' % rank}
         else:
@@ -78,8 +78,8 @@ class ModelSaver(object):
 
     @staticmethod
     def save(file_dir: str, file_name: str, model_dict: dict) -> None:
-        torch.save(model_dict, file_dir+file_name)
-        log.info("Save model in : '{}'".format(file_dir+file_name))
+        torch.save(model_dict, file_dir + file_name)
+        log.info("Save model in : '{}'".format(file_dir + file_name))
         ModelSaver.write_check_point_list(file_dir, file_name)
 
     @staticmethod
@@ -106,22 +106,19 @@ class ModelSaver(object):
 
         if fd_checkpoint_list is None:
             fd_checkpoint_list = FileHandler.open_file(file_dir + sysdefine.CHECK_POINT_LIST_NAME)
-            FileHandler.write_file(fd_checkpoint_list, sysdefine.LAST_MODEL_NAME+file_name)
+            FileHandler.write_file(fd_checkpoint_list, sysdefine.LAST_MODEL_NAME + file_name)
             FileHandler.write_file(fd_checkpoint_list, file_name)
             FileHandler.close_file(fd_checkpoint_list)
         else:
-            fd_checkpoint_temp_list = FileHandler.open_file(file_dir +
-                                                            sysdefine.CHECK_POINT_LIST_NAME
-                                                            + '.temp')
+            fd_checkpoint_temp_list = FileHandler.open_file(file_dir + sysdefine.CHECK_POINT_LIST_NAME + '.temp')
             FileHandler.write_file(fd_checkpoint_temp_list,
-                                   sysdefine.LAST_MODEL_NAME+file_name)
+                                   sysdefine.LAST_MODEL_NAME + file_name)
             FileHandler.copy_file(fd_checkpoint_list, fd_checkpoint_temp_list, 1)
             FileHandler.write_file(fd_checkpoint_temp_list, file_name)
             FileHandler.close_file(fd_checkpoint_list)
             FileHandler.close_file(fd_checkpoint_temp_list)
             os.remove(file_dir + sysdefine.CHECK_POINT_LIST_NAME)
-            os.rename(file_dir + sysdefine.CHECK_POINT_LIST_NAME
-                      + '.temp', file_dir + sysdefine.CHECK_POINT_LIST_NAME)
+            os.rename(file_dir + sysdefine.CHECK_POINT_LIST_NAME + '.temp', file_dir + sysdefine.CHECK_POINT_LIST_NAME)
 
 
 def debug_main():

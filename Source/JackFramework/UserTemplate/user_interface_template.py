@@ -9,7 +9,7 @@ class NetWorkInferenceTemplate(object):
     def __init__(self):
         pass
 
-    def __new__(cls, *args: str, **kwargs: str)->object:
+    def __new__(cls, *args: str, **kwargs: str) -> object:
         if cls.__NETWORK_INFERENCE is None:
             cls.__NETWORK_INFERENCE = object.__new__(cls)
         return cls.__NETWORK_INFERENCE
@@ -21,7 +21,7 @@ class NetWorkInferenceTemplate(object):
         pass
 
     @abstractmethod
-    def user_parser(self, parser: object)-> object:
+    def user_parser(self, parser: object) -> object:
         # parser.add_argument('--phase', default='train', help='train or test')
         # return parser
         pass

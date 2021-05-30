@@ -52,7 +52,7 @@ class BuildGraph(object):
         if args.dist:
             for i, model_item in enumerate(self.__model):
                 model_item = model_item.to(self.__rank)
-                self.__model[i] = DDP(model_item,  device_ids=[self.__rank],
+                self.__model[i] = DDP(model_item, device_ids=[self.__rank],
                                       find_unused_parameters=True)
         else:
             for i, model_item in enumerate(self.__model):
@@ -63,13 +63,13 @@ class BuildGraph(object):
 
         log.info("Successfully loaded the model into GPUs!")
 
-    def __init_model(self)->object:
+    def __init_model(self) -> object:
         log.info("Loading user's model!")
         model = self.__jf_model.get_model()
         log.info("Successfully get user's model!")
         return model
 
-    def __init_optimizer(self)->object:
+    def __init_optimizer(self) -> object:
         log.info("Loading user's optimizer!")
         args = self.__args
         opt, sch = self.__jf_model.optimizer(self.__model, args.lr)
@@ -94,7 +94,7 @@ class BuildGraph(object):
         else:
             log.warning("no checkpoint found at '{}'".format(checkpoint_path))
 
-    def count_parameter_num(self)->None:
+    def count_parameter_num(self) -> None:
         for i, model_item in enumerate(self.__model):
             num_params = 0
             for param in model_item.parameters():
@@ -183,7 +183,7 @@ class BuildGraph(object):
 
         return tower_loss_iteration, tower_acc_iteration
 
-    def __pass_data2device(self, data: list)->list:
+    def __pass_data2device(self, data: list) -> list:
         args = self.__args
 
         if args.dist:
@@ -197,7 +197,7 @@ class BuildGraph(object):
 
         return data
 
-    def __variable2tensor(self, data: list)-> None:
+    def __variable2tensor(self, data: list) -> None:
         res = []
         args = self.__args
         for _, data_item in enumerate(data):
@@ -212,7 +212,7 @@ class BuildGraph(object):
     def cal_tower_loss_acc(self, tower_loss: list, tower_acc: list,
                            tower_loss_iteration: list,
                            tower_acc_iteration: list,
-                           total_iteration: int) ->list:
+                           total_iteration: int) -> list:
         tower_loss = ListHandler.double_list_add(tower_loss_iteration, tower_loss)
         tower_acc = ListHandler.double_list_add(tower_acc_iteration, tower_acc)
 

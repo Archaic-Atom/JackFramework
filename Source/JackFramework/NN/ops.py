@@ -10,7 +10,7 @@ class Ops(object):
     def __init__(self):
         super().__init__()
 
-    def __new__(cls, *args: str, **kwargs: str)->object:
+    def __new__(cls, *args: str, **kwargs: str) -> object:
         if cls.__OPS is None:
             cls.__OPS = object.__new__(cls)
         return cls.__OPS

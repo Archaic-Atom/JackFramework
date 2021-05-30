@@ -7,7 +7,7 @@ from JackFramework.SysBasic.loghander import LogHandler as log
 class DataHandlerManager(object):
     """docstring for ClassName"""
 
-    def __init__(self, args: object, jf_datahandler: object) ->None:
+    def __init__(self, args: object, jf_datahandler: object) -> None:
         super().__init__()
         self.__jf_datahandler = jf_datahandler
         self.__args = args
@@ -73,19 +73,19 @@ class DataHandlerManager(object):
         return training_dataloader, val_dataloader, training_sampler, val_sampler
 
     @property
-    def training_dataloader(self):
+    def training_dataloader(self) -> object:
         return self.__training_dataloader
 
     @property
-    def val_dataloader(self):
+    def val_dataloader(self) -> object:
         return self.__val_dataloader
 
-    def get_dataloader(self, is_traning: bool)->object:
+    def get_dataloader(self, is_traning: bool) -> object:
         if is_traning:
             return self.training_dataloader
         return self.val_dataloader
 
-    def set_epoch(self, epoch: int, is_traning: bool)->None:
+    def set_epoch(self, epoch: int, is_traning: bool) -> None:
         args = self.__args
         if args.dist:
             if is_traning:
@@ -93,7 +93,7 @@ class DataHandlerManager(object):
             else:
                 self.__val_sampler.set_epoch(epoch)
 
-    def split_data(self, batch_data: tuple, is_training: bool)->object:
+    def split_data(self, batch_data: tuple, is_training: bool) -> object:
         return self.__jf_datahandler.split_data(batch_data, is_training)
 
     def show_training_info(self, epoch: int, loss:
@@ -107,7 +107,7 @@ class DataHandlerManager(object):
             self.__jf_datahandler.show_val_result(epoch, loss, acc, duration)
 
     def show_intermediate_result(self, epoch: int,
-                                 loss: list, acc: list)->str:
+                                 loss: list, acc: list) -> str:
         return self.__jf_datahandler.show_intermediate_result(epoch, loss, acc)
 
     def save_result(self, output_data: list, supplement: list, img_id: int):

@@ -16,7 +16,7 @@ class Res2DBlock(nn.Module):
     def __init__(self, in_channels: int, out_channels: int,
                  kernel_size: int = 3, stride: int = 1,
                  padding: int = 1, dilation: int = 1,
-                 downsample: object = None):
+                 downsample: object = None) -> object:
         super().__init__()
         self.conv_2d_layer_1 = Layer.conv_2d_layer(
             in_channels, out_channels, kernel_size, stride, padding, dilation)
@@ -26,7 +26,7 @@ class Res2DBlock(nn.Module):
         self.downsample = downsample
         self.act_layer = Layer.act_layer()
 
-    def forward(self, x: tensor)->tensor:
+    def forward(self, x: tensor) -> tensor:
         identity = x
         x = self.conv_2d_layer_1(x)
         x = self.conv_2d_layer_2(x)
@@ -44,7 +44,7 @@ class Bottleneck2DBlcok(nn.Module):
 
     def __init__(self, in_channels: int, out_channels: int,
                  kernel_size: int = 3, stride: int = 1,
-                 padding: int = 1, downsample: object = None):
+                 padding: int = 1, downsample: object = None) -> object:
         super().__init__()
 
         bottleneck_out_channels = out_channels // 4
@@ -57,7 +57,7 @@ class Bottleneck2DBlcok(nn.Module):
         self.downsample = downsample
         self.act_layer = Layer.act_layer()
 
-    def forward(self, x: tensor)->tensor:
+    def forward(self, x: tensor) -> tensor:
         identity = x
         x = self.conv_2d_layer_1(x)
         x = self.conv_2d_layer_2(x)
@@ -85,7 +85,7 @@ class Res3DBlock(nn.Module):
         self.downsample = downsample
         self.act_layer = Layer.act_layer()
 
-    def forward(self, x: tensor)->tensor:
+    def forward(self, x: tensor) -> tensor:
         identity = x
         x = self.conv_3d_layer_1(x)
         x = self.conv_3d_layer_2(x)
@@ -103,7 +103,7 @@ class Bottleneck3DBlcok(nn.Module):
 
     def __init__(self, in_channels: int, out_channels: int,
                  kernel_size: int = 3, stride: int = 1,
-                 padding: int = 1, downsample: object = None):
+                 padding: int = 1, downsample: object = None) -> object:
         super().__init__()
 
         bottleneck_out_channels = out_channels // 4
@@ -116,7 +116,7 @@ class Bottleneck3DBlcok(nn.Module):
         self.downsample = downsample
         self.act_layer = Layer.act_layer()
 
-    def forward(self, x: tensor)->tensor:
+    def forward(self, x: tensor) -> tensor:
         identity = x
         x = self.conv_3d_layer_1(x)
         x = self.conv_3d_layer_2(x)
@@ -151,7 +151,7 @@ class ASPPBlock(nn.Module):
         self.block_4 = Layer.conv_2d_layer(
             in_channels, out_channels, 3, padding=dilation[2], dilation=dilation[2])
 
-    def forward(self, x: tensor)->tensor:
+    def forward(self, x: tensor) -> tensor:
         branch_1 = self.block_1(x)
         branch_2 = self.block_2(x)
         branch_3 = self.block_3(x)
@@ -179,7 +179,7 @@ class SPPBlock(nn.Module):
         layer.append(Layer.conv_2d_layer(in_channels, out_channels, 1, 1, 0))
         return nn.Sequential(*layer)
 
-    def forward(self, x: tensor)->tensor:
+    def forward(self, x: tensor) -> tensor:
         branch_1 = self.branch_1(x)
         branch_1 = F.upsample(branch_1, (x.size()[2], x.size()[3]), mode='bilinear')
 

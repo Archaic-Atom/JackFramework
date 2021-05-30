@@ -22,7 +22,7 @@ class DeviceManager(object):
         else:
             self.__device = None
 
-    def __new__(cls, *args: str, **kwargs: str)->object:
+    def __new__(cls, *args: str, **kwargs: str) -> object:
         if cls.__DEVICE_MANAGER is None:
             cls.__DEVICE_MANAGER = object.__new__(cls)
         return cls.__DEVICE_MANAGER
@@ -42,7 +42,7 @@ class DeviceManager(object):
         return res_bool
 
     @staticmethod
-    def check_cuda_count(args)->object:
+    def check_cuda_count(args) -> object:
         if torch.cuda.device_count() < args.gpu:
             log.warning(
                 "The setting of GPUs is more than actually owned GPUs: %d vs %d"
@@ -56,7 +56,7 @@ class DeviceManager(object):
         return args, res_bool
 
     @staticmethod
-    def check_port_in_use(port: str, host: str = '127.0.0.1')->bool:
+    def check_port_in_use(port: str, host: str = '127.0.0.1') -> bool:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             s.connect((host, int(port)))
@@ -67,7 +67,7 @@ class DeviceManager(object):
             return False
 
     @staticmethod
-    def find_unused_port(port: str)->bool:
+    def find_unused_port(port: str) -> bool:
         max_failed_num = 5
         try_index = 0
         off_set = 1
@@ -91,7 +91,7 @@ class DeviceManager(object):
 
         return port, find_res_bool
 
-    def init_distributed_gpu_device(self, rank: int)->None:
+    def init_distributed_gpu_device(self, rank: int) -> None:
         log.info("Start initializing distributed device!")
         assert rank is not None
 

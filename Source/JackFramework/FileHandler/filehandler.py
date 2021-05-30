@@ -32,24 +32,24 @@ class FileHandler(object):
         return fd_file
 
     @staticmethod
-    def close_file(fd_file: object)->None:
+    def close_file(fd_file: object) -> None:
         fd_file.close()
 
     @staticmethod
-    def write_file(fd_file: object, data_str: str)-> None:
+    def write_file(fd_file: object, data_str: str) -> None:
         data_str = str(data_str)
         fd_file.write(data_str + "\n")
         fd_file.flush()
 
     @staticmethod
-    def get_line(filename: str, line_num: int)-> str:
+    def get_line(filename: str, line_num: int) -> str:
         path = linecache.getline(filename, line_num)
         path = path.rstrip("\n")
         return path
 
     @staticmethod
     def insert_str2line(fd_file: object,
-                        data_str: str, line_num: int)->None:
+                        data_str: str, line_num: int) -> None:
         current_off_set = fd_file.tell()
         off_set = FileHandler.__get_line_offset(fd_file, line_num)
         fd_file.seek(off_set)
@@ -61,7 +61,7 @@ class FileHandler(object):
         fd_file.seek(off_set)
 
     @staticmethod
-    def get_line_fd(fd_file: object, line_num: int)->str:
+    def get_line_fd(fd_file: object, line_num: int) -> str:
         current_off_set = fd_file.tell()
         fd_file.seek(0, 0)
 
@@ -75,7 +75,7 @@ class FileHandler(object):
         return line
 
     @staticmethod
-    def copy_file(fd_file_A: object, fd_file_B: object, line_num: int)-> None:
+    def copy_file(fd_file_A: object, fd_file_B: object, line_num: int) -> None:
         off_set = FileHandler.__get_line_offset(fd_file_A, line_num)
         fd_file_A.seek(off_set, 0)
         off_set = FileHandler.__get_line_offset(fd_file_B, line_num)
@@ -129,7 +129,8 @@ def debug_main():
     LAST_MODEL_NAME = 'last model name:'
 
     for i in range(50):
-        fd_checkpoint_list = FileHandler.open_file(file_dir + CHECK_POINT_LIST_NAME)
+        fd_checkpoint_list = FileHandler.open_file(
+            file_dir + CHECK_POINT_LIST_NAME)
         str_line = FileHandler.get_line_fd(fd_checkpoint_list, 0)
         file_name = test_file_name % i
         if str_line[0:len(LAST_MODEL_NAME)] != LAST_MODEL_NAME:
@@ -139,22 +140,25 @@ def debug_main():
             os.remove(file_dir + CHECK_POINT_LIST_NAME)
 
         if fd_checkpoint_list is None:
-            fd_checkpoint_list = FileHandler.open_file(file_dir + CHECK_POINT_LIST_NAME)
-            FileHandler.write_file(fd_checkpoint_list, LAST_MODEL_NAME+file_name)
+            fd_checkpoint_list = FileHandler.open_file(
+                file_dir + CHECK_POINT_LIST_NAME)
+            FileHandler.write_file(
+                fd_checkpoint_list, LAST_MODEL_NAME + file_name)
             FileHandler.write_file(fd_checkpoint_list, file_name)
             FileHandler.close_file(fd_checkpoint_list)
         else:
-            fd_checkpoint_temp_list = FileHandler.open_file(file_dir +
-                                                            CHECK_POINT_LIST_NAME
-                                                            + '.temp')
-            FileHandler.write_file(fd_checkpoint_temp_list, LAST_MODEL_NAME+file_name)
-            FileHandler.copy_file(fd_checkpoint_list, fd_checkpoint_temp_list, 1)
+            fd_checkpoint_temp_list = FileHandler.open_file(
+                file_dir + CHECK_POINT_LIST_NAME + '.temp')
+            FileHandler.write_file(
+                fd_checkpoint_temp_list, LAST_MODEL_NAME + file_name)
+            FileHandler.copy_file(fd_checkpoint_list,
+                                  fd_checkpoint_temp_list, 1)
             FileHandler.write_file(fd_checkpoint_temp_list, file_name)
             FileHandler.close_file(fd_checkpoint_list)
             FileHandler.close_file(fd_checkpoint_temp_list)
             os.remove(file_dir + CHECK_POINT_LIST_NAME)
-            os.rename(file_dir + CHECK_POINT_LIST_NAME
-                      + '.temp', file_dir + CHECK_POINT_LIST_NAME)
+            os.rename(file_dir + CHECK_POINT_LIST_NAME +
+                      '.temp', file_dir + CHECK_POINT_LIST_NAME)
 
 
 if __name__ == '__main__':

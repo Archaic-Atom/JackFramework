@@ -11,9 +11,7 @@ class ShowProcess():
     _MAX_SCORE = 100.0
     _INFO_DONE = 'done'
 
-    def __init__(self, max_steps: int,
-                 info: str = '',
-                 info_done='Done'):
+    def __init__(self, max_steps: int, info: str = '', info_done='Done') -> object:
         self.__info = info
         self.__max_steps = max_steps
         self.__counter = self._INIT_COUNTER
@@ -83,7 +81,7 @@ class ShowProcess():
     def __generate_show_data(self, num_arrow: int, num_line: int,
                              percent: float, show_info: str,
                              info_done: str, queue_size: str,
-                             rest_time: str)-> str:
+                             rest_time: str) -> str:
         process_str = '[' + self.__info + '] [' + '>' * num_arrow   \
             + '-' * num_line + ']'                                  \
             + ' %d / %d, ' % (self.__counter, self.__max_steps)     \
@@ -94,7 +92,7 @@ class ShowProcess():
         return process_str
 
     @staticmethod
-    def __print(process_str: str) ->None:
+    def __print(process_str: str) -> None:
         sys.stdout.write(process_str)
         sys.stdout.flush()
 
@@ -109,6 +107,6 @@ if __name__ == '__main__':
     process_bar = ShowProcess(max_steps, 'OK')
 
     for i in range(max_steps):
-        process_bar.show_process(i+1)
+        process_bar.show_process(i + 1)
         time.sleep(0.01)
     time.sleep(50)
