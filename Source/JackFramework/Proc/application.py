@@ -17,7 +17,7 @@ class Application(object):
         self.__user_interface = user_interface
         self.__application_name = application_name
 
-    def __new__(cls, *args: str, **kwargs: str)->object:
+    def __new__(cls, *args: str, **kwargs: str) -> object:
         if cls.__APPLICATION is None:
             cls.__APPLICATION = object.__new__(cls)
         return cls.__APPLICATION

@@ -70,7 +70,7 @@ class Bottleneck(nn.Module):
         assert(len(x) == len(y))
         z = []
         for i in range(len(x)):
-            z.append(x[i]+y[i])
+            z.append(x[i] + y[i])
         return z
 
     def forward(self, x: object) -> object:

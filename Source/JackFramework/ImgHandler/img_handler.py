@@ -13,17 +13,17 @@ class ImgHandler(object):
         super().__init__()
 
     @staticmethod
-    def read_img(path: str)->np.array:
+    def read_img(path: str) -> np.array:
         img = Image.open(path).convert("RGB")
         return img
 
     @staticmethod
-    def read_single_channle_img(path: str)->np.array:
+    def read_single_channle_img(path: str) -> np.array:
         img = Image.open(path)
         return img
 
     @staticmethod
-    def read_pfm(filename: str)->tuple:
+    def read_pfm(filename: str) -> tuple:
         file = open(filename, 'rb')
         color = None
         width = None
@@ -60,7 +60,7 @@ class ImgHandler(object):
         return data, scale
 
     @staticmethod
-    def write_pfm(filename: str, image: np.array, scale: int = 1)-> None:
+    def write_pfm(filename: str, image: np.array, scale: int = 1) -> None:
         file = open(filename, mode='wb')
         color = None
 
