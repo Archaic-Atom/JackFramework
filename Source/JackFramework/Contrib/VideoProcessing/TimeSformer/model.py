@@ -292,7 +292,7 @@ class TimeSformer_v3(nn.Module):
         self.to_out = nn.Sequential(
             nn.LayerNorm(bottleneck_channels),
             #nn.Linear(bottleneck_channels, patch_dim)
-            nn.Linear(bottleneck_channels, patch_size*patch_size)
+            nn.Linear(bottleneck_channels, patch_size * patch_size)
         )
 
     def forward(self, video):
@@ -319,6 +319,84 @@ class TimeSformer_v3(nn.Module):
         x = self.to_out(x)
         x = x[:, 1:, :]  # remove cls_token
         x = rearrange(x, 'b (f h w) (p1 p2) -> b f 1 (h p1) (w p2)', p1=p, p2=p,
+                      f=f, h=h // p, w=w // p)
+        x = rearrange(x, 'b f c h w -> b c f h w')
+        return x
+
+
+class TimeSformer_v4(nn.Module):
+    # main classes
+    def __init__(
+        self,
+        *,
+        in_channels,
+        out_channels,
+        bottleneck_channels,
+        num_frames,
+        image_height,
+        image_width,
+        patch_size=16,
+        depth=12,
+        heads=8,
+        dim_head=64,
+        attn_dropout=0.,
+        ff_dropout=0.
+    ):
+        super().__init__()
+        assert image_height % patch_size == 0 and image_width % patch_size == 0, \
+            'Image dimensions must be divisible by the patch size.'
+
+        num_patches = (image_height // patch_size) * (image_width // patch_size)
+        num_positions = num_frames * num_patches
+        patch_dim = in_channels * patch_size ** 2
+
+        self.patch_size = patch_size
+        self.to_patch_embedding = nn.Linear(patch_dim, bottleneck_channels)
+        self.pos_emb = nn.Embedding(num_positions + 1, bottleneck_channels)
+        self.cls_token = nn.Parameter(torch.randn(1, bottleneck_channels))
+
+        self.layers = nn.ModuleList([])
+        for _ in range(depth):
+            self.layers.append(nn.ModuleList([
+                PreNorm(bottleneck_channels, Attention(bottleneck_channels,
+                                                       dim_head=dim_head,
+                                                       heads=heads, dropout=attn_dropout)),
+                PreNorm(bottleneck_channels, Attention(bottleneck_channels,
+                                                       dim_head=dim_head,
+                                                       heads=heads, dropout=attn_dropout)),
+                PreNorm(bottleneck_channels, FeedForward(bottleneck_channels, dropout=ff_dropout))
+            ]))
+
+        self.to_out = nn.Sequential(
+            nn.LayerNorm(bottleneck_channels),
+            nn.Linear(bottleneck_channels, out_channels * patch_size ** 2)
+            #nn.Linear(bottleneck_channels, patch_size*patch_size)
+        )
+
+    def forward(self, video):
+        video = rearrange(video, 'b c f h w  -> b f c h w')
+        b, f, _, h, w, *_, device, p = *video.shape, video.device, self.patch_size
+        assert h % p == 0 and w % p == 0, \
+            f'height {h} and width {w} of video must be divisible by the patch size {p}'
+
+        n = (h // p) * (w // p)
+
+        video = rearrange(video, 'b f c (h p1) (w p2) -> b (f h w) (p1 p2 c)', p1=p, p2=p)
+        tokens = self.to_patch_embedding(video)
+
+        cls_token = repeat(self.cls_token, 'n d -> b n d', b=b)
+        x = torch.cat((cls_token, tokens), dim=1)
+        x += self.pos_emb(torch.arange(x.shape[1], device=device))
+
+        for (time_attn, spatial_attn, ff) in self.layers:
+            x = time_attn(x, 'b (f n) d', '(b n) f d', n=n) + x
+            x = spatial_attn(x, 'b (f n) d', '(b f) n d', f=f) + x
+            x = ff(x) + x
+
+        #cls_token = x[:, 0]
+        x = self.to_out(x)
+        x = x[:, 1:, :]  # remove cls_token
+        x = rearrange(x, 'b (f h w) (p1 p2 c) -> b f c (h p1) (w p2)', p1=p, p2=p,
                       f=f, h=h // p, w=w // p)
         x = rearrange(x, 'b f c h w -> b c f h w')
         return x

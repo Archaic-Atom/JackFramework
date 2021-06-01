@@ -43,6 +43,8 @@ class DeviceManager(object):
 
     @staticmethod
     def check_cuda_count(args) -> object:
+        res_bool = True
+
         if torch.cuda.device_count() < args.gpu:
             log.warning(
                 "The setting of GPUs is more than actually owned GPUs: %d vs %d"
@@ -50,9 +52,9 @@ class DeviceManager(object):
             log.info("We will use all actually owned GPUs.")
             args.gpu = torch.cuda.device_count()
 
-            res_bool = True
             if args.dist:
                 args.port, res_bool = DeviceManager.find_unused_port(args.port)
+
         return args, res_bool
 
     @staticmethod
