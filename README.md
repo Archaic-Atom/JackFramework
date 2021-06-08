@@ -1,4 +1,4 @@
->This is a trainin framework based on pythorch, if you have any question please send an e-mail to raoxi36@foxmail.com
+>This is a training framework based on pythorch, if you have any question please send an e-mail to raoxi36@foxmail.com
 
 #### 0. Software Environment
 **1) OS Environment**

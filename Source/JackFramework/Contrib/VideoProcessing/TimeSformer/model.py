@@ -402,7 +402,7 @@ class TimeSformer_v4(nn.Module):
         return x
 
 
-if __name__ == '__main__':
+def debug_main():
     model = TimeSformer_v3(
         bottleneck_channels=256, image_height=64, image_width=128,
         num_frames=64, in_channels=96, patch_size=8, depth=11,
@@ -425,3 +425,7 @@ if __name__ == '__main__':
     for param in model.parameters():
         num_params += param.numel()
     print(num_params)
+
+
+if __name__ == '__main__':
+    debug_main()

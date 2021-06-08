@@ -7,7 +7,7 @@ from torch import nn, einsum
 from torch._six import container_abcs
 
 from einops import rearrange, repeat
-#from JackFramework.SysBasic.loghander import LogHandler as log
+# from JackFramework.SysBasic.loghander import LogHandler as log
 
 
 def _ntuple(n):
@@ -29,7 +29,7 @@ def _no_grad_trunc_normal_(tensor, mean, std, a, b):
 
     if (mean < a - 2 * std) or (mean > b + 2 * std):
         print("mean is more than 2 std from [a, b] in nn.init.trunc_normal_. \
-        	The distribution of values may be incorrect.")
+            The distribution of values may be incorrect.")
         # log.warning("mean is more than 2 std from [a, b] in nn.init.trunc_normal_. "
         #            "The distribution of values may be incorrect.")
 
@@ -240,8 +240,8 @@ class PatchEmbed(nn.Module):
 
     def __init__(self, img_size=224, patch_size=16, in_chans=3, embed_dim=768):
         super().__init__()
-        #img_size = to_2tuple(img_size)
-        #patch_size = to_2tuple(patch_size)
+        # img_size = to_2tuple(img_size)
+        # patch_size = to_2tuple(patch_size)
         num_patches = (img_size // patch_size) * (img_size // patch_size)
         self.img_size = img_size
         self.patch_size = patch_size
@@ -277,7 +277,7 @@ class VisionTransformer(nn.Module):
         self.attention_type = attention_type
         self.depth = depth
         self.dropout = nn.Dropout(dropout)
-        #self.num_classes = num_classes
+        # self.num_classes = num_classes
         self.num_classes = patch_size * patch_size
         # num_features for consistency with other models
         self.num_features = self.embed_dim = embed_dim
@@ -287,7 +287,7 @@ class VisionTransformer(nn.Module):
 
         # Positional Embeddings
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
-        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches+1, embed_dim))
+        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim))
         self.pos_drop = nn.Dropout(p=drop_rate)
         if self.attention_type != 'space_only':
             self.time_embed = nn.Parameter(torch.zeros(1, num_frames, embed_dim))
@@ -406,7 +406,7 @@ class VisionTransformer(nn.Module):
         return x
 
 
-if __name__ == '__main__':
+def debug_main():
     model = VisionTransformer(img_size=64, patch_size=8, in_chans=96,
                               embed_dim=512, depth=5, num_heads=8, mlp_ratio=4., qkv_bias=False,
                               qk_scale=None, drop_rate=0., attn_drop_rate=0.,
@@ -430,3 +430,7 @@ if __name__ == '__main__':
     for param in model.parameters():
         num_params += param.numel()
     print(num_params)
+
+
+if __name__ == '__main__':
+    debug_main()
