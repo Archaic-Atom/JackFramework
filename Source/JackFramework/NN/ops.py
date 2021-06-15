@@ -46,7 +46,7 @@ class Ops(object):
     def deconv_3d(in_channels: int, out_channels: int, kernel_size: int,
                   stride: int = 1, padding: int = 0, output_padding: int = 0,
                   groups: int = 1, dilation: int = 1, bias: bool = False,
-                  padding_mode: str = 'zeros'):
+                  padding_mode: str = 'zeros') -> object:
         return nn.ConvTranspose3d(in_channels, out_channels, kernel_size,
                                   stride, padding, output_padding, groups,
                                   bias, dilation, padding_mode)
