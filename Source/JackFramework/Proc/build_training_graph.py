@@ -96,9 +96,7 @@ class BuildGraph(object):
 
     def count_parameter_num(self) -> None:
         for i, model_item in enumerate(self.__model):
-            num_params = 0
-            for param in model_item.parameters():
-                num_params += param.numel()
+            num_params = sum(param.numel() for param in model_item.parameters())
             log.info('Model ' + str(i) + ': The total parameter - %d' % num_params)
 
     def save_model(self, epoch: int) -> None:
@@ -115,11 +113,10 @@ class BuildGraph(object):
     def set_model_mode(self, is_training: bool = True) -> None:
         if self.__model is None:
             log.error("There is no mdoel!")
-        if is_training:
-            for i, _ in enumerate(self.__model):
+        for i, _ in enumerate(self.__model):
+            if is_training:
                 self.__model[i].train()
-        else:
-            for i, _ in enumerate(self.__model):
+            else:
                 self.__model[i].eval()
 
     def train_proc(self, input_data: list,
@@ -225,7 +222,7 @@ class BuildGraph(object):
             if sch_item is None:
                 return
             self.__jf_model.lr_scheduler(sch_item, float(loss[i][0]), i)
-            if rank == BuildGraph.DEFAULT_RANK_ID or rank == None:
+            if rank == BuildGraph.DEFAULT_RANK_ID or rank is None:
                 log.info("Model " + str(i) + " Current lr: " +
                          str(self.__opt[i].param_groups[self.OPT_LR_GROUP_ID]['lr']))
 

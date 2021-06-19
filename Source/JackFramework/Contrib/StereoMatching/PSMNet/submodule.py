@@ -60,8 +60,9 @@ class matchshifted(nn.Module):
             torch.LongTensor([i for i in range(shift, width)])).cuda()), (shift, 0, 0, 0))
         shifted_right = F.pad(torch.index_select(right, 3, Variable(
             torch.LongTensor([i for i in range(width-shift)])).cuda()), (shift, 0, 0, 0))
-        out = torch.cat((shifted_left, shifted_right), 1).view(batch, filters*2, 1, height, width)
-        return out
+        return torch.cat((shifted_left, shifted_right), 1).view(
+            batch, filters * 2, 1, height, width
+        )
 
 
 class disparityregression(nn.Module):
@@ -73,8 +74,7 @@ class disparityregression(nn.Module):
 
     def forward(self, x):
         disp = self.disp.repeat(x.size()[0], 1, x.size()[2], x.size()[3])
-        out = torch.sum(x*disp, 1)
-        return out
+        return torch.sum(x*disp, 1)
 
 
 class feature_extraction(nn.Module):
@@ -122,10 +122,9 @@ class feature_extraction(nn.Module):
                           kernel_size=1, stride=stride, bias=False),
                 nn.BatchNorm2d(planes * block.expansion),)
 
-        layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample, pad, dilation))
+        layers = [block(self.inplanes, planes, stride, downsample, pad, dilation)]
         self.inplanes = planes * block.expansion
-        for i in range(1, blocks):
+        for _ in range(1, blocks):
             layers.append(block(self.inplanes, planes, 1, None, pad, dilation))
 
         return nn.Sequential(*layers)

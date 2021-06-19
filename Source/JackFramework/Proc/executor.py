@@ -73,9 +73,10 @@ class Executor(object):
             if args.dist:
                 dist.barrier()
 
-            if (epoch + 1) % args.auto_save_num == 0:
-                if rank == Executor.DEFAULT_RANK_ID or rank is None:
-                    graph.save_model(epoch)
+            if (epoch + 1) % args.auto_save_num == 0 and (
+                rank == Executor.DEFAULT_RANK_ID or rank is None
+            ):
+                graph.save_model(epoch)
 
         graph.cleanup()
         log.info("Finish training process!")

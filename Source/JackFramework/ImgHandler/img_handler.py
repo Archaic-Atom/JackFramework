@@ -14,13 +14,11 @@ class ImgHandler(object):
 
     @staticmethod
     def read_img(path: str) -> np.array:
-        img = Image.open(path).convert("RGB")
-        return img
+        return Image.open(path).convert("RGB")
 
     @staticmethod
     def read_single_channle_img(path: str) -> np.array:
-        img = Image.open(path)
-        return img
+        return Image.open(path)
 
     @staticmethod
     def read_pfm(filename: str) -> tuple:
@@ -61,32 +59,30 @@ class ImgHandler(object):
 
     @staticmethod
     def write_pfm(filename: str, image: np.array, scale: int = 1) -> None:
-        file = open(filename, mode='wb')
-        color = None
+        with open(filename, mode='wb') as file:
+            color = None
 
-        if image.dtype.name != 'float32':
-            raise Exception('Image dtype must be float32.')
+            if image.dtype.name != 'float32':
+                raise Exception('Image dtype must be float32.')
 
-        image = np.flipud(image)
+            image = np.flipud(image)
 
-        if len(image.shape) == 3 and image.shape[2] == 3:  # color image
-            color = True
-        elif len(image.shape) == 2 or len(image.shape) == 3 and image.shape[2] == 1:  # greyscale
-            color = False
-        else:
-            raise Exception('Image must have H x W x 3, H x W x 1 or H x W dimensions.')
+            if len(image.shape) == 3 and image.shape[2] == 3:  # color image
+                color = True
+            elif len(image.shape) == 2 or len(image.shape) == 3 and image.shape[2] == 1:  # greyscale
+                color = False
+            else:
+                raise Exception('Image must have H x W x 3, H x W x 1 or H x W dimensions.')
 
-        file.write(str.encode('PF\n' if color else 'Pf\n'))
-        file.write(str.encode('%d %d\n' % (image.shape[1], image.shape[0])))
+            file.write(str.encode('PF\n' if color else 'Pf\n'))
+            file.write(str.encode('%d %d\n' % (image.shape[1], image.shape[0])))
 
-        endian = image.dtype.byteorder
+            endian = image.dtype.byteorder
 
-        if endian == '<' or endian == '=' and sys.byteorder == 'little':
-            scale = -scale
+            if endian == '<' or endian == '=' and sys.byteorder == 'little':
+                scale = -scale
 
-        file.write(str.encode('%f\n' % scale))
+            file.write(str.encode('%f\n' % scale))
 
-        image_string = image.tostring()
-        file.write(image_string)
-
-        file.close()
+            image_string = image.tostring()
+            file.write(image_string)

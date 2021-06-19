@@ -17,13 +17,11 @@ class BasicConv(nn.Module):
                 self.conv = nn.ConvTranspose3d(in_channels, out_channels, bias=False, **kwargs)
             else:
                 self.conv = nn.Conv3d(in_channels, out_channels, bias=False, **kwargs)
-            self.bn = nn.GroupNorm(8, out_channels)
+        elif deconv:
+            self.conv = nn.ConvTranspose2d(in_channels, out_channels, bias=False, **kwargs)
         else:
-            if deconv:
-                self.conv = nn.ConvTranspose2d(in_channels, out_channels, bias=False, **kwargs)
-            else:
-                self.conv = nn.Conv2d(in_channels, out_channels, bias=False, **kwargs)
-            self.bn = nn.GroupNorm(8, out_channels)
+            self.conv = nn.Conv2d(in_channels, out_channels, bias=False, **kwargs)
+        self.bn = nn.GroupNorm(8, out_channels)
 
     def forward(self, x):
         x = self.conv(x)
@@ -60,10 +58,7 @@ class Conv2x(nn.Module):
     def forward(self, x, rem):
         x = self.conv1(x)
         assert(x.size() == rem.size())
-        if self.concat:
-            x = torch.cat((x, rem), 1)
-        else:
-            x = x + rem
+        x = torch.cat((x, rem), 1) if self.concat else x + rem
         x = self.conv2(x)
         return x
 

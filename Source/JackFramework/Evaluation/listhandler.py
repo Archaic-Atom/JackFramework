@@ -11,32 +11,15 @@ class ListHandler(object):
     @staticmethod
     def list_add(list_A: list, list_B: list) -> list:
         assert len(list_A) == len(list_B)
-        res = []
-
-        for i, item in enumerate(list_A):
-            tem_res = item + list_B[i]
-            res.append(tem_res)
-
-        return res
+        return [item + list_B[i] for i, item in enumerate(list_A)]
 
     @staticmethod
     def list_div(list_A: list, num: float) -> list:
-        res = []
-
-        for _, item in enumerate(list_A):
-            tem_res = item / num
-            res.append(tem_res)
-
-        return res
+        return [item / num for _, item in enumerate(list_A)]
 
     @staticmethod
     def list_mean(list_A: list) -> list:
-        res = []
-
-        for _, item in enumerate(list_A):
-            res.append(item)
-
-        return res
+        return [item for _, item in enumerate(list_A)]
 
     @staticmethod
     def double_list_add(list_A: list, list_B: list = None) -> list:

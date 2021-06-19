@@ -43,10 +43,9 @@ class feature_extraction(nn.Module):
                           kernel_size=1, stride=stride, bias=False),
                 nn.BatchNorm2d(planes * block.expansion), )
 
-        layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample, pad, dilation))
+        layers = [block(self.inplanes, planes, stride, downsample, pad, dilation)]
         self.inplanes = planes * block.expansion
-        for i in range(1, blocks):
+        for _ in range(1, blocks):
             layers.append(block(self.inplanes, planes, 1, None, pad, dilation))
 
         return nn.Sequential(*layers)
@@ -62,9 +61,8 @@ class feature_extraction(nn.Module):
 
         if not self.concat_feature:
             return {"gwc_feature": gwc_feature}
-        else:
-            concat_feature = self.lastconv(gwc_feature)
-            return {"gwc_feature": gwc_feature, "concat_feature": concat_feature}
+        concat_feature = self.lastconv(gwc_feature)
+        return {"gwc_feature": gwc_feature, "concat_feature": concat_feature}
 
 
 class hourglass(nn.Module):
@@ -104,9 +102,7 @@ class hourglass(nn.Module):
         conv4 = self.conv4(conv3)
 
         conv5 = F.relu(self.conv5(conv4) + self.redir2(conv2), inplace=True)
-        conv6 = F.relu(self.conv6(conv5) + self.redir1(x), inplace=True)
-
-        return conv6
+        return F.relu(self.conv6(conv5) + self.redir1(x), inplace=True)
 
 
 class GwcNet(nn.Module):
@@ -169,10 +165,7 @@ class GwcNet(nn.Module):
             elif isinstance(m, nn.Conv3d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.kernel_size[2] * m.out_channels
                 m.weight.data.normal_(0, math.sqrt(2. / n))
-            elif isinstance(m, nn.BatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
-            elif isinstance(m, nn.BatchNorm3d):
+            elif isinstance(m, (nn.BatchNorm2d, nn.BatchNorm3d)):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
             elif isinstance(m, nn.Linear):

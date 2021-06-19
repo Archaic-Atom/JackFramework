@@ -93,8 +93,7 @@ class StereoDataset(Dataset):
     def _generate_output_img_path(self, dir_path: str, num: str,
                                   filename_format: str = "%06d_10",
                                   img_type: str = ".png"):
-        path = dir_path + filename_format % num + img_type
-        return path
+        return dir_path + filename_format % num + img_type
 
     def _depth2img(self, img: np.array) -> np.array:
         img = np.array(img)
@@ -180,7 +179,7 @@ class StereoDataset(Dataset):
         right_img = right_img.transpose(2, 0, 1)
 
         name = ""
-        if args.dataset == "eth3d" or args.dataset == "middlebury":
+        if args.dataset in ["eth3d", "middlebury"]:
             off_set = 1
             pos = left_img_path.rfind('/')
             left_name = left_img_path[0:pos]
