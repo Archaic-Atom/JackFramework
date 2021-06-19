@@ -37,7 +37,7 @@ class LogHandler(object):
             self.__file_name = LogHandler.LOG_FILE
 
     def init_log(self, path: str, renew: bool) -> None:
-        path = path + self.__file_name
+        path += self.__file_name
 
         if renew and os.path.exists(path):
             os.remove(path)

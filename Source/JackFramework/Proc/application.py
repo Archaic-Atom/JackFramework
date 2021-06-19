@@ -39,10 +39,9 @@ class Application(object):
 
             mp.spawn(proc_func, nprocs=args.gpu, join=True)
 
+        elif args.mode == 'train':
+            Executor(args, self.__user_interface.inference, True).train()
         else:
-            if args.mode == 'train':
-                Executor(args, self.__user_interface.inference, True).train()
-            else:
-                Executor(args, self.__user_interface.inference, False).test()
+            Executor(args, self.__user_interface.inference, False).test()
 
         LogHandler.info("The Application is finished!")

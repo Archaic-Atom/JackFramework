@@ -71,8 +71,7 @@ def drop_path(x, drop_prob: float = 0., training: bool = False):
     shape = (x.shape[0],) + (1,) * (x.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
     random_tensor = keep_prob + torch.rand(shape, dtype=x.dtype, device=x.device)
     random_tensor.floor_()  # binarize
-    output = x.div(keep_prob) * random_tensor
-    return output
+    return x.div(keep_prob) * random_tensor
 
 
 def trunc_normal_(tensor, mean=0., std=1., a=-2., b=2.):
@@ -419,16 +418,14 @@ def debug_main():
 
     import time
 
-    for i in range(2):
+    for _ in range(2):
         start_time = time.time()
         pred = model(video)
         duration = time.time() - start_time
         print(duration)
 
     print(pred.size())
-    num_params = 0
-    for param in model.parameters():
-        num_params += param.numel()
+    num_params = sum(param.numel() for param in model.parameters())
     print(num_params)
 
 

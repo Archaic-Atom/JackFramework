@@ -41,8 +41,7 @@ class FeedForward(nn.Module):
 def attn(q, k, v):
     sim = einsum('b i d, b j d -> b i j', q, k)
     attn = sim.softmax(dim=-1)
-    out = einsum('b i j, b j d -> b i d', attn, v)
-    return out
+    return einsum('b i j, b j d -> b i d', attn, v)
 
 
 class Attention(nn.Module):
@@ -414,16 +413,14 @@ def debug_main():
 
     import time
 
-    for i in range(2):
+    for _ in range(2):
         start_time = time.time()
         pred = model(video)
         duration = time.time() - start_time
         print(duration)
 
     print(pred.size())
-    num_params = 0
-    for param in model.parameters():
-        num_params += param.numel()
+    num_params = sum(param.numel() for param in model.parameters())
     print(num_params)
 
 

@@ -17,10 +17,7 @@ class DeviceManager(object):
         super().__init__()
         self.__args = args
 
-        if not args.dist:
-            self.__device = self.__init_gpu_device()
-        else:
-            self.__device = None
+        self.__device = self.__init_gpu_device() if not args.dist else None
 
     def __new__(cls, *args: str, **kwargs: str) -> object:
         if cls.__DEVICE_MANAGER is None:
@@ -75,7 +72,7 @@ class DeviceManager(object):
         off_set = 1
         find_res_bool = False
         while True:
-            try_index = try_index + off_set
+            try_index += off_set
             res_bool = True
             if DeviceManager.check_port_in_use(port):
                 log.warning("Port: " + str(port) + " is using")

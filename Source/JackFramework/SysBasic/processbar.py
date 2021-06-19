@@ -54,10 +54,9 @@ class ShowProcess():
 
     def __genearte_info_done(self) -> str:
         if self.__counter >= self.__max_steps:
-            info_done = ', ' + self.__info_done
+            return ', ' + self.__info_done
         else:
-            info_done = ''
-        return info_done
+            return ''
 
     @staticmethod
     def __generate_queue_size(queue_size: int) -> str:
@@ -71,25 +70,20 @@ class ShowProcess():
         if rest_time != '':
             rest_time = '(rt: %.3f s' % rest_time
 
-        if duration != '':
-            rest_time = rest_time + ', bs: %.3f s)' % duration
-        else:
-            rest_time = rest_time + ')'
-
+        rest_time += ', bs: %.3f s)' % duration if duration != '' else ')'
         return rest_time
 
     def __generate_show_data(self, num_arrow: int, num_line: int,
                              percent: float, show_info: str,
                              info_done: str, queue_size: str,
                              rest_time: str) -> str:
-        process_str = '[' + self.__info + '] [' + '>' * num_arrow   \
+        return '[' + self.__info + '] [' + '>' * num_arrow   \
             + '-' * num_line + ']'                                  \
             + ' %d / %d, ' % (self.__counter, self.__max_steps)     \
             + '%.2f' % percent + '%' + ' '                          \
             + show_info + ' ' + queue_size                          \
             + rest_time + info_done                                 \
             + '\r'
-        return process_str
 
     @staticmethod
     def __print(process_str: str) -> None:

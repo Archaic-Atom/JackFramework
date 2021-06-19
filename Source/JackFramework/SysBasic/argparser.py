@@ -25,8 +25,7 @@ class ArgsParser(object):
             if type(user_parser) is type(parser):
                 parser = user_parser
 
-        args = parser.parse_args()
-        return args
+        return parser.parse_args()
 
     @staticmethod
     def __program_setting(parser: object) -> object:

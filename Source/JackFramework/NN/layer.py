@@ -57,9 +57,18 @@ class Layer(object):
                       stride: int = 1, padding: int = 1, dilation: int = 1,
                       bias: bool = False, norm: bool = True,
                       act: bool = True) -> object:
-        layer = []
-        layer.append(Ops.conv_2d(in_channels, out_channels,
-                                 kernel_size, stride, padding, dilation, bias=bias))
+        layer = [
+            Ops.conv_2d(
+                in_channels,
+                out_channels,
+                kernel_size,
+                stride,
+                padding,
+                dilation,
+                bias=bias,
+            )
+        ]
+
         layer = Layer.norm_act_layer(layer, out_channels, norm, act)
         return nn.Sequential(*layer)
 
@@ -68,10 +77,18 @@ class Layer(object):
                         stride: int = 1, padding: int = 0, output_padding: int = 0,
                         bias: bool = False, norm: bool = True,
                         act: bool = True) -> object:
-        layer = []
-        layer.append(Ops.deconv_2d(in_channels, out_channels,
-                                   kernel_size, stride, padding,
-                                   output_padding, bias=bias))
+        layer = [
+            Ops.deconv_2d(
+                in_channels,
+                out_channels,
+                kernel_size,
+                stride,
+                padding,
+                output_padding,
+                bias=bias,
+            )
+        ]
+
         layer = Layer.norm_act_layer(layer, out_channels, norm, act)
         return nn.Sequential(*layer)
 
@@ -80,9 +97,18 @@ class Layer(object):
                       stride: int = 1, padding: int = 1, dilation: int = 1,
                       bias: bool = False, norm: bool = True,
                       act: bool = True) -> object:
-        layer = []
-        layer.append(Ops.conv_3d(in_channels, out_channels,
-                                 kernel_size, stride, padding, dilation, bias=bias))
+        layer = [
+            Ops.conv_3d(
+                in_channels,
+                out_channels,
+                kernel_size,
+                stride,
+                padding,
+                dilation,
+                bias=bias,
+            )
+        ]
+
         layer = Layer.norm_act_layer(layer, out_channels, norm, act)
         return nn.Sequential(*layer)
 
@@ -91,9 +117,17 @@ class Layer(object):
                         stride: int = 1, padding: int = 0, output_padding: int = 0,
                         bias: bool = False, norm: bool = True,
                         act: bool = True) -> object:
-        layer = []
-        layer.append(Ops.deconv_3d(in_channels, out_channels,
-                                   kernel_size, stride, padding,
-                                   output_padding, bias=bias))
+        layer = [
+            Ops.deconv_3d(
+                in_channels,
+                out_channels,
+                kernel_size,
+                stride,
+                padding,
+                output_padding,
+                bias=bias,
+            )
+        ]
+
         layer = Layer.norm_act_layer(layer, out_channels, norm, act)
         return nn.Sequential(*layer)

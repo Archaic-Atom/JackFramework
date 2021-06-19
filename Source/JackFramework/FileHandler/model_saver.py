@@ -36,11 +36,7 @@ class ModelSaver(object):
 
     @staticmethod
     def load_model(model: object, file_path: str, rank: object = None) -> None:
-        if rank is not None:
-            map_location = {'cuda:%d' % 0: 'cuda:%d' % rank}
-        else:
-            map_location = None
-
+        map_location = {'cuda:%d' % 0: 'cuda:%d' % rank} if rank is not None else None
         checkpoint = torch.load(file_path, map_location)
 
         # model_dict = model.state_dict()
@@ -60,11 +56,7 @@ class ModelSaver(object):
 
     @staticmethod
     def load_opt(opt: object, file_path: str, rank: object = None) -> None:
-        if rank is not None:
-            map_location = {'cuda:%d' % 0: 'cuda:%d' % rank}
-        else:
-            map_location = None
-
+        map_location = {'cuda:%d' % 0: 'cuda:%d' % rank} if rank is not None else None
         checkpoint = torch.load(file_path, map_location)
 
         # opt_dict = opt.state_dict()
@@ -85,8 +77,7 @@ class ModelSaver(object):
     @staticmethod
     def __get_model_name(file_path: str) -> str:
         str_line = FileHandler.get_line(file_path, ModelSaver.ROW_ONE)
-        file_name = str_line[len(sysdefine.LAST_MODEL_NAME):len(str_line)]
-        return file_name
+        return str_line[len(sysdefine.LAST_MODEL_NAME):len(str_line)]
 
     @staticmethod
     def write_check_point_list(file_dir: str, file_name: str) -> None:

@@ -68,10 +68,7 @@ class Bottleneck(nn.Module):
 
     def _sum_each(self, x: object, y: object) -> object:
         assert(len(x) == len(y))
-        z = []
-        for i in range(len(x)):
-            z.append(x[i] + y[i])
-        return z
+        return [x[i] + y[i] for i in range(len(x))]
 
     def forward(self, x: object) -> object:
         residual = x
@@ -197,7 +194,7 @@ class ResNet(nn.Module):
             layers.append(block(self.inplanes, planes, stride, dilation=multi_dilations[0],
                                 downsample=downsample, previous_dilation=dilation,
                                 norm_layer=norm_layer, spm_on=spm_on))
-        elif dilation in (1, 2):
+        elif dilation in {1, 2}:
             layers.append(block(self.inplanes, planes, stride, dilation=1,
                                 downsample=downsample, previous_dilation=dilation,
                                 norm_layer=norm_layer, spm_on=spm_on))

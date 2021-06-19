@@ -173,9 +173,13 @@ class SPPBlock(nn.Module):
         self.branch_4 = self.__make_block(in_channels, out_channels, 8)
 
     def __make_block(self, in_channels: int, out_channels: int, ave_pool_size: int):
-        layer = []
-        layer.append(nn.AvgPool2d((ave_pool_size, ave_pool_size),
-                                  stride=(ave_pool_size, ave_pool_size)))
+        layer = [
+            nn.AvgPool2d(
+                (ave_pool_size, ave_pool_size),
+                stride=(ave_pool_size, ave_pool_size),
+            )
+        ]
+
         layer.append(Layer.conv_2d_layer(in_channels, out_channels, 1, 1, 0))
         return nn.Sequential(*layer)
 

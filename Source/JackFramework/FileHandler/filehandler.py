@@ -24,12 +24,10 @@ class FileHandler(object):
 
     @staticmethod
     def open_file(path: str, is_continue: bool = True) -> object:
-        if not is_continue:
-            if os.path.exists(path):
-                os.remove(path)
+        if not is_continue and os.path.exists(path):
+            os.remove(path)
 
-        fd_file = open(path, 'a+')
-        return fd_file
+        return open(path, 'a+')
 
     @staticmethod
     def close_file(fd_file: object) -> None:
