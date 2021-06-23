@@ -20,7 +20,7 @@ def install_lib(lib_name: str, all_pkg: list,
 
 def main():
     lib_name = 'JackFramework'
-    version = '0.1.0'
+    version = '0.1.1'
     description = 'The deep learning tranining framework based on pytorch.'
     author = 'Jack Rao'
     lic = 'MIT'
