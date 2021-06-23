@@ -121,6 +121,9 @@ class StereoDataset(Dataset):
                                             right_img_path, gt_dsp_path)
         return self._read_testing_data(left_img_path, right_img_path)
 
+    def _get_img_read_func(self):
+        return self.__img_read_func, self.__label_read_func
+
     def _read_training_data(self, left_img_path: str,
                             right_img_path: str,
                             gt_dsp_path: str) -> object:

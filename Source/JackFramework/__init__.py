@@ -9,6 +9,7 @@ from JackFramework.SysBasic import define as sys_define
 from JackFramework.SysBasic.loghander import LogHandler as log
 from JackFramework.SysBasic.switch import Switch
 from JackFramework.FileHandler.filehandler import FileHandler
+from JackFramework.ImgHandler.data_augmentation import DataAugmentation
 
 # framework
 from JackFramework.Proc.application import Application
