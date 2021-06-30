@@ -107,7 +107,6 @@ dependencies:
   - pip:
     - affine==2.3.0
     - anykeystore==0.2
-    - apex==0.1
     - attrs==20.3.0
     - backcall==0.2.0
     - chardet==4.0.0
@@ -126,7 +125,6 @@ dependencies:
     - ipykernel==5.4.2
     - ipython==7.19.0
     - ipython-genutils==0.2.0
-    - jackframework==0.1.0
     - jedi==0.18.0
     - jupyter-client==6.1.11
     - jupyter-core==4.7.0
