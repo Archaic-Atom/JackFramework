@@ -32,4 +32,7 @@ jobs:
       run: |
         conda install pytest
         pytest
+    - name: Install JackFramework
+      run: |
+        sh install.sh
 
