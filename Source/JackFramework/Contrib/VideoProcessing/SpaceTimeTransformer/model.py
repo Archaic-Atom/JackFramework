@@ -75,7 +75,7 @@ def drop_path(x, drop_prob: float = 0., training: bool = False):
 
 
 def trunc_normal_(tensor, mean=0., std=1., a=-2., b=2.):
-    # type: (Tensor, float, float, float, float) -> Tensor
+    # type: (torch.tensor, float, float, float, float) -> torch.tensor
     r"""Fills the input Tensor with values drawn from a truncated
     normal distribution. The values are effectively drawn from the
     normal distribution :math:`\mathcal{N}(\text{mean}, \text{std}^2)`
