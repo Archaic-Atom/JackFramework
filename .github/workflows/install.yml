@@ -20,7 +20,8 @@ jobs:
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
       run: |
-        conda env update --file environment.yml --name pytorch1.6
+        conda env create --file environment.yml
+        conda activate JackFramework-torch1.7.1
     - name: Lint with flake8
       run: |
         conda install flake8
@@ -31,4 +32,5 @@ jobs:
     - name: Install JackFramework
       run: |
         sh install.sh
+        python -c "import JackFramework as jf; print(jf.version())"
 
