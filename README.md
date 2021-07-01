@@ -25,8 +25,8 @@ This framework is only used in GPUs.
 #### 2. How to use our framework:
 **1) Build env**
 ```
-conda env create -f environment.yml
-conda activate JackFramework-torch1.7.1
+$ conda env create -f environment.yml
+$ conda activate JackFramework-torch1.7.1
 ```
 **2) Install the JackFramework lib**
 ```
