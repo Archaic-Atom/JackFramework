@@ -32,6 +32,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Install JackFramework
       run: |
+        conda activate JackFramework-torch1.7.1
         sh install.sh
     - name: Test JackFramework
       run: |
