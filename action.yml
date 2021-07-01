@@ -2,7 +2,7 @@ name: Build env action for github
 
 runs:
   using: "composite"
-  step:
+  steps:
     # build env
     - run: conda env update --file environment.yml --name JackFramework
       shell: bash
