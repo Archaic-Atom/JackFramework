@@ -1,6 +1,6 @@
 name: Build env action for github
 
-run:
+runs:
   using: "composite"
   step:
     # build env
