@@ -1,4 +1,4 @@
-name: pytorch1.6
+name: JackFramework-torch1.7.1
 channels:
   - pytorch
   - https://mirrors.bfsu.edu.cn/anaconda/pkgs/msys2
