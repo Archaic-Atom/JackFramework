@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: |
         conda env update --file environment.yml --name JackFramework-torch1.7.1
-        source ${CONDA}/bin/activate
+        source ${CONDA}/bin/activate JackFramework-torch1.7.1
     - name: Lint with flake8
       run: |
         conda activate JackFramework-torch1.7.1
