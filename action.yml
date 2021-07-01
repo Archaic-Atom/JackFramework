@@ -4,7 +4,7 @@ runs:
   using: "composite"
   steps:
     # build env
-    - run: conda env update --file environment.yml --name JackFramework
+    - run: conda env create -f environment.yml
       shell: bash
     # install flake8
     - run: conda install flake8
