@@ -4,6 +4,9 @@ import random
 import numpy as np
 import sys
 from PIL import Image
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
 
 class ImgHandler(object):
@@ -86,3 +89,103 @@ class ImgHandler(object):
 
             image_string = image.tostring()
             file.write(image_string)
+
+    @staticmethod
+    def SSIM(x: torch.tensor, y: torch.tensor) -> torch.tensor:
+        C1 = 0.01 ** 2
+        C2 = 0.03 ** 2
+
+        mu_x = nn.AvgPool2d(3, 1)(x)
+        mu_y = nn.AvgPool2d(3, 1)(y)
+        mu_x_mu_y = mu_x * mu_y
+        mu_x_sq = mu_x.pow(2)
+        mu_y_sq = mu_y.pow(2)
+
+        sigma_x = nn.AvgPool2d(3, 1)(x * x) - mu_x_sq
+        sigma_y = nn.AvgPool2d(3, 1)(y * y) - mu_y_sq
+        sigma_xy = nn.AvgPool2d(3, 1)(x * y) - mu_x_mu_y
+
+        SSIM_n = (2 * mu_x_mu_y + C1) * (2 * sigma_xy + C2)
+        SSIM_d = (mu_x_sq + mu_y_sq + C1) * (sigma_x + sigma_y + C2)
+        SSIM = SSIM_n / SSIM_d
+
+        return torch.clamp((1 - SSIM) / 2, 0, 1)
+
+    @staticmethod
+    def scale_pyramid(img: str, num_scales: int):
+        scaled_imgs = [img]
+        s = img.size()
+        h = s[2]
+        w = s[3]
+        for i in range(num_scales - 1):
+            ratio = 2 ** (i + 1)
+            nh = h // ratio
+            nw = w // ratio
+            scaled_imgs.append(
+                nn.functional.interpolate(img,
+                                          size=[nh, nw], mode='bilinear',
+                                          align_corners=True)
+            )
+        return scaled_imgs
+
+    @staticmethod
+    def warp_img(img: torch.tensor, disp: torch.tensor) -> torch.tensor:
+        batch_size, _, height, width = img.size()
+
+        # Original coordinates of pixels
+        x_base = torch.linspace(0, 1, width).repeat(batch_size,
+                                                    height, 1).type_as(img)
+        y_base = torch.linspace(0, 1, height).repeat(batch_size,
+                                                     width, 1).transpose(1, 2).type_as(img)
+
+        # Apply shift in X direction
+        x_shifts = disp[:, 0, :, :]  # Disparity is passed in NCHW format with 1 channel
+        flow_field = torch.stack((x_base + x_shifts, y_base), dim=3)
+        # In grid_sample coordinates are assumed to be between -1 and 1
+        output = F.grid_sample(img, 2 * flow_field - 1, mode='bilinear',
+                               padding_mode='zeros')
+
+        return output
+
+    @staticmethod
+    def generate_image_left(img: torch.tensor, disp: torch.tensor) -> torch.tensor:
+        return ImgHandler.warp_img(img, -disp)
+
+    @staticmethod
+    def generate_image_right(img: torch.tensor, disp: torch.tensor) -> torch.tensor:
+        return ImgHandler.warp_img(img, disp)
+
+    @staticmethod
+    def disp_smoothness(disp: torch.tensor, pyramid: torch.tensor, num_scales: int) -> list:
+        disp_gradients_x = [ImgHandler.gradient_x(d) for d in disp]
+        disp_gradients_y = [ImgHandler.gradient_y(d) for d in disp]
+
+        image_gradients_x = [ImgHandler.gradient_x(img) for img in pyramid]
+        image_gradients_y = [ImgHandler.gradient_y(img) for img in pyramid]
+
+        weights_x = [torch.exp(-torch.mean(torch.abs(g), 1,
+                                           keepdim=True)) for g in image_gradients_x]
+        weights_y = [torch.exp(-torch.mean(torch.abs(g), 1,
+                                           keepdim=True)) for g in image_gradients_y]
+
+        smoothness_x = [disp_gradients_x[i] * weights_x[i]
+                        for i in range(num_scales)]
+        smoothness_y = [disp_gradients_y[i] * weights_y[i]
+                        for i in range(num_scales)]
+
+        return [torch.abs(smoothness_x[i]) + torch.abs(smoothness_y[i])
+                for i in range(num_scales)]
+
+    @staticmethod
+    def gradient_x(img: torch.tensor) -> torch.tensor:
+        # Pad input to keep output size consistent
+        img = F.pad(img, (0, 1, 0, 0), mode="replicate")
+        gx = img[:, :, :, :-1] - img[:, :, :, 1:]  # NCHW
+        return gx
+
+    @staticmethod
+    def gradient_y(img: torch.tensor) -> torch.tensor:
+        # Pad input to keep output size consistent
+        img = F.pad(img, (0, 0, 0, 1), mode="replicate")
+        gy = img[:, :, :-1, :] - img[:, :, 1:, :]  # NCHW
+        return gy

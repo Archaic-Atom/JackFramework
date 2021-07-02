@@ -51,6 +51,15 @@ $ ./clean.sh
 .
 ├── Source # source code
 │   ├── JackFramework/
+|   |   ├── Contrib/
+|   |   ├── DatasetReader/
+|   |   ├── Evalution/
+|   |   ├── NN/
+|   |   ├── Proc/
+|   |   ├── SysBasic/
+|   |   ├── UserTemplate/
+|   |   ├── FileHandler/ 
+│   |   └── ...
 │   ├── setup.py
 │   └── ...
 ├── LICENSE
