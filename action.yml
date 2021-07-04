@@ -3,10 +3,19 @@ name: Build env action for github
 runs:
   using: "composite"
   steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
     # build env
     - run: conda env create -f environment.yml
       shell: bash
-    - run: conda activate JackFramework-torch1.7.1
+    - run: source ${CONDA}/bin/activate JackFramework-torch1.7.1
       shell: bash
     # install flake8
     - run: conda install flake8
@@ -18,4 +27,9 @@ runs:
       shell: bash
     # install the lib
     - run: sh install.sh
+      shell: bash
+    # test the JackFramework
+    - run: |
+        source ${CONDA}/bin/activate JackFramework-torch1.7.1
+        python -c "import JackFramework as jf; print(jf.version())"
       shell: bash
