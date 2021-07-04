@@ -34,8 +34,8 @@ class StereoDataset(Dataset):
         self.__left_img_path = input_dataframe["left_img"].values
         self.__right_img_path = input_dataframe["right_img"].values
 
-        self.__img_read_func, self.__label_read_func = self.__read_func(
-            args.dataset)
+        self.__img_read_func, self.__label_read_func = \
+            self.__read_func(args.dataset)
 
         if is_training:
             self.__gt_dsp_path = input_dataframe["gt_disp"].values

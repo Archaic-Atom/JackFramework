@@ -9,6 +9,7 @@ from .data_handler_manager import DataHandlerManager
 
 from JackFramework.SysBasic.loghander import LogHandler as log
 from JackFramework.SysBasic.processbar import ShowProcess
+from JackFramework.FileHandler.tensorboard_handler import TensorboardHandler
 
 
 class Executor(object):
@@ -24,6 +25,7 @@ class Executor(object):
 
         self.__data_manager = None
         self.__graph = None
+        self.__tensorboard_handler = TensorboardHandler(args)
 
         if args.dist:
             self.__training_iteration = math.ceil(
@@ -122,6 +124,8 @@ class Executor(object):
             duration = time.time() - start_time
             data_manager.show_training_info(
                 epoch, ave_tower_loss, ave_tower_acc, duration, is_training)
+
+            self.__tensorboard_handler.write_data(epoch, ave_tower_loss, ave_tower_acc, bar_info)
 
             if total_iteration != training_iteration:
                 log.warning("The input images numbers is different the number of datasets!")
