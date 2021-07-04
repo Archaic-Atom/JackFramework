@@ -141,11 +141,8 @@ class ImgHandler(object):
         # Apply shift in X direction
         x_shifts = disp[:, 0, :, :]  # Disparity is passed in NCHW format with 1 channel
         flow_field = torch.stack((x_base + x_shifts, y_base), dim=3)
-        # In grid_sample coordinates are assumed to be between -1 and 1
-        output = F.grid_sample(img, 2 * flow_field - 1, mode='bilinear',
+        return F.grid_sample(img, 2 * flow_field - 1, mode='bilinear',
                                padding_mode='zeros')
-
-        return output
 
     @staticmethod
     def generate_image_left(img: torch.tensor, disp: torch.tensor) -> torch.tensor:
@@ -180,12 +177,10 @@ class ImgHandler(object):
     def gradient_x(img: torch.tensor) -> torch.tensor:
         # Pad input to keep output size consistent
         img = F.pad(img, (0, 1, 0, 0), mode="replicate")
-        gx = img[:, :, :, :-1] - img[:, :, :, 1:]  # NCHW
-        return gx
+        return img[:, :, :, :-1] - img[:, :, :, 1:]
 
     @staticmethod
     def gradient_y(img: torch.tensor) -> torch.tensor:
         # Pad input to keep output size consistent
         img = F.pad(img, (0, 0, 0, 1), mode="replicate")
-        gy = img[:, :, :-1, :] - img[:, :, 1:, :]  # NCHW
-        return gy
+        return img[:, :, :-1, :] - img[:, :, 1:, :]
