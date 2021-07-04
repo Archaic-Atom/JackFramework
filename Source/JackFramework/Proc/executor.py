@@ -25,7 +25,7 @@ class Executor(object):
 
         self.__data_manager = None
         self.__graph = None
-        self.__tensorboard_handler = TensorboardHandler(args)
+        self.__tensorboard_handler = None
 
         if args.dist:
             self.__training_iteration = math.ceil(
@@ -39,10 +39,13 @@ class Executor(object):
     def __init_datahandler_modelhandler(self, rank: object) -> object:
         args = self.__args
 
-        if args.dist and rank == Executor.DEFAULT_RANK_ID:
+        if not args.dist:
+            self.__tensorboard_handler = TensorboardHandler(args)
+        elif args.dist and rank == Executor.DEFAULT_RANK_ID:
             # dist reinit log
             log().init_log(args.outputDir, args.pretrain)
             log().info("LogHandler is reinitialized!")
+            self.__tensorboard_handler = TensorboardHandler(args)
 
         model, dataloader = self.__user_inference_func(self.__args)
         assert model is not None and dataloader is not None
