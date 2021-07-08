@@ -34,3 +34,26 @@ class Accuracy(object):
                 acc_res.append(error_rate)
             mae = error.sum() / (total_num + ACC_EPSILON)
         return acc_res, mae
+
+    @staticmethod
+    def r2_score(res: tensor, gt: tensor) -> tensor:
+        gt_mean = torch.mean(gt)
+        ss_tot = torch.sum((gt - gt_mean) ** 2)
+        ss_res = torch.sum((gt - res) ** 2)
+        r2 = 1 - ss_res / ss_tot
+        return r2
+
+    @staticmethod
+    def rmse_score(res: tensor, gt: tensor) -> tensor:
+        return torch.sqrt(torch.mean((res - gt)**2))
+
+
+def debug_main():
+    pred = torch.rand(10, 600)
+    gt = torch.rand(10, 600)
+    out = Accuracy.rmse_score(pred, gt)
+    print(out)
+
+
+if __name__ == "__main__":
+    debug_main()
