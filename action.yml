@@ -15,18 +15,17 @@ runs:
     # build env
     - run: conda env create -f environment.yml
       shell: bash
-    - run: source ${CONDA}/bin/activate JackFramework-torch1.7.1
-      shell: bash
     # install flake8
-    - run: conda install flake8
-      shell: bash
-    # use flake8 to check code (opt)
-    - run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-      shell: bash
-    - run: flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - run: |
+        source ${CONDA}/bin/activate JackFramework-torch1.7.1
+        conda install flake8
+        lake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       shell: bash
     # install the lib
-    - run: sh install.sh
+    - run: |
+        source ${CONDA}/bin/activate JackFramework-torch1.7.1
+        sh install.sh
       shell: bash
     # test the JackFramework
     - run: |

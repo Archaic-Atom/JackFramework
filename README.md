@@ -2,22 +2,20 @@
 
 #### 0. Software Environment
 **1) OS Environment**
-os >= linux 16.04
-
-cudaToolKit == 10.1
-
-cudnn == 7.3.6
+```
+$ os >= linux 16.04
+$ cudaToolKit >= 10.1
+$ cudnn >= 7.3.6
+```
 
 **2) Python Environment**
-python == 3.8.5
-
-pythorch >= 1.15.0
-
-numpy == 1.14.5
-
-opencv == 3.4.0
-
-PIL == 5.1.0
+```
+$ python == 3.8.5
+$ pythorch >= 1.15.0
+$ numpy == 1.14.5
+$ opencv == 3.4.0
+$ PIL == 5.1.0
+```
 
 #### 1. Hardware Environment
 This framework is only used in GPUs.
@@ -37,11 +35,11 @@ $ ./install.sh
 $ python -c "import JackFramework as jf; print(jf.version())"
 ```
 
-**3) the template for using the JackFramework**
+**4) the template for using the JackFramework**
 
 you can find the template project in: https://github.com/Archaic-Atom/FameworkTemplate
 
-**4) Clean the project**
+**5) Clean the project (if you want to clean generating files)**
 ```
 $ ./clean.sh
 ```
@@ -65,6 +63,12 @@ $ ./clean.sh
 ├── LICENSE
 └── README.md
 ```
+
+---
+#### To do
+#### 2021-07-10
+1. rewirte the readme;
+2. code refacotoring for contrib
 
 ---
 #### Update log
