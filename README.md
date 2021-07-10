@@ -1,3 +1,5 @@
+[![build test](https://github.com/Archaic-Atom/JackFramework/actions/workflows/build%20test.yml/badge.svg?event=push)](https://github.com/Archaic-Atom/JackFramework/actions/workflows/build%20test.yml)
+
 >This is a training framework based on pythorch, if you have any question please send an e-mail to raoxi36@foxmail.com
 
 #### 0. Software Environment
