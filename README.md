@@ -4,7 +4,8 @@
 ![cuDnn 7.3.6](https://img.shields.io/badge/cudnn-7.3.6-green.svg?style=plastic)
 ![License MIT](https://img.shields.io/badge/license-MIT-green.svg?style=plastic)
 
->This is a training framework based on pythorch, if you have any question please send an e-mail to raoxi36@foxmail.com
+>This is a training framework based on pythorch, which is used to rapidly build the model, without caring about the training process (such as DDP or DP, Tensorboard, et al.). The demo for use can be find in FrameworkTemplate (https://github.com/Archaic-Atom/FrameworkTemplate). if you have any questions, please send an e-mail to raoxi36@foxmail.com
+
 
 --- 
 #### 0. Software Environment
