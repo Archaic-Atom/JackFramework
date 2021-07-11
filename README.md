@@ -1,7 +1,12 @@
 [![build test](https://github.com/Archaic-Atom/JackFramework/actions/workflows/build%20test.yml/badge.svg?event=push)](https://github.com/Archaic-Atom/JackFramework/actions/workflows/build%20test.yml)
+![Python 3.8](https://img.shields.io/badge/python-3.8-green.svg?style=plastic)
+![Pytorch 1.7](https://img.shields.io/badge/PyTorch%20-%23EE4C2C.svg?style=plastic)
+![cuDnn 7.3.6](https://img.shields.io/badge/cudnn-7.3.6-green.svg?style=plastic)
+![License MIT](https://img.shields.io/badge/license-MIT-green.svg?style=plastic)
 
 >This is a training framework based on pythorch, if you have any question please send an e-mail to raoxi36@foxmail.com
 
+--- 
 #### 0. Software Environment
 **1) OS Environment**
 ```
@@ -19,9 +24,11 @@ $ opencv == 3.4.0
 $ PIL == 5.1.0
 ```
 
+---
 #### 1. Hardware Environment
 This framework is only used in GPUs.
 
+---
 #### 2. How to use our framework:
 **1) Build env**
 ```
@@ -45,7 +52,7 @@ you can find the template project in: https://github.com/Archaic-Atom/FameworkTe
 ```
 $ ./clean.sh
 ```
-
+---
 #### 3. File Structure
 ```
 .
