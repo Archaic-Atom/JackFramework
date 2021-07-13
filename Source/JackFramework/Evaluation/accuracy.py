@@ -40,18 +40,18 @@ class Accuracy(object):
         gt_mean = torch.mean(gt)
         ss_tot = torch.sum((gt - gt_mean) ** 2)
         ss_res = torch.sum((gt - res) ** 2)
-        r2 = 1 - ss_res / ss_tot
+        r2 = ss_res / ss_tot
         return r2
 
     @staticmethod
-    def rmse_score(res: tensor, gt: tensor) -> tensor:
-        return torch.sqrt(torch.mean((res - gt)**2))
+    def rmspe_score(res: tensor, gt: tensor) -> tensor:
+        return torch.sqrt(torch.mean((res - gt)**2 / gt))
 
 
 def debug_main():
     pred = torch.rand(10, 600)
     gt = torch.rand(10, 600)
-    out = Accuracy.rmse_score(pred, gt)
+    out = Accuracy.r2_score(pred, gt)
     print(out)
 
 

@@ -53,6 +53,25 @@ class Layer(object):
         return layer
 
     @staticmethod
+    def conv_1d_layer(in_channels: int, out_channels: int, kernel_size: int,
+                      stride: int = 1, padding: int = 1, dilation: int = 1,
+                      bias: bool = False, norm: bool = True,
+                      act: bool = True) -> object:
+        layer = [
+            Ops.conv_1d(
+                in_channels,
+                out_channels,
+                kernel_size,
+                stride,
+                padding,
+                dilation,
+                bias=bias,
+            )
+        ]
+        layer = Layer.norm_act_layer(layer, out_channels, norm, act)
+        return nn.Sequential(*layer)
+
+    @staticmethod
     def conv_2d_layer(in_channels: int, out_channels: int, kernel_size: int,
                       stride: int = 1, padding: int = 1, dilation: int = 1,
                       bias: bool = False, norm: bool = True,

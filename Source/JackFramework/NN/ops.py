@@ -16,6 +16,15 @@ class Ops(object):
         return cls.__OPS
 
     @staticmethod
+    def conv_1d(in_channels: int, out_channels: int, kernel_size: int,
+                stride: int = 1, padding: int = 0, dilation: int = 1,
+                groups: int = 1, bias: bool = False,
+                padding_mode: str = 'circular') -> object:
+        return nn.Conv1d(in_channels, out_channels, kernel_size,
+                         stride, padding, dilation, groups,
+                         bias, padding_mode)
+
+    @staticmethod
     def conv_2d(in_channels: int, out_channels: int, kernel_size: int,
                 stride: int = 1, padding: int = 0, dilation: int = 1,
                 groups: int = 1, bias: bool = False,
