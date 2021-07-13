@@ -40,8 +40,7 @@ class Accuracy(object):
         gt_mean = torch.mean(gt)
         ss_tot = torch.sum((gt - gt_mean) ** 2)
         ss_res = torch.sum((gt - res) ** 2)
-        r2 = ss_res / ss_tot
-        return r2
+        return ss_res / ss_tot
 
     @staticmethod
     def rmspe_score(res: tensor, gt: tensor) -> tensor:
