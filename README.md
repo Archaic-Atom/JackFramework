@@ -49,6 +49,35 @@ $ python -c "import JackFramework as jf; print(jf.version())"
 
 you can find the template project in: https://github.com/Archaic-Atom/FameworkTemplate
 
+**Related Arguments for training or testing process**
+|   Args        |   Type  |      Description                 | Default         |
+|:-------------:|:-------:|:--------------------------------:|:---------------:|
+| mode          |  [str]  |         train or test            |  train          |
+| gpu           |  [int]  |        the number of gpus        |    2            |
+| auto_save_num |  [int]  | the number of interval save      |    1            |
+| dataloaderNum |  [int]  |  the number of dataloders        |    8            |
+| pretrain      |  [bool] |    is a new traning process>     |  False          |
+| ip            |  [str]  | used for distributed training    | 127.0.0.1       |
+| port          |  [str]  | used for distributed training    | 8086            |
+| dist          |  [bool] | distributed training (DDP)       | True            |
+| trainListPath |  [str]  | the list for training or testing | ./Datasets/*.csv|
+| valListPath   |  [str]  | the list for validate process    | ./Datasets/*.csv|
+| outputDir     |  [str]  | the folder for log file          | ./Result/       |
+| modelDir      |  [str]  | the folder for saving model      | ./Checkpoint/   |
+| resultImgDir  |  [str]  | the folder for output            | ./ResultImg/    |
+| log           |  [str]  | the folder for tensorboard       | ./log/          |
+| sampleNum     |  [int]  | the number of sample for data    | 1               |
+| batchSize     |  [int]  | batch size                       | 4               |
+| lr            |  [float]| leanring rate                    | 0.001           |
+| maxEpochs     |  [int]  | training epoch                   | 30              |
+| imgWidth      |  [int]  | the croped width                 | 512             |
+| imgHeight     |  [int]  | the croped height                | 256             |
+| imgNum        |  [int]  | the number of images for tranin  | 35354           |
+| valImgNum     |  [int]  | the number of images for val     | 200             |
+| modelName     |  [str]  | the model's name                 | NLCA-Net        |
+| dataset       |  [str]  | the dataset's name               | SceneFlow       |
+
+
 **5) Clean the project (if you want to clean generating files)**
 ```
 $ ./clean.sh
