@@ -38,7 +38,7 @@ class Accuracy(object):
     @staticmethod
     def r2_score(res: tensor, gt: tensor) -> tensor:
         gt_mean = torch.mean(gt)
-        ss_tot = torch.sum((gt - gt_mean) ** 2)
+        ss_tot = torch.sum((gt - gt_mean) ** 2) + ACC_EPSILON
         ss_res = torch.sum((gt - res) ** 2)
         r2 = ss_res / ss_tot
         return r2
