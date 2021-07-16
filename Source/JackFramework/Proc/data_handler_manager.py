@@ -55,8 +55,8 @@ class DataHandlerManager(object):
 
             if args.dist:
                 val_sampler = torch.utils.data.distributed.DistributedSampler(
-                    tranining_dataset, shuffle=False)
-                self.__args.dataloaderNum = 0
+                    val_dataset, shuffle=False)
+                # self.__args.dataloaderNum = 0
 
             val_dataloader = torch.utils.data.DataLoader(
                 val_dataset,
