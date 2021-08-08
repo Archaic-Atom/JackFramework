@@ -33,12 +33,12 @@ class StereoDataset(Dataset):
         input_dataframe = pd.read_csv(list_path)
         self.__left_img_path = input_dataframe["left_img"].values
         self.__right_img_path = input_dataframe["right_img"].values
+        self.__gt_dsp_path = input_dataframe["gt_disp"].values
 
         self.__img_read_func, self.__label_read_func = \
             self.__read_func(args.dataset)
 
         if is_training:
-            self.__gt_dsp_path = input_dataframe["gt_disp"].values
             self.__get_path = self._get_training_path
             self.__data_steam = list(
                 zip(self.__left_img_path,
@@ -113,13 +113,14 @@ class StereoDataset(Dataset):
             self.__right_img_path[idx], self.__gt_dsp_path[idx]
 
     def _get_testing_path(self, idx: int) -> list:
-        return self.__left_img_path[idx], self.__right_img_path[idx], None
+        return self.__left_img_path[idx], self.__right_img_path[idx], \
+            self.__gt_dsp_path[idx]
 
     def _get_data(self, left_img_path, right_img_path, gt_dsp_path):
         if self.__is_training:
             return self._read_training_data(left_img_path,
                                             right_img_path, gt_dsp_path)
-        return self._read_testing_data(left_img_path, right_img_path)
+        return self._read_testing_data(left_img_path, right_img_path, gt_dsp_path)
 
     def _get_img_read_func(self):
         return self.__img_read_func, self.__label_read_func
@@ -156,8 +157,15 @@ class StereoDataset(Dataset):
         right_img = right_img.transpose(2, 0, 1)
         return left_img, right_img, gt_dsp
 
+    @staticmethod
+    def _padding_size(value: int, base: int = 64) -> int:
+        off_set = 1
+        times = value // base + off_set
+        return times * base
+
     def _read_testing_data(self, left_img_path: str,
-                           right_img_path: str) -> object:
+                           right_img_path: str,
+                           gt_dsp_path: str) -> object:
         args = self.__args
 
         left_img = np.array(self.__img_read_func(left_img_path))
@@ -167,8 +175,11 @@ class StereoDataset(Dataset):
         right_img = DataAugmentation.standardize(right_img)
 
         # pading size
-        top_pad = args.imgHeight - left_img.shape[0]
-        left_pad = args.imgWidth - right_img.shape[1]
+        padding_height = self._padding_size(left_img.shape[0])
+        padding_width = self._padding_size(left_img.shape[1])
+
+        top_pad = padding_height - left_img.shape[0]
+        left_pad = padding_width - right_img.shape[1]
 
         # pading
         left_img = np.lib.pad(left_img, ((
@@ -181,6 +192,14 @@ class StereoDataset(Dataset):
         left_img = left_img.transpose(2, 0, 1)
         right_img = right_img.transpose(2, 0, 1)
 
+        gt_dsp = None
+        if gt_dsp_path is not None:
+            # print(gt_dsp_path)
+            gt_dsp = np.array(self.__label_read_func(gt_dsp_path))
+            gt_dsp = np.lib.pad(gt_dsp, ((
+                top_pad, 0), (0, left_pad)),
+                mode='constant', constant_values=0)
+
         name = ""
         if args.dataset in ["eth3d", "middlebury"]:
             off_set = 1
@@ -189,7 +208,7 @@ class StereoDataset(Dataset):
             pos = left_name.rfind('/')
             name = left_name[pos + off_set:]
 
-        return left_img, right_img, top_pad, left_pad, name
+        return left_img, right_img, gt_dsp, top_pad, left_pad, name
 
     def __len__(self):
         return len(self.__data_steam)

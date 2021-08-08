@@ -13,25 +13,25 @@ class hourglass(nn.Module):
     def __init__(self, inplanes):
         super(hourglass, self).__init__()
 
-        self.conv1 = nn.Sequential(convbn_3d(inplanes, inplanes*2, kernel_size=3, stride=2, pad=1),
+        self.conv1 = nn.Sequential(convbn_3d(inplanes, inplanes * 2, kernel_size=3, stride=2, pad=1),
                                    nn.ReLU(inplace=True))
 
-        self.conv2 = convbn_3d(inplanes*2, inplanes*2, kernel_size=3, stride=1, pad=1)
+        self.conv2 = convbn_3d(inplanes * 2, inplanes * 2, kernel_size=3, stride=1, pad=1)
 
-        self.conv3 = nn.Sequential(convbn_3d(inplanes*2, inplanes*2,
+        self.conv3 = nn.Sequential(convbn_3d(inplanes * 2, inplanes * 2,
                                              kernel_size=3, stride=2, pad=1),
                                    nn.ReLU(inplace=True))
 
-        self.conv4 = nn.Sequential(convbn_3d(inplanes*2, inplanes*2,
+        self.conv4 = nn.Sequential(convbn_3d(inplanes * 2, inplanes * 2,
                                              kernel_size=3, stride=1, pad=1),
                                    nn.ReLU(inplace=True))
 
-        self.conv5 = nn.Sequential(nn.ConvTranspose3d(inplanes*2, inplanes*2,
+        self.conv5 = nn.Sequential(nn.ConvTranspose3d(inplanes * 2, inplanes * 2,
                                                       kernel_size=3, padding=1, output_padding=1,
                                                       stride=2, bias=False),
-                                   nn.BatchNorm3d(inplanes*2))  # +conv2
+                                   nn.BatchNorm3d(inplanes * 2))  # +conv2
 
-        self.conv6 = nn.Sequential(nn.ConvTranspose3d(inplanes*2, inplanes, kernel_size=3,
+        self.conv6 = nn.Sequential(nn.ConvTranspose3d(inplanes * 2, inplanes, kernel_size=3,
                                                       padding=1, output_padding=1, stride=2,
                                                       bias=False),
                                    nn.BatchNorm3d(inplanes))  # +x
@@ -49,9 +49,9 @@ class hourglass(nn.Module):
         out = self.conv4(out)  # in:1/16 out:1/16
 
         if presqu is not None:
-            post = F.relu(self.conv5(out)+presqu, inplace=True)  # in:1/16 out:1/8
+            post = F.relu(self.conv5(out) + presqu, inplace=True)  # in:1/16 out:1/8
         else:
-            post = F.relu(self.conv5(out)+pre, inplace=True)
+            post = F.relu(self.conv5(out) + pre, inplace=True)
 
         out = self.conv6(post)  # in:1/8 out:1/4
 
@@ -100,7 +100,7 @@ class PSMNet(nn.Module):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
                 m.weight.data.normal_(0, math.sqrt(2. / n))
             elif isinstance(m, nn.Conv3d):
-                n = m.kernel_size[0] * m.kernel_size[1]*m.kernel_size[2] * m.out_channels
+                n = m.kernel_size[0] * m.kernel_size[1] * m.kernel_size[2] * m.out_channels
                 m.weight.data.normal_(0, math.sqrt(2. / n))
             elif isinstance(m, (nn.BatchNorm2d, nn.BatchNorm3d)):
                 m.weight.data.fill_(1)
@@ -115,12 +115,12 @@ class PSMNet(nn.Module):
 
         # matching
         cost = Variable(torch.FloatTensor(refimg_fea.size()[0],
-                                          refimg_fea.size()[1]*2,
-                                          int(self.maxdisp/4),
+                                          refimg_fea.size()[1] * 2,
+                                          int(self.maxdisp / 4),
                                           refimg_fea.size()[2],
                                           refimg_fea.size()[3]).zero_()).cuda()
 
-        for i in range(int(self.maxdisp/4)):
+        for i in range(int(self.maxdisp / 4)):
             if i > 0:
                 cost[:, :refimg_fea.size()[1], i, :, i:] = refimg_fea[:, :, :, i:]
                 cost[:, refimg_fea.size()[1]:, i, :, i:] = targetimg_fea[:, :, :, :-i]
@@ -133,13 +133,13 @@ class PSMNet(nn.Module):
         cost0 = self.dres1(cost0) + cost0
 
         out1, pre1, post1 = self.dres2(cost0, None, None)
-        out1 = out1+cost0
+        out1 = out1 + cost0
 
         out2, pre2, post2 = self.dres3(out1, pre1, post1)
-        out2 = out2+cost0
+        out2 = out2 + cost0
 
         out3, pre3, post3 = self.dres4(out2, pre1, post2)
-        out3 = out3+cost0
+        out3 = out3 + cost0
 
         cost1 = self.classif1(out1)
         cost2 = self.classif2(out2) + cost1
