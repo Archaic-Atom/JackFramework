@@ -1,6 +1,6 @@
-from img_handler import ImgHandler 
-from data_augmentation import DataAugmentation 
-from img_io import ImgIO 
+from img_handler import ImgHandler
+from data_augmentation import DataAugmentation
+from img_io import ImgIO
 import numpy as np
 
 
