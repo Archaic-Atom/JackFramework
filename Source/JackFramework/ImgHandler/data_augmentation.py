@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import random
-from PIL import Image
 
 EPSILON = 1e-9
-
 
 class DataAugmentation(object):
     """docstring for ClassName"""
@@ -25,27 +23,13 @@ class DataAugmentation(object):
         var = np.var(img, axis=(0, 1), keepdims=True)
         mean = np.mean(img, axis=(0, 1), keepdims=True)
         return (img - mean) / (np.sqrt(var) + EPSILON)
-
-    @staticmethod
-    def img_slice_3d(img: np.array, x: int, y: int,
-                     w: int, h: int) -> np.array:
-        return img[y:y + h, x:x + w, :]
-
-    @staticmethod
-    def img_slice_2d(img: np.array, x: int, y: int,
-                     w: int, h: int) -> np.array:
-        return img[y:y + h, x:x + w]
     
     @staticmethod
     def random_crop(imgs: list, w: int, h: int,
                     crop_w: int, crop_h: int) -> list:
         x,y = DataAugmentation.random_org(w, h, crop_w, crop_h)
-        if len(imgs[0].shape) == 2:
-            imgs = list(map(lambda img: img[y:y + crop_h, \
-                                x:x + crop_w], imgs))
-        elif len(imgs[0].shape) == 3:
-            imgs = list(map(lambda img: img[y:y + crop_h, \
-                                x:x + crop_w, :], imgs))     
+        imgs = list(map(lambda img: img[y:y + crop_h, \
+                            x:x + crop_w, :], imgs))     
         return imgs
     
     @staticmethod
@@ -65,8 +49,11 @@ class DataAugmentation(object):
             imgs = list(map(lambda img: np.flip(img, 1), imgs))
             return imgs
 
-if __name__ == "__main__":
-    img = Image.open('1.jpg')
+
+
+def debug_main():
+    from PIL import Image
+    img = Image.open('Source/TestExample/DataAugSample.jpg')
     img = np.array(img)
     imgs = []
     imgs.append(img)
@@ -78,9 +65,15 @@ if __name__ == "__main__":
     img_rotate = Image.fromarray(img_rotate[0])
     img_flip =  Image.fromarray(img_flip[0])
     
-    img_crop = img_crop.save('img_crop.png')
-    img_rotate = img_rotate.save('img_rotate.png')
-    img_flip =  img_flip.save('img_flip.png')
+    img_crop = img_crop.save('Source/TestExample/DataAug_crop.png')
+    img_rotate = img_rotate.save('Source/TestExample/DataAug_rotate.png')
+    img_flip =  img_flip.save('Source/TestExample/DataAug_flip.png')
+
+
+
+if __name__ == "__main__":
+    debug_main()
+    
 
 
 
