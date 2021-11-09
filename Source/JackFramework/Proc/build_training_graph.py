@@ -135,10 +135,10 @@ class BuildGraph(object):
         if checkpoint_path is not None and os.path.isfile(checkpoint_path):
             checkpoint = ModelSaver.load_checkpoint(checkpoint_path, rank)
             for i, _ in enumerate(self.__model):
-                if self.__jf_model.load_model(self.__model[i], checkpoint, i) == False:
+                if self.__jf_model.load_model(self.__model[i], checkpoint, i) is False:
                     ModelSaver.load_model(self.__model[i], checkpoint, i)
 
-                if self.__jf_model.load_opt(self.__opt[i], checkpoint, i) == False:
+                if self.__jf_model.load_opt(self.__opt[i], checkpoint, i) is False:
                     ModelSaver.load_opt(self.__opt[i], checkpoint, i)
         else:
             log.warning("no checkpoint found at '{}'".format(checkpoint_path))
