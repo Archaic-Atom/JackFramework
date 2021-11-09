@@ -11,7 +11,7 @@ class ImgHandler(object):
         super().__init__()
 
     @staticmethod
-    def img_tensor(imgs: list) -> list:
+    def hwc2cwh(imgs: list) -> list:
         imgs = list(map(lambda img: torch.Tensor(\
                         img.transpose(2,0,1)), imgs))
         return imgs
