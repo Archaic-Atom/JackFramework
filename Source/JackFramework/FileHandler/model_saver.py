@@ -37,8 +37,7 @@ class ModelSaver(object):
     @staticmethod
     def load_checkpoint(file_path: str, rank: object = None) -> object:
         map_location = {'cuda:%d' % 0: 'cuda:%d' % rank} if rank is not None else None
-        checkpoint = torch.load(file_path, map_location)
-        return checkpoint
+        return torch.load(file_path, map_location)
 
     @staticmethod
     def load_model(model: object, checkpoint: dict, model_id: int) -> None:
@@ -55,9 +54,7 @@ class ModelSaver(object):
     @staticmethod
     def construct_model_dict(epoch: int, model_list: list, opt_list: list) -> dict:
         assert len(model_list) == len(opt_list)
-        model_dict = {}
-        model_dict['epoch'] = epoch
-
+        model_dict = {'epoch': epoch}
         for i, _ in enumerate(model_list):
             model_name = 'model_%d' % i
             opt_name = 'opt_%d' % i
