@@ -76,39 +76,84 @@ class BuildGraph(object):
         log.info("Successfully get user's optimizer!")
         return opt, sch
 
+    def __calculation_process(self, model_item: object, input_data: list, label_data: list,
+                              model_id: int, is_training: bool = True) -> tuple:
+        output_data = None
+        loss = None
+        acc = None
+
+        # get ouput
+        output_data = self.__jf_model.inference(model_item, input_data, model_id)
+        # loss and acc
+        if is_training:
+            loss = self.__jf_model.loss(output_data, label_data, model_id)
+            acc = self.__jf_model.accuary(output_data, label_data, model_id)
+
+        return output_data, loss, acc
+
     def __reduce_tensor(self, data: torch.tensor) -> torch.tensor:
         dist.all_reduce(data, op=dist.ReduceOp.SUM)
         return data
 
+    def __pass_data2device(self, data: list) -> list:
+        args = self.__args
+
+        if args.dist:
+            for i, data_item in enumerate(data):
+                data[i] = data_item.cuda(non_blocking=True)
+        else:
+            assert self.__device is not None
+            for i, data_item in enumerate(data):
+                data[i] = data_item.to(self.__device)
+
+        return data
+
+    def __variable2tensor(self, data: list) -> None:
+        res = []
+        args = self.__args
+        for _, data_item in enumerate(data):
+            if args.dist:
+                log_data = self.__reduce_tensor(
+                    data_item.clone().detach_() / (args.gpu))
+                res.append(log_data.item())
+            else:
+                res.append(data_item.item())
+        return res
+
     def cleanup(self):
         self.__device_manager.cleanup()
-
-    def restore_model(self, rank: object) -> None:
-        args = self.__args
-        checkpoint_path = ModelSaver.get_check_point_path(args.modelDir)
-
-        if checkpoint_path is not None and os.path.isfile(checkpoint_path):
-            for i, _ in enumerate(self.__model):
-                ModelSaver.load_model(self.__model[i], checkpoint_path, rank)
-                ModelSaver.load_opt(self.__opt[i], checkpoint_path, rank)
-        else:
-            log.warning("no checkpoint found at '{}'".format(checkpoint_path))
 
     def count_parameter_num(self) -> None:
         for i, model_item in enumerate(self.__model):
             num_params = sum(param.numel() for param in model_item.parameters())
             log.info('Model ' + str(i) + ': The total parameter - %d' % num_params)
 
+    def restore_model(self, rank: object) -> None:
+        args = self.__args
+        checkpoint_path = ModelSaver.get_check_point_path(args.modelDir)
+
+        if checkpoint_path is not None and os.path.isfile(checkpoint_path):
+            checkpoint = ModelSaver.load_checkpoint(checkpoint_path, rank)
+            for i, _ in enumerate(self.__model):
+                if self.__jf_model.load_model(self.__model[i], checkpoint, i) == False:
+                    ModelSaver.load_model(self.__model[i], checkpoint, i)
+
+                if self.__jf_model.load_opt(self.__opt[i], checkpoint, i) == False:
+                    ModelSaver.load_opt(self.__opt[i], checkpoint, i)
+        else:
+            log.warning("no checkpoint found at '{}'".format(checkpoint_path))
+
     def save_model(self, epoch: int) -> None:
         args = self.__args
         assert len(self.__model) == len(self.__opt)
-        for i, model_item in enumerate(self.__model):
-            file_name = sysdefine.CHECK_POINT_NAME % (i, epoch)
-            ModelSaver.save(args.modelDir, file_name,
-                            {'epoch': epoch,
-                             'state_dict': model_item.state_dict(),
-                             'optimizer': self.__opt[i].state_dict(),
-                             })
+        file_name = sysdefine.CHECK_POINT_NAME % epoch
+
+        model_dict = self.__jf_model.save_model(epoch, self.__model, self.__opt)
+
+        if model_dict is None:
+            model_dict = ModelSaver.construct_model_dict(epoch, self.__model, self.__opt)
+
+        ModelSaver.save(args.modelDir, file_name, model_dict)
 
     def set_model_mode(self, is_training: bool = True) -> None:
         if self.__model is None:
@@ -141,17 +186,14 @@ class BuildGraph(object):
 
         for i, model_item in enumerate(self.__model):
             self.__opt[i].zero_grad()
-            # get ouput
-            output_data = self.__jf_model.inference(model_item, input_data, i)
-            # loss and acc
-            loss = self.__jf_model.loss(output_data, label_data, i)
-            acc = self.__jf_model.accuary(output_data, label_data, i)
+            _, loss, acc = self.__calculation_process(model_item,
+                                                      input_data,
+                                                      label_data,
+                                                      i)
 
-            # grad and update
             loss[self.OPT_LOSS_ID].backward()
             self.__opt[i].step()
 
-            # to show
             tower_loss_iteration.append(self.__variable2tensor(loss))
             tower_acc_iteration.append(self.__variable2tensor(acc))
             if args.dist:
@@ -169,42 +211,17 @@ class BuildGraph(object):
         tower_acc_iteration = []
         with torch.no_grad():
             for i, model_item in enumerate(self.__model):
-                output_data = self.__jf_model.inference(model_item, input_data, i)
-                loss = self.__jf_model.loss(output_data, label_data, i)
+                _, loss, acc = self.__calculation_process(model_item,
+                                                          input_data,
+                                                          label_data,
+                                                          i)
                 tower_loss_iteration.append(self.__variable2tensor(loss))
-                acc = self.__jf_model.accuary(output_data, label_data, i)
                 tower_acc_iteration.append(self.__variable2tensor(acc))
 
                 if args.dist:
                     torch.cuda.synchronize()
 
         return tower_loss_iteration, tower_acc_iteration
-
-    def __pass_data2device(self, data: list) -> list:
-        args = self.__args
-
-        if args.dist:
-            for i, data_item in enumerate(data):
-                data[i] = data_item.cuda(non_blocking=True)
-            #data[i] = data_item.to(self.__rank)
-        else:
-            assert self.__device is not None
-            for i, data_item in enumerate(data):
-                data[i] = data_item.to(self.__device)
-
-        return data
-
-    def __variable2tensor(self, data: list) -> None:
-        res = []
-        args = self.__args
-        for _, data_item in enumerate(data):
-            if args.dist:
-                log_data = self.__reduce_tensor(
-                    data_item.clone().detach_() / (args.gpu))
-                res.append(log_data.item())
-            else:
-                res.append(data_item.item())
-        return res
 
     def cal_tower_loss_acc(self, tower_loss: list, tower_acc: list,
                            tower_loss_iteration: list,
@@ -223,7 +240,7 @@ class BuildGraph(object):
                 return
             self.__jf_model.lr_scheduler(sch_item, float(loss[i][0]), i)
             if rank == BuildGraph.DEFAULT_RANK_ID or rank is None:
-                log.info("Model " + str(i) + " Current lr: " +
+                log.info("Model_" + str(i) + " Current lr: " +
                          str(self.__opt[i].param_groups[self.OPT_LR_GROUP_ID]['lr']))
 
     def test_model(self, input_data: list) -> list:

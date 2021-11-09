@@ -37,3 +37,12 @@ class ModelHandlerTemplate(object):
     def loss(self, output_data: list, label_data: list, model_id: int) -> list:
         # return loss's list
         pass
+
+    def load_model(self, model: object, checkpoint: dict, model_id: int) -> bool:
+        return False
+
+    def load_opt(self, opt: object, checkpoint: dict, model_id: int) -> bool:
+        return False
+
+    def save_model(self, epoch: int, model_list: list, opt_list: list) -> dict:
+        return None
