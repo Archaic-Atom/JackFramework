@@ -34,12 +34,10 @@ class DataAugmentation(object):
     
     @staticmethod
     def random_rotate(imgs: list, thro=0.5) -> list:
-        if np.random.random() > thro:
-            return imgs
-        else:
+        if np.random.random() <= thro:
             rotote_k = np.random.randint(low=0, high=3)
             imgs = list(map(lambda img: np.rot90(img, rotote_k), imgs))
-            return imgs
+        return imgs
     
     @staticmethod
     def random_flip(imgs: list, thro=0.5) -> list:
@@ -55,8 +53,7 @@ def debug_main():
     from PIL import Image
     img = Image.open('TestExample/DataAugSample.jpg')
     img = np.array(img)
-    imgs = []
-    imgs.append(img)
+    imgs = [img]
     img_crop = DataAugmentation.random_crop(imgs, 947, 432, 400, 400)
     img_rotate = DataAugmentation.random_rotate(imgs, thro=1)
     img_flip =  DataAugmentation.random_flip(imgs, 1)
@@ -64,7 +61,7 @@ def debug_main():
     img_crop = Image.fromarray(img_crop[0])
     img_rotate = Image.fromarray(img_rotate[0])
     img_flip =  Image.fromarray(img_flip[0])
-    
+
     img_crop = img_crop.save('TestExample/DataAug_crop.png')
     img_rotate = img_rotate.save('TestExample/DataAug_rotate.png')
     img_flip =  img_flip.save('TestExample/DataAug_flip.png')

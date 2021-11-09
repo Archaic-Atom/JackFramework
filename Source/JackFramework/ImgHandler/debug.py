@@ -9,9 +9,7 @@ def debug_main():
     save_path = 'TestExample/'
     img1 = ImgIO.read_img(path)
     img2 = ImgIO.read_img(path)
-    imgs = []
-    imgs.append(img1)
-    imgs.append(img2)
+    imgs = [img1, img2]
     imgs = DataAugmentation.random_crop(imgs, 947, 432, 400, 400)
     # imgs = ImgHandler.img_tensor(imgs)
     print(imgs[0].shape, imgs[1].shape)
