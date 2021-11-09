@@ -35,38 +35,36 @@ class ModelSaver(object):
         return checkpoint_path
 
     @staticmethod
-    def load_model(model: object, file_path: str, rank: object = None) -> None:
+    def load_checkpoint(file_path: str, rank: object = None) -> object:
         map_location = {'cuda:%d' % 0: 'cuda:%d' % rank} if rank is not None else None
         checkpoint = torch.load(file_path, map_location)
+        return checkpoint
 
-        # model_dict = model.state_dict()
-        # pretrained_dict = {k: v for k, v in checkpoint['state_dict'].items() if k in model_dict}
-        # ignore_block = ['module.feature_extraction.block_1']
-
-        # for k, v in checkpoint['state_dict'].items():
-        #    print(k)
-
-        # pretrained_dict = {k: v for k,
-        #                   v in checkpoint['state_dict'].items() if k not in ignore_block}
-        # model_dict.update(pretrained_dict)
-        # model.load_state_dict(model_dict, strict=True)
-
-        model.load_state_dict(checkpoint['state_dict'], strict=True)
+    @staticmethod
+    def load_model(model: object, checkpoint: dict, model_id: int) -> None:
+        model_name = 'model_%d' % model_id
+        model.load_state_dict(checkpoint[model_name], strict=True)
         log.info("Model loaded successfully")
 
     @staticmethod
-    def load_opt(opt: object, file_path: str, rank: object = None) -> None:
-        map_location = {'cuda:%d' % 0: 'cuda:%d' % rank} if rank is not None else None
-        checkpoint = torch.load(file_path, map_location)
-
-        # opt_dict = opt.state_dict()
-        # pretrained_dict = {k: v for k, v in checkpoint['optimizer'].items() if k in opt_dict}
-        # print(pretrained_dict)
-        # opt_dict.update(pretrained_dict)
-        # opt.load_state_dict(opt_dict)
-
-        # opt.load_state_dict(checkpoint['optimizer'])
+    def load_opt(opt: object, checkpoint: str, model_id: int) -> None:
+        opt_name = 'optimizer_%d' % model_id
+        opt.load_state_dict(checkpoint[opt_name])
         log.info("opt loaded successfully")
+
+    @staticmethod
+    def construct_model_dict(epoch: int, model_list: list, opt_list: list) -> dict:
+        assert len(model_list) == len(opt_list)
+        model_dict = {}
+        model_dict['epoch'] = epoch
+
+        for i, _ in enumerate(model_list):
+            model_name = 'model_%d' % i
+            opt_name = 'opt_%d' % i
+            model_dict[model_name] = model_list[i].state_dict()
+            model_dict[opt_name] = opt_list[i].state_dict()
+
+        return model_dict
 
     @staticmethod
     def save(file_dir: str, file_name: str, model_dict: dict) -> None:
