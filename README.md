@@ -6,7 +6,7 @@
 
 >This is a training framework based on pythorch, which is used to rapidly build the model, without caring about the training process (such as DDP or DP, Tensorboard, et al.). The demo for use can be find in FrameworkTemplate (https://github.com/Archaic-Atom/FrameworkTemplate). if you have any questions, please send an e-mail to raoxi36@foxmail.com
 
-
+# add one people
 --- 
 #### 0. Software Environment
 **1) OS Environment**
