@@ -53,7 +53,7 @@ class DataAugmentation(object):
 
 def debug_main():
     from PIL import Image
-    img = Image.open('Source/TestExample/DataAugSample.jpg')
+    img = Image.open('TestExample/DataAugSample.jpg')
     img = np.array(img)
     imgs = []
     imgs.append(img)
@@ -65,9 +65,9 @@ def debug_main():
     img_rotate = Image.fromarray(img_rotate[0])
     img_flip =  Image.fromarray(img_flip[0])
     
-    img_crop = img_crop.save('Source/TestExample/DataAug_crop.png')
-    img_rotate = img_rotate.save('Source/TestExample/DataAug_rotate.png')
-    img_flip =  img_flip.save('Source/TestExample/DataAug_flip.png')
+    img_crop = img_crop.save('TestExample/DataAug_crop.png')
+    img_rotate = img_rotate.save('TestExample/DataAug_rotate.png')
+    img_flip =  img_flip.save('TestExample/DataAug_flip.png')
 
 
 

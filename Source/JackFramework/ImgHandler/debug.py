@@ -5,8 +5,8 @@ import numpy as np
 
 
 def debug_main():
-    path = 'Source/TestExample/DataAugSample.jpg'
-    save_path = 'Source/TestExample/'
+    path = 'TestExample/DataAugSample.jpg'
+    save_path = 'TestExample/'
     img1 = ImgIO.read_img(path)
     img2 = ImgIO.read_img(path)
     imgs = []
