@@ -19,9 +19,6 @@ from JackFramework.ImgHandler.img_handler import ImgHandler
 from JackFramework.Proc.application import Application
 from JackFramework.SysBasic.result_str import ResultStr
 
-# inner datasets
-import JackFramework.DatasetReader as dataset
-
 # loss
 from JackFramework.Evaluation.loss import Loss
 from JackFramework.Evaluation.accuracy import Accuracy
