@@ -72,12 +72,14 @@ class BuildGraph(object):
         log.info("Successfully get user's optimizer!")
         return opt, sch
 
-    def __init_tower_loss_and_tower_acc(self):
+    @staticmethod
+    def __init_tower_loss_and_tower_acc():
         tower_loss_iteration = []
         tower_acc_iteration = []
         return tower_loss_iteration, tower_acc_iteration
 
-    def __init_calculation_result(self):
+    @staticmethod
+    def __init_calculation_result():
         output_data = None
         loss = None
         acc = None
@@ -120,7 +122,8 @@ class BuildGraph(object):
 
         return output_data, loss, acc
 
-    def __reduce_tensor(self, data: torch.tensor) -> torch.tensor:
+    @staticmethod
+    def __reduce_tensor(data: torch.tensor) -> torch.tensor:
         dist.all_reduce(data, op=dist.ReduceOp.SUM)
         return data
 
@@ -199,8 +202,7 @@ class BuildGraph(object):
 
         for i, model_item in enumerate(self.__model):
             self.__opt[i].zero_grad()
-            _, loss, acc = self.__calculation_process(
-                model_item, input_data, label_data, i)
+            _, loss, acc = self.__calculation_process(model_item, input_data, label_data, i)
 
             loss[self.OPT_LOSS_ID].backward()
             self.__opt[i].step()
@@ -221,8 +223,7 @@ class BuildGraph(object):
 
         with torch.no_grad():
             for i, model_item in enumerate(self.__model):
-                _, loss, acc = self.__calculation_process(
-                    model_item, input_data, label_data, i)
+                _, loss, acc = self.__calculation_process(model_item, input_data, label_data, i)
                 tower_loss_iteration.append(self.__variable2tensor(loss))
                 tower_acc_iteration.append(self.__variable2tensor(acc))
 
@@ -231,7 +232,8 @@ class BuildGraph(object):
 
         return tower_loss_iteration, tower_acc_iteration
 
-    def cal_tower_loss_acc(self, tower_loss: list, tower_acc: list,
+    @staticmethod
+    def cal_tower_loss_acc(tower_loss: list, tower_acc: list,
                            tower_loss_iteration: list,
                            tower_acc_iteration: list,
                            total_iteration: int) -> list:
