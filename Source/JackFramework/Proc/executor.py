@@ -54,20 +54,18 @@ class Executor(object):
 
         return data_manager, graph
 
-    def __init_training_model(self, epoch: int, graph: BuildGraph,
-                              data_manager: DataHandlerManager,
-                              is_training: bool = True) -> tuple:
+    def __init_training_model(self, epoch: int, is_training: bool = True) -> tuple:
         total_iteration = 0
         off_set = 1
-
-        graph.set_model_mode(is_training)
-        dataloader = data_manager.get_dataloader(is_training)
-        data_manager.set_epoch(epoch, is_training)
-
         tower_loss = None
         tower_acc = None
         ave_tower_acc = None
         ave_tower_loss = None
+        graph, data_manager = self.__get_graph_and_data_manager()
+
+        graph.set_model_mode(is_training)
+        dataloader = data_manager.get_dataloader(is_training)
+        data_manager.set_epoch(epoch, is_training)
 
         return total_iteration, off_set, dataloader, tower_loss,\
             tower_acc, ave_tower_acc, ave_tower_loss
@@ -79,8 +77,8 @@ class Executor(object):
         rest_time = (training_iteration - total_iteration) * duration
         return duration, rest_time
 
-    def __data_proc(self, batch_data: list, tower_loss: list,
-                    tower_acc: list, total_iteration: int, is_training: bool) -> tuple:
+    def __training_data_proc(self, batch_data: list, tower_loss: list,
+                             tower_acc: list, total_iteration: int, is_training: bool) -> tuple:
         graph, data_manager = self.__get_graph_and_data_manager()
         input_data, output_data = data_manager.split_data(batch_data, True)
         tower_loss_iteration, tower_acc_iteration = graph.train_proc(
@@ -88,6 +86,12 @@ class Executor(object):
         tower_loss, tower_acc, ave_tower_loss, ave_tower_acc = graph.cal_tower_loss_acc(
             tower_loss, tower_acc, tower_loss_iteration, tower_acc_iteration, total_iteration)
         return tower_loss, tower_acc, ave_tower_loss, ave_tower_acc
+
+    def __testing_data_proc(self, batch_data: list) -> tuple:
+        graph, data_manager = self.__get_graph_and_data_manager()
+        input_data, supplement = data_manager.split_data(batch_data, False)
+        outputs_data = graph.test_model(input_data)
+        return outputs_data, supplement
 
     @staticmethod
     def __init_show_setting(training_iteration: int, bar_info: str) -> tuple:
@@ -114,24 +118,34 @@ class Executor(object):
         if rank == Executor.DEFAULT_RANK_ID or rank is None:
             process_bar.close()
             duration = time.time() - start_time
-            data_manager.show_training_info(epoch, ave_tower_loss,
-                                            ave_tower_acc, duration, is_training)
+            data_manager.show_training_info(epoch, ave_tower_loss, ave_tower_acc, duration, is_training)
             self.__tensorboard_handler.write_data(epoch, ave_tower_loss, ave_tower_acc, bar_info)
 
             if total_iteration != training_iteration:
                 log.warning("The input images numbers is different the number of datasets!")
 
+    def __show_testing_proc(self, rank: object, start_time: object,
+                            process_bar: object, total_iteration: int) -> None:
+        if rank == Executor.DEFAULT_RANK_ID or rank is None:
+            duration, rest_time = self.__calculate_ave_runtime(
+                start_time, time.time(), total_iteration, self.__training_iteration)
+            process_bar.show_process(rest_time=rest_time, duration=duration)
+
+    def __adjust_lr_scheduler(self, ave_tower_loss: float,
+                              rank: object, is_training: bool) -> None:
+        if is_training:
+            graph, _ = self.__get_graph_and_data_manager()
+            graph.adjust_lr_scheduler(ave_tower_loss, rank)
+
     def __train_proc(self, epoch: int, training_iteration: int,
                      bar_info: str, rank: object, is_training: bool = True) -> None:
-        graph, data_manager = self.__get_graph_and_data_manager()
-        total_iteration, off_set, dataloader, tower_loss,\
-            tower_acc, ave_tower_acc, ave_tower_loss = self.__init_training_model(
-                epoch, graph, data_manager, is_training)
+        total_iteration, off_set, dataloader, tower_loss, tower_acc, ave_tower_acc, \
+            ave_tower_loss = self.__init_training_model(epoch, is_training)
         process_bar, start_time = self.__init_show_setting(training_iteration, bar_info)
 
         for iteration, batch_data in enumerate(dataloader):
             total_iteration = iteration + off_set
-            tower_loss, tower_acc, ave_tower_loss, ave_tower_acc = self.__data_proc(
+            tower_loss, tower_acc, ave_tower_loss, ave_tower_acc = self.__training_data_proc(
                 batch_data, tower_loss, tower_acc, total_iteration, is_training)
             self.__show_iteration_result(rank, process_bar, start_time, total_iteration,
                                          training_iteration, epoch, ave_tower_loss,
@@ -140,9 +154,7 @@ class Executor(object):
         self.__show_epoch_result(process_bar, rank, start_time, epoch,
                                  ave_tower_loss, ave_tower_acc, total_iteration,
                                  training_iteration, bar_info, is_training)
-
-        if is_training:
-            graph.adjust_lr_scheduler(ave_tower_loss, rank)
+        self.__adjust_lr_scheduler(ave_tower_loss, rank, is_training)
 
         return total_iteration
 
@@ -151,71 +163,81 @@ class Executor(object):
 
     def __get_img_id(self, iteration: int, rank: object) -> int:
         args = self.__args
-        img_id = None
         if rank is None:
-            img_id = iteration
+            return iteration
         else:
-            img_id = rank + iteration * (args.batchSize * args.gpu)
-        return img_id
+            return rank + iteration * (args.batchSize * args.gpu)
 
-    def init_datahandler_modelhandler(self, rank: object):
+    def __executor_training_proc(self, epoch: int, rank: object) -> None:
+        if self.__training_iteration > 0:
+            self.__training_iteration = self.__train_proc(
+                epoch, self.__training_iteration, "Train", rank, True)
+
+    def __executor_val_proc(self, epoch: int, rank: object) -> None:
+        if self.__val_iteration > 0:
+            self.__val_iteration = self.__train_proc(
+                epoch, self.__val_iteration, "Val", rank, False)
+
+    def __save_model(self, epoch: int, rank: object) -> None:
+        args = self.__args
+        graph, _ = self.__get_graph_and_data_manager()
+        off_set = 1
+
+        if (epoch + off_set) % args.auto_save_num == 0 and (
+                rank == Executor.DEFAULT_RANK_ID or rank is None):
+            graph.save_model(epoch)
+
+    def __save_result(self, iteration: int, rank: object,
+                      outputs_data: list, supplement: list):
+        _, data_manager = self.__get_graph_and_data_manager()
+        img_id = self.__get_img_id(iteration, rank)
+        data_manager.save_result(outputs_data, supplement, img_id)
+
+    def __traning_post_proc(self) -> None:
+        graph, _ = self.__get_graph_and_data_manager()
+        graph.cleanup()
+        log.info("Finish training process!")
+
+    def __testing_post_proc(self, rank: object, process_bar: object) -> None:
+        if rank == Executor.DEFAULT_RANK_ID or rank is None:
+            process_bar.close()
+            log.info("Finish testing process!")
+
+    def init_datahandler_modelhandler(self, rank: object) -> None:
         self.__data_manager, self.__graph = self.__init_datahandler_modelhandler(rank)
 
     def train(self, rank: object = None) -> None:
         self.init_datahandler_modelhandler(rank)
         log.info("Start the training process!")
-
         args = self.__args
         graph, _ = self.__get_graph_and_data_manager()
         graph.restore_model(rank)
-        off_set = 1
 
         log.info("Start iteration!")
         for epoch in range(args.maxEpochs):
-            if self.__training_iteration > 0:
-                self.__training_iteration = self.__train_proc(
-                    epoch, self.__training_iteration, "Train", rank, True)
-
-            if self.__val_iteration > 0:
-                self.__val_iteration = self.__train_proc(
-                    epoch, self.__val_iteration, "Val", rank, False)
-
+            self.__executor_training_proc(epoch, rank)
+            self.__executor_val_proc(epoch, rank)
             if args.dist:
                 dist.barrier()
 
-            if (epoch + off_set) % args.auto_save_num == 0 and (
-                    rank == Executor.DEFAULT_RANK_ID or rank is None):
-                graph.save_model(epoch)
-
-        graph.cleanup()
-        log.info("Finish training process!")
+        self.__save_model(epoch, rank)
+        self.__traning_post_proc()
 
     def test(self, rank: object = None) -> None:
         self.init_datahandler_modelhandler(rank)
         log.info("Start the testing process!")
-
-        graph, data_manager = self.__get_graph_and_data_manager()
+        graph, _ = self.__get_graph_and_data_manager()
         graph.restore_model(rank)
-        graph.set_model_mode(False)
 
-        total_iteration, off_set, dataloader, _, _, _, _ = \
-            self.__init_training_model(0, graph, data_manager, True)
+        total_iteration, off_set, dataloader, _, _, _, _ = self.__init_training_model(0, True)
+        graph.set_model_mode(False)
         process_bar, start_time = self.__init_show_setting(self.__training_iteration, "Test")
 
         log.info("Start testing iteration!")
         for iteration, batch_data in enumerate(dataloader):
             total_iteration = iteration + off_set
-            input_data, supplement = data_manager.split_data(batch_data, False)
-            outputs_data = graph.test_model(input_data)
+            outputs_data, supplement = self.__testing_data_proc(batch_data)
+            self.__save_result(iteration, rank, outputs_data, supplement)
+            self.__show_testing_proc(rank, start_time, process_bar, total_iteration)
 
-            img_id = self.__get_img_id(iteration, rank)
-            data_manager.save_result(outputs_data, supplement, img_id)
-
-            if rank == Executor.DEFAULT_RANK_ID or rank is None:
-                duration, rest_time = self.__calculate_ave_runtime(
-                    start_time, time.time(), total_iteration, self.__training_iteration)
-                process_bar.show_process(rest_time=rest_time, duration=duration)
-
-        if rank == Executor.DEFAULT_RANK_ID or rank is None:
-            process_bar.close()
-            log.info("Finish testing process!")
+        self.__testing_post_proc(rank, process_bar)
