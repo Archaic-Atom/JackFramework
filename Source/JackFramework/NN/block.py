@@ -5,10 +5,11 @@ import torch.nn.functional as F
 
 from typing import TypeVar, Generic
 
-from .layer import Layer
+from layer import Layer
 
 tensor = TypeVar('tensor')
-
+act  = Layer.act_layer
+norm = Layer.norm_layer
 
 class Res2DBlock(nn.Module):
     """docstring for Res2DBlock"""
@@ -16,15 +17,16 @@ class Res2DBlock(nn.Module):
     def __init__(self, in_channels: int, out_channels: int,
                  kernel_size: int = 3, stride: int = 1,
                  padding: int = 1, dilation: int = 1,
+                 act: object = act, norm: object = norm,
                  downsample: object = None) -> object:
         super().__init__()
         self.conv_2d_layer_1 = Layer.conv_2d_layer(
-            in_channels, out_channels, kernel_size, stride, padding, dilation)
+            in_channels, out_channels, kernel_size, stride, padding, dilation, norm=norm, act=act)
         self.conv_2d_layer_2 = Layer.conv_2d_layer(
             in_channels, out_channels, kernel_size, padding=padding,
-            dilation=dilation, act=False)
+            dilation=dilation, norm=norm)
         self.downsample = downsample
-        self.act_layer = Layer.act_layer()
+        self.act_layer = act()
 
     def forward(self, x: tensor) -> tensor:
         identity = x
@@ -44,18 +46,20 @@ class Bottleneck2DBlcok(nn.Module):
 
     def __init__(self, in_channels: int, out_channels: int,
                  kernel_size: int = 3, stride: int = 1,
-                 padding: int = 1, downsample: object = None) -> object:
+                 padding: int = 1, 
+                 act: object = act, norm: object = norm, 
+                 downsample: object = None) -> object:
         super().__init__()
 
         bottleneck_out_channels = out_channels // 4
         self.conv_2d_layer_1 = Layer.conv_2d_layer(
-            in_channels, bottleneck_out_channels, 1, 1, 0)
+            in_channels, bottleneck_out_channels, 1, 1, 0, norm=norm, act=act)
         self.conv_2d_layer_2 = Layer.conv_2d_layer(
-            in_channels, bottleneck_out_channels, kernel_size, stride, padding)
+            bottleneck_out_channels, bottleneck_out_channels, kernel_size, stride, padding, norm=norm, act=act)
         self.conv_2d_layer_3 = Layer.conv_2d_layer(
-            in_channels, out_channels, 1, 1, 0, act=False)
+            bottleneck_out_channels, out_channels, 1, 1, 0, norm=norm)
         self.downsample = downsample
-        self.act_layer = Layer.act_layer()
+        self.act_layer = act()
 
     def forward(self, x: tensor) -> tensor:
         identity = x
@@ -76,14 +80,16 @@ class Res3DBlock(nn.Module):
 
     def __init__(self, in_channels: int, out_channels: int,
                  kernel_size: int = 3, stride: int = 1,
-                 padding: int = 1, downsample: object = None):
+                 padding: int = 1, downsample: object = None,
+                 norm=norm, act=act):
         super().__init__()
         self.conv_3d_layer_1 = Layer.conv_3d_layer(
-            in_channels, out_channels, kernel_size, stride, padding)
+            in_channels, out_channels, kernel_size, stride, padding,
+            norm=norm, act=act)
         self.conv_3d_layer_2 = Layer.conv_3d_layer(
-            in_channels, out_channels, kernel_size, act=False)
+            in_channels, out_channels, kernel_size, norm=norm)
         self.downsample = downsample
-        self.act_layer = Layer.act_layer()
+        self.act_layer = act()
 
     def forward(self, x: tensor) -> tensor:
         identity = x
@@ -103,18 +109,20 @@ class Bottleneck3DBlcok(nn.Module):
 
     def __init__(self, in_channels: int, out_channels: int,
                  kernel_size: int = 3, stride: int = 1,
-                 padding: int = 1, downsample: object = None) -> object:
+                 padding: int = 1, downsample: object = None,
+                 norm=norm, act=act) -> object:
         super().__init__()
 
         bottleneck_out_channels = out_channels // 4
         self.conv_3d_layer_1 = Layer.conv_3d_layer(
-            in_channels, bottleneck_out_channels, 1, 1, 0)
+            in_channels, bottleneck_out_channels, 1, 1, 0,
+            norm=norm, act=act)
         self.conv_3d_layer_2 = Layer.conv_3d_layer(
-            in_channels, bottleneck_out_channels, kernel_size, stride, padding)
+            bottleneck_out_channels, bottleneck_out_channels, kernel_size, stride, padding, norm=norm, act=act)
         self.conv_3d_layer_3 = Layer.conv_3d_layer(
-            in_channels, out_channels, 1, 1, 0, act=False)
+            bottleneck_out_channels, out_channels, 1, 1, 0, norm=norm, act=False)
         self.downsample = downsample
-        self.act_layer = Layer.act_layer()
+        self.act_layer = act()
 
     def forward(self, x: tensor) -> tensor:
         identity = x
@@ -133,7 +141,7 @@ class Bottleneck3DBlcok(nn.Module):
 class ASPPBlock(nn.Module):
     """docstring for ASPP"""
 
-    def __init__(self, in_channels: int, out_channels: int, stride: int = 16):
+    def __init__(self, in_channels: int, out_channels: int, stride: int = 16, norm=norm, act=act):
         super().__init__()
 
         if stride == 8:
@@ -143,13 +151,13 @@ class ASPPBlock(nn.Module):
         else:
             raise NotImplementedError
 
-        self.block_1 = Layer.conv_2d_layer(in_channels, out_channels, 1, padding=0, dilation=1)
+        self.block_1 = Layer.conv_2d_layer(in_channels, out_channels, 1, padding=0, dilation=1, norm=norm, act=act)
         self.block_2 = Layer.conv_2d_layer(
-            in_channels, out_channels, 3, padding=dilation[0], dilation=dilation[0])
+            in_channels, out_channels, 3, padding=dilation[0], dilation=dilation[0], norm=norm, act=act)
         self.block_3 = Layer.conv_2d_layer(
-            in_channels, out_channels, 3, padding=dilation[1], dilation=dilation[1])
+            in_channels, out_channels, 3, padding=dilation[1], dilation=dilation[1], norm=norm, act=act)
         self.block_4 = Layer.conv_2d_layer(
-            in_channels, out_channels, 3, padding=dilation[2], dilation=dilation[2])
+            in_channels, out_channels, 3, padding=dilation[2], dilation=dilation[2], norm=norm, act=act)
 
     def forward(self, x: tensor) -> tensor:
         branch_1 = self.block_1(x)
@@ -163,10 +171,10 @@ class ASPPBlock(nn.Module):
 class SPPBlock(nn.Module):
     """docstring for SPPBlock"""
 
-    def __init__(self, in_channels: int, out_channels: int):
+    def __init__(self, in_channels: int, out_channels: int, norm=norm, act=act):
         super().__init__()
 
-        self.act = Layer.act_layer()
+        self.act = act()
         self.branch_1 = self.__make_block(in_channels, out_channels, 64)
         self.branch_2 = self.__make_block(in_channels, out_channels, 32)
         self.branch_3 = self.__make_block(in_channels, out_channels, 16)
@@ -180,7 +188,7 @@ class SPPBlock(nn.Module):
             )
         ]
 
-        layer.append(Layer.conv_2d_layer(in_channels, out_channels, 1, 1, 0))
+        layer.append(Layer.conv_2d_layer(in_channels, out_channels, 1, 1, 0, norm=norm, act=act))
         return nn.Sequential(*layer)
 
     def forward(self, x: tensor) -> tensor:
