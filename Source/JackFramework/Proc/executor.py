@@ -72,48 +72,74 @@ class Executor(object):
         return total_iteration, off_set, dataloader, tower_loss,\
             tower_acc, ave_tower_acc, ave_tower_loss
 
-    def __calculate_ave_runtime(self, start_time: object, end_time: object,
+    @staticmethod
+    def __calculate_ave_runtime(start_time: object, end_time: object,
                                 total_iteration: int, training_iteration: int) -> tuple:
         duration = (end_time - start_time) / (total_iteration)
         rest_time = (training_iteration - total_iteration) * duration
         return duration, rest_time
 
-    def __train_proc(self, epoch: int, training_iteration: int,
-                     bar_info: str, rank: object, is_training: bool = True) -> None:
-        graph = self.__graph
-        data_manager = self.__data_manager
-        total_iteration, off_set, dataloader, tower_loss,\
-            tower_acc, ave_tower_acc, ave_tower_loss = self.__init_training_model(
-                epoch, graph, data_manager, is_training)
+    def __data_proc(self, batch_data: list, tower_loss: list,
+                    tower_acc: list, total_iteration: int, is_training: bool) -> tuple:
+        graph, data_manager = self.__get_graph_and_data_manager()
+        input_data, output_data = data_manager.split_data(batch_data, True)
+        tower_loss_iteration, tower_acc_iteration = graph.train_proc(
+            input_data, output_data, is_training)
+        tower_loss, tower_acc, ave_tower_loss, ave_tower_acc = graph.cal_tower_loss_acc(
+            tower_loss, tower_acc, tower_loss_iteration, tower_acc_iteration, total_iteration)
+        return tower_loss, tower_acc, ave_tower_loss, ave_tower_acc
 
+    @staticmethod
+    def __init_show_setting(training_iteration: int, bar_info: str) -> tuple:
         process_bar = ShowProcess(training_iteration, bar_info)
         start_time = time.time()
+        return process_bar, start_time
 
-        for iteration, batch_data in enumerate(dataloader):
-            # iterate process
-            total_iteration = iteration + off_set
-            input_data, output_data = data_manager.split_data(batch_data, True)
-            tower_loss_iteration, tower_acc_iteration = graph.train_proc(
-                input_data, output_data, is_training)
-            tower_loss, tower_acc, ave_tower_loss, ave_tower_acc = graph.cal_tower_loss_acc(
-                tower_loss, tower_acc, tower_loss_iteration, tower_acc_iteration, total_iteration)
+    def __show_iteration_result(self, rank: object, process_bar: object, start_time: object,
+                                total_iteration: int, training_iteration: int, epoch: int,
+                                ave_tower_loss: list, ave_tower_acc: list):
+        _, data_manager = self.__get_graph_and_data_manager()
+        if rank == Executor.DEFAULT_RANK_ID or rank is None:
+            duration, rest_time = self.__calculate_ave_runtime(
+                start_time, time.time(), total_iteration, training_iteration)
+            info_str = data_manager.show_intermediate_result(
+                epoch, ave_tower_loss, ave_tower_acc)
+            process_bar.show_process(show_info=info_str, rest_time=rest_time, duration=duration)
 
-            if rank == Executor.DEFAULT_RANK_ID or rank is None:
-                duration, rest_time = self.__calculate_ave_runtime(
-                    start_time, time.time(), total_iteration, training_iteration)
-                info_str = data_manager.show_intermediate_result(
-                    epoch, ave_tower_loss, ave_tower_acc)
-                process_bar.show_process(show_info=info_str, rest_time=rest_time, duration=duration)
-
+    def __show_epoch_result(self, process_bar: object, rank: object,
+                            start_time: object, epoch: int, ave_tower_loss: list,
+                            ave_tower_acc: int, total_iteration: int,
+                            training_iteration: int, bar_info: str, is_training: bool) -> None:
+        _, data_manager = self.__get_graph_and_data_manager()
         if rank == Executor.DEFAULT_RANK_ID or rank is None:
             process_bar.close()
             duration = time.time() - start_time
-            data_manager.show_training_info(
-                epoch, ave_tower_loss, ave_tower_acc, duration, is_training)
+            data_manager.show_training_info(epoch, ave_tower_loss,
+                                            ave_tower_acc, duration, is_training)
             self.__tensorboard_handler.write_data(epoch, ave_tower_loss, ave_tower_acc, bar_info)
 
             if total_iteration != training_iteration:
                 log.warning("The input images numbers is different the number of datasets!")
+
+    def __train_proc(self, epoch: int, training_iteration: int,
+                     bar_info: str, rank: object, is_training: bool = True) -> None:
+        graph, data_manager = self.__get_graph_and_data_manager()
+        total_iteration, off_set, dataloader, tower_loss,\
+            tower_acc, ave_tower_acc, ave_tower_loss = self.__init_training_model(
+                epoch, graph, data_manager, is_training)
+        process_bar, start_time = self.__init_show_setting(training_iteration, bar_info)
+
+        for iteration, batch_data in enumerate(dataloader):
+            total_iteration = iteration + off_set
+            tower_loss, tower_acc, ave_tower_loss, ave_tower_acc = self.__data_proc(
+                batch_data, tower_loss, tower_acc, total_iteration, is_training)
+            self.__show_iteration_result(rank, process_bar, start_time, total_iteration,
+                                         training_iteration, epoch, ave_tower_loss,
+                                         ave_tower_acc)
+
+        self.__show_epoch_result(process_bar, rank, start_time, epoch,
+                                 ave_tower_loss, ave_tower_acc, total_iteration,
+                                 training_iteration, bar_info, is_training)
 
         if is_training:
             graph.adjust_lr_scheduler(ave_tower_loss, rank)
@@ -169,18 +195,14 @@ class Executor(object):
         log.info("Start the testing process!")
 
         graph, data_manager = self.__get_graph_and_data_manager()
-
         graph.restore_model(rank)
         graph.set_model_mode(False)
 
-        total_iteration, off_set, dataloader, _,\
-            _, _, _ = self.__init_training_model(
-                0, graph, data_manager, True)
+        total_iteration, off_set, dataloader, _, _, _, _ = \
+            self.__init_training_model(0, graph, data_manager, True)
+        process_bar, start_time = self.__init_show_setting(self.__training_iteration, "Test")
 
-        start_time = time.time()
-        process_bar = ShowProcess(self.__training_iteration, "Test")
-
-        log.info("Start iteration!")
+        log.info("Start testing iteration!")
         for iteration, batch_data in enumerate(dataloader):
             total_iteration = iteration + off_set
             input_data, supplement = data_manager.split_data(batch_data, False)

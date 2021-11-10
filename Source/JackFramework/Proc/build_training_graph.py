@@ -244,12 +244,11 @@ class BuildGraph(object):
 
     def adjust_lr_scheduler(self, loss: list, rank: int) -> None:
         for i, sch_item in enumerate(self.__sch):
-            if sch_item is None:
-                return
-            self.__jf_model.lr_scheduler(sch_item, float(loss[i][0]), i)
-            if rank == BuildGraph.DEFAULT_RANK_ID or rank is None:
-                log.info("Model_" + str(i) + " Current lr: " +
-                         str(self.__opt[i].param_groups[self.OPT_LR_GROUP_ID]['lr']))
+            if sch_item is not None:
+                self.__jf_model.lr_scheduler(sch_item, float(loss[i][0]), i)
+                if rank == BuildGraph.DEFAULT_RANK_ID or rank is None:
+                    log.info("Model_" + str(i) + " Current lr: " +
+                             str(self.__opt[i].param_groups[self.OPT_LR_GROUP_ID]['lr']))
 
     def test_model(self, input_data: list) -> list:
         input_data = self.__pass_data2device(input_data)
