@@ -47,7 +47,7 @@ class ModelSaver(object):
 
     @staticmethod
     def load_opt(opt: object, checkpoint: str, model_id: int) -> None:
-        opt_name = 'optimizer_%d' % model_id
+        opt_name = 'opt_%d' % model_id
         opt.load_state_dict(checkpoint[opt_name])
         log.info("opt loaded successfully")
 

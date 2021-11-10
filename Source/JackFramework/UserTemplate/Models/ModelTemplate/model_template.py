@@ -39,10 +39,13 @@ class ModelHandlerTemplate(object):
         pass
 
     def load_model(self, model: object, checkpoint: dict, model_id: int) -> bool:
+        # return False
         return False
 
     def load_opt(self, opt: object, checkpoint: dict, model_id: int) -> bool:
+        # return False
         return False
 
     def save_model(self, epoch: int, model_list: list, opt_list: list) -> dict:
+        # return None
         return None
