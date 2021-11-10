@@ -41,7 +41,7 @@ class Executor(object):
 
         if not args.dist:
             self.__tensorboard_handler = TensorboardHandler(args)
-        elif args.dist and rank == Executor.DEFAULT_RANK_ID:
+        elif rank == Executor.DEFAULT_RANK_ID:
             # dist reinit log
             log().init_log(args.outputDir, args.pretrain)
             log().info("LogHandler is reinitialized!")
@@ -127,10 +127,9 @@ class Executor(object):
         args = self.__args
         img_id = None
         if rank is None:
-            img_id = iteration
+            return iteration
         else:
-            img_id = rank + iteration * (args.batchSize * args.gpu)
-        return img_id
+            return rank + iteration * (args.batchSize * args.gpu)
 
     def init_datahandler_modelhandler(self, rank: object):
         self.__data_manager, self.__graph = self.__init_datahandler_modelhandler(rank)
