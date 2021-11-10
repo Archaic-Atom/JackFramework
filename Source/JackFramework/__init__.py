@@ -27,6 +27,7 @@ from JackFramework.Evaluation.accuracy import Accuracy
 import JackFramework.NN as nn
 import JackFramework.NN.block as block
 from JackFramework.NN.layer import Layer as layer
+from JackFramework.NN.layer import NormActLayer as norm_act_layer
 from JackFramework.NN.ops import Ops as ops
 
 # Contrib
