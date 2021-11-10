@@ -41,7 +41,7 @@ class Executor(object):
 
         if not args.dist:
             self.__tensorboard_handler = TensorboardHandler(args)
-        elif args.dist and rank == Executor.DEFAULT_RANK_ID:
+        elif rank == Executor.DEFAULT_RANK_ID:
             # dist reinit log
             log().init_log(args.outputDir, args.pretrain)
             log().info("LogHandler is reinitialized!")
