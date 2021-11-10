@@ -43,20 +43,20 @@ class Layer(object):
 
     @staticmethod
     def norm_act_layer(layer: list, out_channels: int,
-                       norm: bool = True, act: bool = True) -> list:
+                       norm: object = None, act: object = None) -> list:
         if norm:
-            layer.append(Layer.norm_layer(out_channels))
+            layer.append(norm(out_channels))
 
         if act:
-            layer.append(Layer.act_layer())
+            layer.append(act())
 
         return layer
 
     @staticmethod
     def conv_1d_layer(in_channels: int, out_channels: int, kernel_size: int,
                       stride: int = 1, padding: int = 1, dilation: int = 1,
-                      bias: bool = False, norm: bool = True,
-                      act: bool = True) -> object:
+                      bias: bool = False, norm: object = None,
+                      act: object = None) -> object:
         layer = [
             Ops.conv_1d(
                 in_channels,
@@ -74,8 +74,8 @@ class Layer(object):
     @staticmethod
     def conv_2d_layer(in_channels: int, out_channels: int, kernel_size: int,
                       stride: int = 1, padding: int = 1, dilation: int = 1,
-                      bias: bool = False, norm: bool = True,
-                      act: bool = True) -> object:
+                      bias: bool = False, norm: object = None,
+                      act: object = None) -> object:
         layer = [
             Ops.conv_2d(
                 in_channels,
@@ -87,15 +87,14 @@ class Layer(object):
                 bias=bias,
             )
         ]
-
         layer = Layer.norm_act_layer(layer, out_channels, norm, act)
         return nn.Sequential(*layer)
 
     @staticmethod
     def deconv_2d_layer(in_channels: int, out_channels: int, kernel_size: int,
                         stride: int = 1, padding: int = 0, output_padding: int = 0,
-                        bias: bool = False, norm: bool = True,
-                        act: bool = True) -> object:
+                        bias: bool = False, norm: object = None,
+                      act: object = None) -> object:
         layer = [
             Ops.deconv_2d(
                 in_channels,
@@ -114,8 +113,8 @@ class Layer(object):
     @staticmethod
     def conv_3d_layer(in_channels: int, out_channels: int, kernel_size: int,
                       stride: int = 1, padding: int = 1, dilation: int = 1,
-                      bias: bool = False, norm: bool = True,
-                      act: bool = True) -> object:
+                      bias: bool = False, norm: object = None,
+                      act: object = None) -> object:
         layer = [
             Ops.conv_3d(
                 in_channels,
@@ -134,8 +133,8 @@ class Layer(object):
     @staticmethod
     def deconv_3d_layer(in_channels: int, out_channels: int, kernel_size: int,
                         stride: int = 1, padding: int = 0, output_padding: int = 0,
-                        bias: bool = False, norm: bool = True,
-                        act: bool = True) -> object:
+                        bias: bool = False, norm: object = None,
+                      act: object = None) -> object:
         layer = [
             Ops.deconv_3d(
                 in_channels,
