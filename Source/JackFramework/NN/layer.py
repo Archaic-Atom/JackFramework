@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ops import Ops
+from .ops import Ops
 
 
 class Layer(object):

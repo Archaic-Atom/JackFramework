@@ -3,8 +3,6 @@ import re
 import numpy as np
 import sys
 from PIL import Image
-import torch
-import torch.nn as nn
 import cv2
 
 
@@ -26,7 +24,7 @@ class ImgIO(object):
 
     @staticmethod
     def write_img(path: str, img: np.array) -> None:
-        img = np.array(img, np.uint8)
+        img = np.array(img, np.uint8).squeeze()
         if len(img.shape) == 2 or len(img.shape) == 3 \
                 and img.shape[2] == 3:
             img = Image.fromarray(img)
