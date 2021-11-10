@@ -44,24 +44,20 @@ class BuildGraph(object):
         self.__opt, self.__sch = self.__init_optimizer()
         self.count_parameter_num()
 
-    def __pass_model2device(self) -> None:
-        log.info("Loading model to GPUs!")
-        # if self.__args.gpu > 1:
-        args = self.__args
+    def __init_DDP_Model(self) -> None:
+        assert self.__model is not None
+        for i, model_item in enumerate(self.__model):
+            model_item = model_item.to(self.__rank)
+            self.__model[i] = DDP(model_item, device_ids=[self.__rank],
+                                  find_unused_parameters=True)
 
-        if args.dist:
-            for i, model_item in enumerate(self.__model):
-                model_item = model_item.to(self.__rank)
-                self.__model[i] = DDP(model_item, device_ids=[self.__rank],
-                                      find_unused_parameters=True)
-        else:
-            for i, model_item in enumerate(self.__model):
-                self.__model[i] = nn.DataParallel(model_item)
+    def __init_DP_Model(self) -> None:
+        assert self.__model is not None
+        for i, model_item in enumerate(self.__model):
+            self.__model[i] = nn.DataParallel(model_item)
 
-            for i, model_item in enumerate(self.__model):
-                self.__model[i].to(self.__device)
-
-        log.info("Successfully loaded the model into GPUs!")
+        for i, model_item in enumerate(self.__model):
+            self.__model[i].to(self.__device)
 
     def __init_model(self) -> object:
         log.info("Loading user's model!")
@@ -76,24 +72,27 @@ class BuildGraph(object):
         log.info("Successfully get user's optimizer!")
         return opt, sch
 
-    def __calculation_process(self, model_item: object, input_data: list, label_data: list,
-                              model_id: int, is_training: bool = True) -> tuple:
+    def __init_tower_loss_and_tower_acc(self):
+        tower_loss_iteration = []
+        tower_acc_iteration = []
+        return tower_loss_iteration, tower_acc_iteration
+
+    def __init_calculation_result(self):
         output_data = None
         loss = None
         acc = None
-
-        # get ouput
-        output_data = self.__jf_model.inference(model_item, input_data, model_id)
-        # loss and acc
-        if is_training:
-            loss = self.__jf_model.loss(output_data, label_data, model_id)
-            acc = self.__jf_model.accuary(output_data, label_data, model_id)
-
         return output_data, loss, acc
 
-    def __reduce_tensor(self, data: torch.tensor) -> torch.tensor:
-        dist.all_reduce(data, op=dist.ReduceOp.SUM)
-        return data
+    def __pass_model2device(self) -> None:
+        log.info("Loading model to GPUs!")
+        args = self.__args
+
+        if args.dist:
+            self.__init_DDP_Model()
+        else:
+            self.__init_DP_Model()
+
+        log.info("Successfully loaded the model into GPUs!")
 
     def __pass_data2device(self, data: list) -> list:
         args = self.__args
@@ -106,6 +105,23 @@ class BuildGraph(object):
             for i, data_item in enumerate(data):
                 data[i] = data_item.to(self.__device)
 
+        return data
+
+    def __calculation_process(self, model_item: object, input_data: list, label_data: list,
+                              model_id: int, is_training: bool = True) -> tuple:
+        output_data, loss, acc = self.__init_calculation_result()
+
+        # get ouput
+        output_data = self.__jf_model.inference(model_item, input_data, model_id)
+        # loss and acc
+        if is_training:
+            loss = self.__jf_model.loss(output_data, label_data, model_id)
+            acc = self.__jf_model.accuary(output_data, label_data, model_id)
+
+        return output_data, loss, acc
+
+    def __reduce_tensor(self, data: torch.tensor) -> torch.tensor:
+        dist.all_reduce(data, op=dist.ReduceOp.SUM)
         return data
 
     def __variable2tensor(self, data: list) -> None:
@@ -144,12 +160,11 @@ class BuildGraph(object):
             log.warning("no checkpoint found at '{}'".format(checkpoint_path))
 
     def save_model(self, epoch: int) -> None:
-        args = self.__args
         assert len(self.__model) == len(self.__opt)
+        args = self.__args
         file_name = sysdefine.CHECK_POINT_NAME % epoch
 
         model_dict = self.__jf_model.save_model(epoch, self.__model, self.__opt)
-
         if model_dict is None:
             model_dict = ModelSaver.construct_model_dict(epoch, self.__model, self.__opt)
 
@@ -175,21 +190,17 @@ class BuildGraph(object):
         return tower_loss_iteration, tower_acc_iteration
 
     def train_model(self, input_data: list, label_data: list) -> list:
+        assert len(self.__model) == len(self.__opt)
+        args = self.__args
+        tower_loss_iteration, tower_acc_iteration = self.__init_tower_loss_and_tower_acc()
+
         input_data = self.__pass_data2device(input_data)
         label_data = self.__pass_data2device(label_data)
 
-        args = self.__args
-
-        assert len(self.__model) == len(self.__opt)
-        tower_loss_iteration = []
-        tower_acc_iteration = []
-
         for i, model_item in enumerate(self.__model):
             self.__opt[i].zero_grad()
-            _, loss, acc = self.__calculation_process(model_item,
-                                                      input_data,
-                                                      label_data,
-                                                      i)
+            _, loss, acc = self.__calculation_process(
+                model_item, input_data, label_data, i)
 
             loss[self.OPT_LOSS_ID].backward()
             self.__opt[i].step()
@@ -202,19 +213,16 @@ class BuildGraph(object):
         return tower_loss_iteration, tower_acc_iteration
 
     def val_model(self, input_data: list, label_data: list) -> list:
+        args = self.__args
+        tower_loss_iteration, tower_acc_iteration = self.__init_tower_loss_and_tower_acc()
+
         input_data = self.__pass_data2device(input_data)
         label_data = self.__pass_data2device(label_data)
 
-        args = self.__args
-
-        tower_loss_iteration = []
-        tower_acc_iteration = []
         with torch.no_grad():
             for i, model_item in enumerate(self.__model):
-                _, loss, acc = self.__calculation_process(model_item,
-                                                          input_data,
-                                                          label_data,
-                                                          i)
+                _, loss, acc = self.__calculation_process(
+                    model_item, input_data, label_data, i)
                 tower_loss_iteration.append(self.__variable2tensor(loss))
                 tower_acc_iteration.append(self.__variable2tensor(acc))
 
