@@ -261,3 +261,10 @@ class BuildGraph(object):
                 outputs_data.append(output_data)
 
         return outputs_data
+
+    def pretreatment(self, epoch: int, rank: object) -> None:
+        self.__jf_model.pretreatment(epoch, rank)
+
+    def postprocess(self, epoch: int, rank: object,
+                    ave_tower_loss: list = None, ave_tower_acc: list = None) -> None:
+        self.__jf_model.postprocess(epoch, rank, ave_tower_loss, ave_tower_acc)

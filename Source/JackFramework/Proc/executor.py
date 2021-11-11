@@ -54,7 +54,7 @@ class Executor(object):
 
         return data_manager, graph
 
-    def __init_training_model(self, epoch: int, is_training: bool = True) -> tuple:
+    def __init_training_para(self, epoch: int, rank: object, is_training: bool = True) -> tuple:
         total_iteration = 0
         off_set = 1
         tower_loss = None
@@ -66,6 +66,7 @@ class Executor(object):
         graph.set_model_mode(is_training)
         dataloader = data_manager.get_dataloader(is_training)
         data_manager.set_epoch(epoch, is_training)
+        graph.pretreatment(epoch, rank)
 
         return total_iteration, off_set, dataloader, tower_loss,\
             tower_acc, ave_tower_acc, ave_tower_loss
@@ -110,7 +111,7 @@ class Executor(object):
                 epoch, ave_tower_loss, ave_tower_acc)
             process_bar.show_process(show_info=info_str, rest_time=rest_time, duration=duration)
 
-    def __show_epoch_result(self, process_bar: object, rank: object,
+    def __show_epoch_result(self, rank: object, process_bar: object,
                             start_time: object, epoch: int, ave_tower_loss: list,
                             ave_tower_acc: int, total_iteration: int,
                             training_iteration: int, bar_info: str, is_training: bool) -> None:
@@ -131,16 +132,18 @@ class Executor(object):
                 start_time, time.time(), total_iteration, self.__training_iteration)
             process_bar.show_process(rest_time=rest_time, duration=duration)
 
-    def __adjust_lr_scheduler(self, ave_tower_loss: float,
-                              rank: object, is_training: bool) -> None:
+    def __adjust_lr_scheduler_and_post_proc(self, epoch: int, rank: object,
+                                            ave_tower_loss: float, ave_tower_acc: float,
+                                            is_training: bool) -> None:
+        graph, _ = self.__get_graph_and_data_manager()
         if is_training:
-            graph, _ = self.__get_graph_and_data_manager()
             graph.adjust_lr_scheduler(ave_tower_loss, rank)
+        graph.postprocess(epoch, rank, ave_tower_loss, ave_tower_acc)
 
     def __train_proc(self, epoch: int, training_iteration: int,
                      bar_info: str, rank: object, is_training: bool = True) -> None:
         total_iteration, off_set, dataloader, tower_loss, tower_acc, ave_tower_acc, \
-            ave_tower_loss = self.__init_training_model(epoch, is_training)
+            ave_tower_loss = self.__init_training_para(epoch, rank, is_training)
         process_bar, start_time = self.__init_show_setting(training_iteration, bar_info)
 
         for iteration, batch_data in enumerate(dataloader):
@@ -151,10 +154,11 @@ class Executor(object):
                                          training_iteration, epoch, ave_tower_loss,
                                          ave_tower_acc)
 
-        self.__show_epoch_result(process_bar, rank, start_time, epoch,
+        self.__show_epoch_result(rank, process_bar, start_time, epoch,
                                  ave_tower_loss, ave_tower_acc, total_iteration,
                                  training_iteration, bar_info, is_training)
-        self.__adjust_lr_scheduler(ave_tower_loss, rank, is_training)
+        self.__adjust_lr_scheduler_and_post_proc(epoch, rank, ave_tower_loss,
+                                                 ave_tower_acc, is_training)
 
         return total_iteration
 
@@ -169,7 +173,9 @@ class Executor(object):
             return rank + iteration * (args.batchSize * args.gpu)
 
     def __executor_training_proc(self, epoch: int, rank: object) -> None:
+
         if self.__training_iteration > 0:
+            graph = self.__get_graph_and_data_manager()
             self.__training_iteration = self.__train_proc(
                 epoch, self.__training_iteration, "Train", rank, True)
 
@@ -229,7 +235,7 @@ class Executor(object):
         graph, _ = self.__get_graph_and_data_manager()
         graph.restore_model(rank)
 
-        total_iteration, off_set, dataloader, _, _, _, _ = self.__init_training_model(0, True)
+        total_iteration, off_set, dataloader, _, _, _, _ = self.__init_training_para(0, rank, True)
         graph.set_model_mode(False)
         process_bar, start_time = self.__init_show_setting(self.__training_iteration, "Test")
 
@@ -240,4 +246,5 @@ class Executor(object):
             self.__save_result(iteration, rank, outputs_data, supplement)
             self.__show_testing_proc(rank, start_time, process_bar, total_iteration)
 
+        graph.postprocess(0, rank)
         self.__testing_post_proc(rank, process_bar)
