@@ -38,6 +38,15 @@ class ModelHandlerTemplate(object):
         # return loss's list
         pass
 
+    def pretreatment(self, epoch: int, rank: object) -> None:
+        # do something before training epoch
+        pass
+
+    def postprocess(self, epoch: int, rank: object,
+                    ave_tower_loss: list, ave_tower_acc: list) -> None:
+        # do something after training epoch
+        pass
+
     def load_model(self, model: object, checkpoint: dict, model_id: int) -> bool:
         # return False
         return False
