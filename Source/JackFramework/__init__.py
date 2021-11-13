@@ -39,6 +39,8 @@ import JackFramework.Contrib.Activation as act
 # template
 from JackFramework import UserTemplate
 
+# Tools
+from JackFramework.Tools.tools import Tools
 
 def version():
     return sys_define.VERSION
