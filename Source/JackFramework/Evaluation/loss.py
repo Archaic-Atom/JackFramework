@@ -4,9 +4,11 @@ from typing import Generic, TypeVar
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from JackFramework.ImgHandler.img_handler import ImgHandler
 from JackFramework.Tools.tools import Tools
 # from tools import Tools
+
 tensor = TypeVar('tensor')
 
 LOSS_EPSILON = 1e-9
@@ -35,12 +37,12 @@ class Loss(object):
         return F.smooth_l1_loss(res[mask], gt[mask], reduction='sum') / total_num
 
     @staticmethod
-    def focal_loss(res: tensor, 
-                gt: tensor, 
-                alpha: float = -1, 
-                gamma: float = 2,
-                reduction: str = 'mean',
-                mode: str = 'bce') -> tensor:
+    def focal_loss(res: tensor,
+                   gt: tensor,
+                   alpha: float = -1,
+                   gamma: float = 2,
+                   reduction: str = 'mean',
+                   mode: str = 'bce') -> tensor:
         """
         Params:
             res: Outputs of model with shape [B, C, H, W]
@@ -82,17 +84,17 @@ class Loss(object):
         return loss
 
     @ staticmethod
-    def mutil_focal_loss(res: list, 
-                gt: tensor, 
-                alpha: float = -1, 
-                gamma: float = 2,
-                reduction: str = 'mean',
-                mode: str = 'bce',
-                lambdas: list = None) -> tensor:
+    def mutil_focal_loss(res: list,
+                         gt: tensor,
+                         alpha: float = -1,
+                         gamma: float = 2,
+                         reduction: str = 'mean',
+                         mode: str = 'bce',
+                         lambdas: list = None) -> tensor:
 
         loss = 0
         length = len(res)
-        _, _, h, w  = gt.shape
+        _, _, h, w = gt.shape
         if lambdas is None:
             lambdas = [1] * length
 
@@ -113,8 +115,8 @@ class Loss(object):
         :param margin: 
         :return: Average loss of batch data
         """
-        loss = torch.mean((1- gt) * torch.pow(res, 2) +
-                        gt * torch.pow(torch.clamp(margin - res, min=0), 2))
+        loss = torch.mean((1 - gt) * torch.pow(res, 2) +
+                          gt * torch.pow(torch.clamp(margin - res, min=0), 2))
         return loss
 
     @staticmethod
@@ -133,7 +135,7 @@ class Loss(object):
         :param gt: Tensor with shape [B, 1, H, W]
         :return: Average loss of batch data
         """
-        batch, num_classes, _, _= res.shape
+        batch, num_classes, _, _ = res.shape
         if num_classes >= 2:
             loss = 0
             res = F.softmax(res, dim=1)
@@ -147,9 +149,7 @@ class Loss(object):
         return loss
 
 
-
 def debug_main():
-    
     pred1 = torch.rand(size=[10, 1, 10, 10])
     pred2 = torch.rand(size=[10, 1, 10, 10])
     gt = torch.randint(low=0, high=2, size=[10, 1, 10, 10]).float()
@@ -160,7 +160,7 @@ def debug_main():
     loss2 = Loss.mutil_focal_loss([pred1], gt, 0.75, 2, mode='bce')
     print(loss2)
 
-    pred = torch.cat((1- pred1, pred1), dim=1)
+    pred = torch.cat((1 - pred1, pred1), dim=1)
     loss3 = Loss.focal_loss(pred, gt.long(), alpha=0.75, mode='ce')
     print(loss3)
 
@@ -176,8 +176,6 @@ def debug_main():
     loss5 = Loss.dice_loss(pred3, gt3)
     print(loss5)
 
+
 if __name__ == '__main__':
     debug_main()
-
-
-
