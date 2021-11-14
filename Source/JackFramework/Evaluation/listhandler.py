@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-import numpy as np
-
-
 class ListHandler(object):
     """docstring for ListHandler"""
 

@@ -34,7 +34,7 @@ class DataAugmentation(object):
         return imgs
 
     @staticmethod
-    def random_rotate(imgs: list, thro: float=0.5) -> list:
+    def random_rotate(imgs: list, thro: float = 0.5) -> list:
         if np.random.random() > thro:
             return imgs
         else:
@@ -43,7 +43,7 @@ class DataAugmentation(object):
             return imgs
 
     @staticmethod
-    def random_flip(imgs: list, thro: float=0.5) -> list:
+    def random_flip(imgs: list, thro: float = 0.5) -> list:
         if np.random.random() < thro:
             imgs = list(map(lambda img: np.flip(img, 0), imgs))
         if np.random.random() < thro:

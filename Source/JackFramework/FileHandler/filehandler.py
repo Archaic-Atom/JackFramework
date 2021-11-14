@@ -120,9 +120,6 @@ def debug_main():
 
     # Checkpoint's list file
     CHECK_POINT_LIST_NAME = 'checkpoint.list'
-    # Checkpoint's name
-    # model_epoch.pth
-    CHECK_POINT_NAME = 'model_%d_epoch_%d.pth'
     #
     LAST_MODEL_NAME = 'last model name:'
 

@@ -4,7 +4,6 @@ import torch
 
 import JackFramework.SysBasic.define as sysdefine
 from JackFramework.SysBasic.loghander import LogHandler as log
-from JackFramework.FileHandler.filehandler import FileHandler
 from .filehandler import FileHandler
 
 

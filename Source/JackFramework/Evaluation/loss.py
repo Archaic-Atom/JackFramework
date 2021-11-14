@@ -1,23 +1,19 @@
 # -*- coding: utf-8 -*-
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-
-from JackFramework.ImgHandler.img_handler import ImgHandler
 from JackFramework.Tools.tools import Tools
 # from tools import Tools
 
 tensor = TypeVar('tensor')
-
-LOSS_EPSILON = 1e-9
 
 
 class Loss(object):
     """docstring for """
 
     __LOSS_INSTANCE = None
+    LOSS_EPSILON = 1e-9
 
     def __new__(cls, *args: str, **kwargs: str) -> object:
         if cls.__LOSS_INSTANCE is None:
@@ -33,7 +29,7 @@ class Loss(object):
                   mask_threshold_max: int) -> torch.tensor:
         mask = (gt > mask_threshold_min) & (gt < mask_threshold_max)
         mask.detach_()
-        total_num = mask.int().sum() + LOSS_EPSILON
+        total_num = mask.int().sum() + Loss.LOSS_EPSILON
         return F.smooth_l1_loss(res[mask], gt[mask], reduction='sum') / total_num
 
     @staticmethod
@@ -48,18 +44,18 @@ class Loss(object):
             res: Outputs of model with shape [B, C, H, W]
             gt: Labels of datasets with shape [B, C, H, W]
             alpha: Weighting factor in range (0, 1) to balance positive
-                and negative examples. For example: 0.75 means  weighting 
-                factor for positive examples.
+                   and negative examples. For example: 0.75 means weighting
+                   factor for positive examples.
             gamma: Exponent of the modulating factor (1 - p_t) to
-               balance easy vs hard examples.
+                   balance easy vs hard examples.
             reduction: 'none' | 'mean' | 'sum'
                  'none': No reduction will be applied to the output.
                  'mean': The output will be averaged.
                  'sum': The output will be summed.
             mode: 'ce' | 'bce'
-                'ce': The channel num of res is 2, that means caculating 
-                    focal_loss by using cross_entropy_loss 
-                'bce': The channel num of res is 1, that means caculating 
+                'ce': The channel num of res is 2, that means caculating
+                    focal_loss by using cross_entropy_loss
+                'bce': The channel num of res is 1, that means caculating
                     focal_loss by using binary_cross_entropy_loss
         """
         if mode == 'ce':
@@ -112,7 +108,7 @@ class Loss(object):
         """
         :param res: Tensor with shape [B, C, H, W]
         :param gt: Tensor with shape [B, 1, H, W]
-        :param margin: 
+        :param margin:
         :return: Average loss of batch data
         """
         loss = torch.mean((1 - gt) * torch.pow(res, 2) +
@@ -124,7 +120,7 @@ class Loss(object):
         res_vector = res.view(batch, -1)
         gt_vector = gt.view(batch, -1)
         intersection = (res_vector * gt_vector).sum()
-        loss = 1 - torch.mean((2 * intersection) / res_vector.sum() + gt_vector.sum() + LOSS_EPSILON)
+        loss = 1 - torch.mean((2 * intersection) / res_vector.sum() + gt_vector.sum() + Loss.LOSS_EPSILON)
 
         return loss
 

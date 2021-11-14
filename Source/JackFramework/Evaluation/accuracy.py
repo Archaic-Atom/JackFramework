@@ -1,24 +1,18 @@
 # -*- coding: utf-8 -*-
 import torch
-import torch.nn.functional as F
-
-from typing import TypeVar, Generic
-
-tensor = TypeVar('tensor')
-
-ACC_EPSILON = 1e-9
 
 
 class Accuracy(object):
     """docstring for """
+    ACC_EPSILON = 1e-9
 
     def __init__(self):
         super().__init__()
 
     @staticmethod
-    def d_1(res: tensor, gt: tensor, start_threshold: int = 2,
+    def d_1(res: torch.tensor, gt: torch.tensor, start_threshold: int = 2,
             threshold_num: int = 4, relted_error: float = 0.05,
-            invaild_value: int = 0, max_disp: int = 192) -> tensor:
+            invaild_value: int = 0, max_disp: int = 192) -> torch.tensor:
         mask = (gt != invaild_value) & (gt < max_disp)
         mask.detach_()
         acc_res = []
@@ -30,20 +24,20 @@ class Accuracy(object):
                 threshold = start_threshold + i
                 acc = (error > threshold) & (error > related_threshold)
                 acc_num = acc.int().sum()
-                error_rate = acc_num / (total_num + ACC_EPSILON)
+                error_rate = acc_num / (total_num + Accuracy.ACC_EPSILON)
                 acc_res.append(error_rate)
-            mae = error.sum() / (total_num + ACC_EPSILON)
+            mae = error.sum() / (total_num + Accuracy.ACC_EPSILON)
         return acc_res, mae
 
     @staticmethod
-    def r2_score(res: tensor, gt: tensor) -> tensor:
+    def r2_score(res: torch.tensor, gt: torch.tensor) -> torch.tensor:
         gt_mean = torch.mean(gt)
-        ss_tot = torch.sum((gt - gt_mean) ** 2) + ACC_EPSILON
+        ss_tot = torch.sum((gt - gt_mean) ** 2) + Accuracy.ACC_EPSILON
         ss_res = torch.sum((gt - res) ** 2)
         return ss_res / ss_tot
 
     @staticmethod
-    def rmspe_score(res: tensor, gt: tensor) -> tensor:
+    def rmspe_score(res: torch.tensor, gt: torch.tensor) -> torch.tensor:
         return torch.sqrt(torch.mean((res - gt)**2 / gt))
 
 

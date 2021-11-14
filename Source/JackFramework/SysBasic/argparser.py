@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-import os
 import argparse
-
 import JackFramework.SysBasic.define as sysdefine
 
 

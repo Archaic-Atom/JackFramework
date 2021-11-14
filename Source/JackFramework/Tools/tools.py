@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import torch
 
-class Tools(object):
 
+class Tools(object):
     __TOOLS_INSTANCE = None
 
     def __new__(cls, *args: str, **kwargs: str) -> object:
