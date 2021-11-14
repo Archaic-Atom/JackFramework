@@ -111,18 +111,19 @@ class Loss(object):
         :param margin:
         :return: Average loss of batch data
         """
-        loss = torch.mean((1 - gt) * torch.pow(res, 2) +
+        return torch.mean((1 - gt) * torch.pow(res, 2) +
                           gt * torch.pow(torch.clamp(margin - res, min=0), 2))
-        return loss
 
     @staticmethod
     def __dice_loss_func(res: tensor, gt: tensor, batch: int) -> tensor:
         res_vector = res.view(batch, -1)
         gt_vector = gt.view(batch, -1)
         intersection = (res_vector * gt_vector).sum()
-        loss = 1 - torch.mean((2 * intersection) / res_vector.sum() + gt_vector.sum() + Loss.LOSS_EPSILON)
-
-        return loss
+        return 1 - torch.mean(
+            (2 * intersection) / res_vector.sum()
+            + gt_vector.sum()
+            + Loss.LOSS_EPSILON
+        )
 
     @staticmethod
     def dice_loss(res: tensor, gt: tensor) -> tensor:
@@ -133,11 +134,13 @@ class Loss(object):
         """
         batch, num_classes, _, _ = res.shape
         if num_classes >= 2:
-            loss = 0
             res = F.softmax(res, dim=1)
             gt_one_hot = Tools.get_one_hot(gt, num_classes)
-            for c in range(num_classes):
-                loss += Loss.__dice_loss_func(res[:, c], gt_one_hot[:, c], batch)
+            loss = sum(
+                Loss.__dice_loss_func(res[:, c], gt_one_hot[:, c], batch)
+                for c in range(num_classes)
+            )
+
             loss /= num_classes
         else:
             loss = Loss.__dice_loss_func(res, gt, batch)

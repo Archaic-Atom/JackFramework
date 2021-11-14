@@ -64,11 +64,8 @@ class DataHandlerManager(object):
         training_dataloader, val_dataloader, training_sampler, val_sampler = \
             self.__init_dataloader_object()
 
-        is_training = True
-        if args.mode == 'test':
-            is_training = False
-
         if args.imgNum > 0:
+            is_training = args.mode != 'test'
             training_dataloader, training_sampler = self.__init_training_dataloader(is_training)
         else:
             log.error("The training images is 0")
