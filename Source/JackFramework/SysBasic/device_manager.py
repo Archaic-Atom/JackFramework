@@ -60,7 +60,7 @@ class DeviceManager(object):
             s.settimeout(1)
             s.shutdown(2)
             return True
-        except:
+        except ValueError:
             return False
 
     @staticmethod
