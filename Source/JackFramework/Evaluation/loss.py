@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
-from typing import TypeVar
-
 import torch
 import torch.nn.functional as F
 from JackFramework.Tools.tools import Tools
 # from tools import Tools
-
-tensor = TypeVar('tensor')
 
 
 class Loss(object):
@@ -33,12 +29,12 @@ class Loss(object):
         return F.smooth_l1_loss(res[mask], gt[mask], reduction='sum') / total_num
 
     @staticmethod
-    def focal_loss(res: tensor,
-                   gt: tensor,
+    def focal_loss(res: torch.tensor,
+                   gt: torch.tensor,
                    alpha: float = -1,
                    gamma: float = 2,
                    reduction: str = 'mean',
-                   mode: str = 'bce') -> tensor:
+                   mode: str = 'bce') -> torch.tensor:
         """
         Params:
             res: Outputs of model with shape [B, C, H, W]
@@ -81,12 +77,12 @@ class Loss(object):
 
     @ staticmethod
     def mutil_focal_loss(res: list,
-                         gt: tensor,
+                         gt: torch.tensor,
                          alpha: float = -1,
                          gamma: float = 2,
                          reduction: str = 'mean',
                          mode: str = 'bce',
-                         lambdas: list = None) -> tensor:
+                         lambdas: list = None) -> torch.tensor:
 
         loss = 0
         length = len(res)
@@ -104,7 +100,7 @@ class Loss(object):
         return loss
 
     @staticmethod
-    def contrastive_loss(res: tensor, gt: tensor, margin: float) -> tensor:
+    def contrastive_loss(res: torch.tensor, gt: torch.tensor, margin: float) -> torch.tensor:
         """
         :param res: Tensor with shape [B, C, H, W]
         :param gt: Tensor with shape [B, 1, H, W]
@@ -116,7 +112,7 @@ class Loss(object):
         return loss
 
     @staticmethod
-    def __dice_loss_func(res: tensor, gt: tensor, batch: int) -> tensor:
+    def __dice_loss_func(res: torch.tensor, gt: torch.tensor, batch: int) -> torch.tensor:
         res_vector = res.view(batch, -1)
         gt_vector = gt.view(batch, -1)
         intersection = (res_vector * gt_vector).sum()
@@ -125,7 +121,7 @@ class Loss(object):
         return loss
 
     @staticmethod
-    def dice_loss(res: tensor, gt: tensor) -> tensor:
+    def dice_loss(res: torch.tensor, gt: torch.tensor) -> torch.tensor:
         """
         :param res: Tensor with shape [B, C, H, W]
         :param gt: Tensor with shape [B, 1, H, W]
