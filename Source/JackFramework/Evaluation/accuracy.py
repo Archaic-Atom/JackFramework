@@ -277,8 +277,8 @@ def debug_main():
 
         img = Image.open(img_path[i])
         img = trans(img)
-        pred = img[:, 2:-2, 2:258].unsqueeze(0).cuda(i+4)
-        gt = img[:, 2:-2, 260:-2].unsqueeze(0).cuda(i+4)
+        pred = img[:, 2:-2, 2:258].unsqueeze(0).cuda(i + 4)
+        gt = img[:, 2:-2, 260:-2].unsqueeze(0).cuda(i + 4)
 
         CDAccuracy.generate_confusion_matrix(pred[0:1], gt[0:1], 2)
 

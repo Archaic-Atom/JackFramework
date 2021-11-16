@@ -18,7 +18,7 @@ from JackFramework.SysBasic.result_str import ResultStr
 
 # loss
 from JackFramework.Evaluation.loss import Loss
-from JackFramework.Evaluation.accuracy import Accuracy
+from JackFramework.Evaluation.accuracy import BaseAccuracy, SMAccuracy, SegAccuracy, CDAccuracy
 
 # nn
 import JackFramework.NN as nn
