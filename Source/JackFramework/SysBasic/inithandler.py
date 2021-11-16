@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import torch
 
 from JackFramework.SysBasic.loghander import LogHandler as log
 from .device_manager import DeviceManager
@@ -72,7 +71,6 @@ class InitProgram(object):
 
         if not os.path.exists(args.valListPath):
             log.warning('the val list is not existed!')
-            #res = False
 
         if os.path.isfile(args.outputDir):
             log.error("A file was passed as `--outputDir`, please pass a directory!")

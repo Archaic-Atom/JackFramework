@@ -3,10 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from typing import TypeVar
 from .layer import Layer, NormActLayer
-
-tensor = TypeVar('tensor')
 
 
 class Res2DBlock(nn.Module):
@@ -20,14 +17,15 @@ class Res2DBlock(nn.Module):
                  downsample: object = None) -> object:
         super().__init__()
         self.conv_2d_layer_1 = Layer.conv_2d_layer(
-            in_channels, out_channels, kernel_size, stride, padding, dilation, norm=norm, act=act)
+            in_channels, out_channels, kernel_size,
+            stride, padding, dilation, norm=norm, act=act)
         self.conv_2d_layer_2 = Layer.conv_2d_layer(
             in_channels, out_channels, kernel_size, padding=padding,
             dilation=dilation, norm=norm)
         self.downsample = downsample
         self.act_layer = act()
 
-    def forward(self, x: tensor) -> tensor:
+    def forward(self, x: torch.tensor) -> torch.tensor:
         identity = x
         x = self.conv_2d_layer_1(x)
         x = self.conv_2d_layer_2(x)
@@ -55,13 +53,14 @@ class Bottleneck2DBlcok(nn.Module):
         self.conv_2d_layer_1 = Layer.conv_2d_layer(
             in_channels, bottleneck_out_channels, 1, 1, 0, norm=norm, act=act)
         self.conv_2d_layer_2 = Layer.conv_2d_layer(
-            bottleneck_out_channels, bottleneck_out_channels, kernel_size, stride, padding, norm=norm, act=act)
+            bottleneck_out_channels, bottleneck_out_channels,
+            kernel_size, stride, padding, norm=norm, act=act)
         self.conv_2d_layer_3 = Layer.conv_2d_layer(
             bottleneck_out_channels, out_channels, 1, 1, 0, norm=norm)
         self.downsample = downsample
         self.act_layer = act()
 
-    def forward(self, x: tensor) -> tensor:
+    def forward(self, x: torch.tensor) -> torch.tensor:
         identity = x
         x = self.conv_2d_layer_1(x)
         x = self.conv_2d_layer_2(x)
@@ -92,7 +91,7 @@ class Res3DBlock(nn.Module):
         self.downsample = downsample
         self.act_layer = act()
 
-    def forward(self, x: tensor) -> tensor:
+    def forward(self, x: torch.tensor) -> torch.tensor:
         identity = x
         x = self.conv_3d_layer_1(x)
         x = self.conv_3d_layer_2(x)
@@ -120,13 +119,14 @@ class Bottleneck3DBlcok(nn.Module):
             in_channels, bottleneck_out_channels, 1, 1, 0,
             norm=norm, act=act)
         self.conv_3d_layer_2 = Layer.conv_3d_layer(
-            bottleneck_out_channels, bottleneck_out_channels, kernel_size, stride, padding, norm=norm, act=act)
+            bottleneck_out_channels, bottleneck_out_channels,
+            kernel_size, stride, padding, norm=norm, act=act)
         self.conv_3d_layer_3 = Layer.conv_3d_layer(
             bottleneck_out_channels, out_channels, 1, 1, 0, norm=norm, act=False)
         self.downsample = downsample
         self.act_layer = act()
 
-    def forward(self, x: tensor) -> tensor:
+    def forward(self, x: torch.tensor) -> torch.tensor:
         identity = x
         x = self.conv_3d_layer_1(x)
         x = self.conv_3d_layer_2(x)
@@ -144,7 +144,8 @@ class ASPPBlock(nn.Module):
     """docstring for ASPP"""
 
     def __init__(self, in_channels: int, out_channels: int, stride: int = 16,
-                 act: object = NormActLayer.act_layer, norm: object = NormActLayer.norm_layer) -> object:
+                 act: object = NormActLayer.act_layer,
+                 norm: object = NormActLayer.norm_layer) -> object:
         super().__init__()
 
         if stride == 8:
@@ -163,7 +164,7 @@ class ASPPBlock(nn.Module):
         self.block_4 = Layer.conv_2d_layer(in_channels, out_channels, 3, padding=dilation[2],
                                            dilation=dilation[2], norm=norm, act=act)
 
-    def forward(self, x: tensor) -> tensor:
+    def forward(self, x: torch.tensor) -> torch.tensor:
         branch_1 = self.block_1(x)
         branch_2 = self.block_2(x)
         branch_3 = self.block_3(x)
@@ -199,7 +200,7 @@ class SPPBlock(nn.Module):
                                          padding=0, norm=self.norm, act=self.act))
         return nn.Sequential(*layer)
 
-    def forward(self, x: tensor) -> tensor:
+    def forward(self, x: torch.tensor) -> torch.tensor:
         branch_1 = self.branch_1(x)
         branch_1 = F.upsample(branch_1, (x.size()[2], x.size()[3]), mode='bilinear')
 

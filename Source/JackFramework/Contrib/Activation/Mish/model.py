@@ -1,9 +1,9 @@
-
+# -*- coding: utf-8 -*-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F  # (uncomment if needed,but you likely already have it)
 
-#Mish - "Mish: A Self Regularized Non-Monotonic Neural Activation Function"
+# Mish - "Mish: A Self Regularized Non-Monotonic Neural Activation Function"
 # https://arxiv.org/abs/1908.08681v1
 # implemented for PyTorch / FastAI by lessw2020
 # github: https://github.com/lessw2020/mish

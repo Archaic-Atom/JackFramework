@@ -1,21 +1,15 @@
 # -*- coding: utf-8 -*-
-from typing import Generic, TypeVar
-
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from JackFramework.ImgHandler.img_handler import ImgHandler
 from JackFramework.Tools.tools import Tools
-
-tensor = TypeVar('tensor')
-
-LOSS_EPSILON = 1e-9
+# from tools import Tools
 
 
 class Loss(object):
     """docstring for """
 
     __LOSS_INSTANCE = None
+    LOSS_EPSILON = 1e-9
 
     def __new__(cls, *args: str, **kwargs: str) -> object:
         if cls.__LOSS_INSTANCE is None:
@@ -31,33 +25,33 @@ class Loss(object):
                   mask_threshold_max: int) -> torch.tensor:
         mask = (gt > mask_threshold_min) & (gt < mask_threshold_max)
         mask.detach_()
-        total_num = mask.int().sum() + LOSS_EPSILON
+        total_num = mask.int().sum() + Loss.LOSS_EPSILON
         return F.smooth_l1_loss(res[mask], gt[mask], reduction='sum') / total_num
 
     @staticmethod
-    def focal_loss(res: tensor, 
-                gt: tensor, 
-                alpha: float = -1, 
-                gamma: float = 2,
-                reduction: str = 'mean',
-                mode: str = 'bce') -> tensor:
+    def focal_loss(res: torch.tensor,
+                   gt: torch.tensor,
+                   alpha: float = -1,
+                   gamma: float = 2,
+                   reduction: str = 'mean',
+                   mode: str = 'bce') -> torch.tensor:
         """
         Params:
             res: Outputs of model with shape [B, C, H, W]
             gt: Labels of datasets with shape [B, C, H, W]
             alpha: Weighting factor in range (0, 1) to balance positive
-                and negative examples. For example: 0.75 means  weighting 
-                factor for positive examples.
+                   and negative examples. For example: 0.75 means weighting
+                   factor for positive examples.
             gamma: Exponent of the modulating factor (1 - p_t) to
-               balance easy vs hard examples.
+                   balance easy vs hard examples.
             reduction: 'none' | 'mean' | 'sum'
                  'none': No reduction will be applied to the output.
                  'mean': The output will be averaged.
                  'sum': The output will be summed.
             mode: 'ce' | 'bce'
-                'ce': The channel num of res is 2, that means caculating 
-                    focal_loss by using cross_entropy_loss 
-                'bce': The channel num of res is 1, that means caculating 
+                'ce': The channel num of res is 2, that means caculating
+                    focal_loss by using cross_entropy_loss
+                'bce': The channel num of res is 1, that means caculating
                     focal_loss by using binary_cross_entropy_loss
         """
         if mode == 'ce':
@@ -82,17 +76,17 @@ class Loss(object):
         return loss
 
     @ staticmethod
-    def mutil_focal_loss(res: list, 
-                gt: tensor, 
-                alpha: float = -1, 
-                gamma: float = 2,
-                reduction: str = 'mean',
-                mode: str = 'bce',
-                lambdas: list = None) -> tensor:
+    def mutil_focal_loss(res: list,
+                         gt: torch.tensor,
+                         alpha: float = -1,
+                         gamma: float = 2,
+                         reduction: str = 'mean',
+                         mode: str = 'bce',
+                         lambdas: list = None) -> torch.tensor:
 
         loss = 0
         length = len(res)
-        _, _, h, w  = gt.shape
+        _, _, h, w = gt.shape
         if lambdas is None:
             lambdas = [1] * length
 
@@ -106,40 +100,43 @@ class Loss(object):
         return loss
 
     @staticmethod
-    def contrastive_loss(res: tensor, gt: tensor, margin: float) -> tensor:
+    def contrastive_loss(res: torch.tensor, gt: torch.tensor, margin: float) -> torch.tensor:
         """
         :param res: Tensor with shape [B, C, H, W]
         :param gt: Tensor with shape [B, 1, H, W]
-        :param margin: 
+        :param margin:
         :return: Average loss of batch data
         """
-        loss = torch.mean((1- gt) * torch.pow(res, 2) +
-                        gt * torch.pow(torch.clamp(margin - res, min=0), 2))
-        return loss
+        return torch.mean((1 - gt) * torch.pow(res, 2) +
+                          gt * torch.pow(torch.clamp(margin - res, min=0), 2))
 
     @staticmethod
-    def __dice_loss_func(res: tensor, gt: tensor, batch: int) -> tensor:
+    def __dice_loss_func(res: torch.tensor, gt: torch.tensor, batch: int) -> torch.tensor:
         res_vector = res.view(batch, -1)
         gt_vector = gt.view(batch, -1)
         intersection = (res_vector * gt_vector).sum()
-        loss = 1 - torch.mean((2 * intersection) / res_vector.sum() + gt_vector.sum() + LOSS_EPSILON)
-
-        return loss
+        return 1 - torch.mean(
+            (2 * intersection) / res_vector.sum()
+            + gt_vector.sum()
+            + Loss.LOSS_EPSILON
+        )
 
     @staticmethod
-    def dice_loss(res: tensor, gt: tensor) -> tensor:
+    def dice_loss(res: torch.tensor, gt: torch.tensor) -> torch.tensor:
         """
         :param res: Tensor with shape [B, C, H, W]
         :param gt: Tensor with shape [B, 1, H, W]
         :return: Average loss of batch data
         """
-        batch, num_classes, _, _= res.shape
+        batch, num_classes, _, _ = res.shape
         if num_classes >= 2:
-            loss = 0
             res = F.softmax(res, dim=1)
             gt_one_hot = Tools.get_one_hot(gt, num_classes)
-            for c in range(num_classes):
-                loss += Loss.__dice_loss_func(res[:, c], gt_one_hot[:, c], batch)
+            loss = sum(
+                Loss.__dice_loss_func(res[:, c], gt_one_hot[:, c], batch)
+                for c in range(num_classes)
+            )
+
             loss /= num_classes
         else:
             loss = Loss.__dice_loss_func(res, gt, batch)
@@ -147,9 +144,7 @@ class Loss(object):
         return loss
 
 
-
 def debug_main():
-    
     pred1 = torch.rand(size=[10, 1, 10, 10])
     pred2 = torch.rand(size=[10, 1, 10, 10])
     gt = torch.randint(low=0, high=2, size=[10, 1, 10, 10]).float()
@@ -160,7 +155,7 @@ def debug_main():
     loss2 = Loss.mutil_focal_loss([pred1], gt, 0.75, 2, mode='bce')
     print(loss2)
 
-    pred = torch.cat((1- pred1, pred1), dim=1)
+    pred = torch.cat((1 - pred1, pred1), dim=1)
     loss3 = Loss.focal_loss(pred, gt.long(), alpha=0.75, mode='ce')
     print(loss3)
 
@@ -176,8 +171,6 @@ def debug_main():
     loss5 = Loss.dice_loss(pred3, gt3)
     print(loss5)
 
+
 if __name__ == '__main__':
     debug_main()
-
-
-

@@ -3,8 +3,6 @@ import os
 import socket
 import torch
 import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel as DDP
-
 from JackFramework.SysBasic.loghander import LogHandler as log
 
 
@@ -62,7 +60,7 @@ class DeviceManager(object):
             s.settimeout(1)
             s.shutdown(2)
             return True
-        except:
+        except ValueError:
             return False
 
     @staticmethod

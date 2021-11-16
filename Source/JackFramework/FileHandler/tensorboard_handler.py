@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
-import torch
-import torchvision
 from torch.utils.tensorboard import SummaryWriter
 
 

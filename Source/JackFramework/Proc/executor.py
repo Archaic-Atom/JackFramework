@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import torch
 import math
 import time
 import torch.distributed as dist
@@ -173,9 +172,7 @@ class Executor(object):
             return rank + iteration * (args.batchSize * args.gpu)
 
     def __executor_training_proc(self, epoch: int, rank: object) -> None:
-
         if self.__training_iteration > 0:
-            graph = self.__get_graph_and_data_manager()
             self.__training_iteration = self.__train_proc(
                 epoch, self.__training_iteration, "Train", rank, True)
 

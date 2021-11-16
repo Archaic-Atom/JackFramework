@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
-import sys
-
 # sys setting
 from JackFramework.SysBasic import define as sys_define
 
@@ -31,9 +28,6 @@ from JackFramework.NN.layer import NormActLayer as norm_act_layer
 from JackFramework.NN.ops import Ops as ops
 
 # Contrib
-import JackFramework.Contrib.SemanticSegmentation as ss
-import JackFramework.Contrib.StereoMatching as sm
-import JackFramework.Contrib.VideoProcessing as vp
 import JackFramework.Contrib.Activation as act
 
 # template
@@ -41,6 +35,7 @@ from JackFramework import UserTemplate
 
 # Tools
 from JackFramework.Tools.tools import Tools
+
 
 def version():
     return sys_define.VERSION

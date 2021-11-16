@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
-
 from .ops import Ops
 
 
@@ -80,9 +77,9 @@ class Layer(object):
 
     @ staticmethod
     def conv_2d_layer(in_channels: int, out_channels: int, kernel_size: int,
-                      stride: int=1, padding: int=1, dilation: int=1,
-                      bias: bool=False, norm: object=NormActLayer.norm_layer,
-                      act: object=NormActLayer.act_layer) -> object:
+                      stride: int = 1, padding: int = 1, dilation: int = 1,
+                      bias: bool = False, norm: object = NormActLayer.norm_layer,
+                      act: object = NormActLayer.act_layer) -> object:
         layer = [
             Ops.conv_2d(
                 in_channels, out_channels, kernel_size, stride,
@@ -94,9 +91,9 @@ class Layer(object):
 
     @ staticmethod
     def deconv_2d_layer(in_channels: int, out_channels: int, kernel_size: int,
-                        stride: int=1, padding: int=0, output_padding: int=0,
-                        bias: bool=False, norm: object=NormActLayer.norm_layer,
-                        act: object=NormActLayer.act_layer) -> object:
+                        stride: int = 1, padding: int = 0, output_padding: int = 0,
+                        bias: bool = False, norm: object = NormActLayer.norm_layer,
+                        act: object = NormActLayer.act_layer) -> object:
         layer = [
             Ops.deconv_2d(
                 in_channels, out_channels, kernel_size, stride,
@@ -109,9 +106,9 @@ class Layer(object):
 
     @ staticmethod
     def conv_3d_layer(in_channels: int, out_channels: int, kernel_size: int,
-                      stride: int=1, padding: int=1, dilation: int=1,
-                      bias: bool=False, norm: object=NormActLayer.norm_layer,
-                      act: object=NormActLayer.act_layer) -> object:
+                      stride: int = 1, padding: int = 1, dilation: int = 1,
+                      bias: bool = False, norm: object = NormActLayer.norm_layer,
+                      act: object = NormActLayer.act_layer) -> object:
         layer = [
             Ops.conv_3d(
                 in_channels, out_channels, kernel_size, stride,
@@ -124,9 +121,9 @@ class Layer(object):
 
     @ staticmethod
     def deconv_3d_layer(in_channels: int, out_channels: int, kernel_size: int,
-                        stride: int=1, padding: int=0, output_padding: int=0,
-                        bias: bool=False, norm: object=NormActLayer.norm_layer,
-                        act: object=NormActLayer.act_layer) -> object:
+                        stride: int = 1, padding: int = 0, output_padding: int = 0,
+                        bias: bool = False, norm: object = NormActLayer.norm_layer,
+                        act: object = NormActLayer.act_layer) -> object:
         layer = [
             Ops.deconv_3d(
                 in_channels, out_channels, kernel_size, stride,

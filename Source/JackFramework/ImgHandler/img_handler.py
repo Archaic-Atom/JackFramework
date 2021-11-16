@@ -11,8 +11,7 @@ class ImgHandler(object):
 
     @staticmethod
     def hwc2cwh(imgs: list) -> list:
-        imgs = list(map(lambda img: torch.Tensor(\
-                        img.transpose(2,0,1)), imgs))
+        imgs = list(map(lambda img: torch.Tensor(img.transpose(2, 0, 1)), imgs))
         return imgs
 
     @staticmethod
@@ -35,4 +34,3 @@ class ImgHandler(object):
         SSIM = SSIM_n / SSIM_d
 
         return torch.clamp((1 - SSIM) / 2, 0, 1)
-

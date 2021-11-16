@@ -107,7 +107,8 @@ $ ./clean.sh
 #### To do
 #### 2021-07-10
 1. rewirte the readme;
-2. code refacotoring for contrib
+2. code refacotoring for contrib;
+3. refactor the code;
 
 ---
 #### Update log
