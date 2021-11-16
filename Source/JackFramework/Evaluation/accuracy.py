@@ -85,41 +85,38 @@ class SegAccuracy(object):
     def dice_score(res: torch.tensor, gt: torch.tensor) -> torch.tensor:
         intersection = (res * gt).sum()
         union = res.sum() + gt.sum() + SegAccuracy.ACC_EPSILON
-        dice = 2 * intersection / union
-        return dice
+        return 2 * intersection / union
 
     @staticmethod
     def generate_confusion_matrix(res: torch.tensor, gt: torch.tensor, num_classes: int) -> torch.tensor:
         res = res.flatten()
         gt = gt.flatten()
         mask = (gt >= 0) & (gt < num_classes)
-        confusion_matrix = torch.bincount(num_classes * gt[mask].int() + res[mask].int(),
-                                          minlength=num_classes**2).reshape(num_classes, num_classes)
-        return confusion_matrix
+        return torch.bincount(
+            num_classes * gt[mask].int() + res[mask].int(),
+            minlength=num_classes ** 2,
+        ).reshape(num_classes, num_classes)
 
     @staticmethod
     def precision_score(res: torch.tensor, gt: torch.tensor, num_classes: int) -> torch.tensor:
 
         cm = SegAccuracy.generate_confusion_matrix(res, gt, num_classes)
         tp = torch.diag(cm)
-        precision = tp / (cm.sum(dim=0) + SegAccuracy.ACC_EPSILON)
-        return precision
+        return tp / (cm.sum(dim=0) + SegAccuracy.ACC_EPSILON)
 
     @staticmethod
     def recall_score(res: torch.tensor, gt: torch.tensor, num_classes: int) -> torch.tensor:
 
         cm = SegAccuracy.generate_confusion_matrix(res, gt, num_classes)
         tp = torch.diag(cm)
-        recall = tp / (cm.sum(dim=1) + SegAccuracy.ACC_EPSILON)
-        return recall
+        return tp / (cm.sum(dim=1) + SegAccuracy.ACC_EPSILON)
 
     @staticmethod
     def pa_score(res: torch.tensor, gt: torch.tensor, num_classes: int) -> torch.tensor:
 
         cm = SegAccuracy.generate_confusion_matrix(res, gt, num_classes)
         tp = torch.diag(cm)
-        pa = tp.sum() / (cm.sum() + SegAccuracy.ACC_EPSILON)
-        return pa
+        return tp.sum() / (cm.sum() + SegAccuracy.ACC_EPSILON)
 
     @staticmethod
     def cpa_score(res: torch.tensor, gt: torch.tensor, num_classes: int) -> torch.tensor:
@@ -127,8 +124,7 @@ class SegAccuracy(object):
         cm = SegAccuracy.generate_confusion_matrix(res, gt, num_classes)
         tp = torch.diag(cm)
         sum_0 = cm.sum(dim=0)
-        cpa = tp / (sum_0 + SegAccuracy.ACC_EPSILON)
-        return cpa
+        return tp / (sum_0 + SegAccuracy.ACC_EPSILON)
 
     @staticmethod
     def mpa_score(res: torch.tensor, gt: torch.tensor, num_classes: int) -> torch.tensor:
@@ -136,8 +132,7 @@ class SegAccuracy(object):
         cm = SegAccuracy.generate_confusion_matrix(res, gt, num_classes)
         tp = torch.diag(cm)
         sum_0 = cm.sum(dim=0)
-        mpa = torch.mean(tp / (sum_0 + SegAccuracy.ACC_EPSILON))
-        return mpa
+        return torch.mean(tp / (sum_0 + SegAccuracy.ACC_EPSILON))
 
     @staticmethod
     def iou_miou_score(res: torch.tensor, gt: torch.tensor, num_classes: int) -> torch.tensor:
@@ -157,8 +152,7 @@ class SegAccuracy(object):
         sum_0 = cm.sum(dim=0)
         freq_weight = cm.sum(dim=1) / cm.sum()
         each_class_counts = cm.sum(dim=1) + sum_0 - tp
-        fwiou = (tp * freq_weight / (each_class_counts + SegAccuracy.ACC_EPSILON)).sum()
-        return fwiou
+        return (tp * freq_weight / (each_class_counts + SegAccuracy.ACC_EPSILON)).sum()
 
 
 class CDAccuracy(object):
@@ -213,8 +207,7 @@ class CDAccuracy(object):
         else:
             cm = CDAccuracy.__TEMP_CONFUSION_MATRIX
         tp = torch.diag(cm)
-        oa = tp.sum() / (cm.sum() + CDAccuracy.ACC_EPSILON)
-        return oa
+        return tp.sum() / (cm.sum() + CDAccuracy.ACC_EPSILON)
 
     @staticmethod
     def precision_score(accumulate: bool = False) -> torch.tensor:
@@ -223,8 +216,7 @@ class CDAccuracy(object):
         else:
             cm = CDAccuracy.__TEMP_CONFUSION_MATRIX
         tp = torch.diag(cm)
-        precision = tp / (cm.sum(dim=0) + CDAccuracy.ACC_EPSILON)
-        return precision
+        return tp / (cm.sum(dim=0) + CDAccuracy.ACC_EPSILON)
 
     @staticmethod
     def recall_score(accumulate: bool = False) -> torch.tensor:
@@ -233,8 +225,7 @@ class CDAccuracy(object):
         else:
             cm = CDAccuracy.__TEMP_CONFUSION_MATRIX
         tp = torch.diag(cm)
-        recall = tp / (cm.sum(dim=1) + CDAccuracy.ACC_EPSILON)
-        return recall
+        return tp / (cm.sum(dim=1) + CDAccuracy.ACC_EPSILON)
 
     @staticmethod
     def iou_miou_score(accumulate: bool = False) -> torch.tensor:
@@ -258,8 +249,12 @@ class CDAccuracy(object):
         tp = torch.diag(cm)
         precision = tp / (cm.sum(dim=0) + CDAccuracy.ACC_EPSILON)
         recall = tp / (cm.sum(dim=1) + CDAccuracy.ACC_EPSILON)
-        f = (1 + beta ** 2) * precision * recall / (precision * beta ** 2 + recall + CDAccuracy.ACC_EPSILON)
-        return f
+        return (
+            (1 + beta ** 2)
+            * precision
+            * recall
+            / (precision * beta ** 2 + recall + CDAccuracy.ACC_EPSILON)
+        )
 
 
 def debug_main():
