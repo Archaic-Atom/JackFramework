@@ -1,24 +1,46 @@
 # -*- coding: utf-8 -*-
 import torch
-import torch.nn.functional as F
-
-from typing import TypeVar, Generic
-
-tensor = TypeVar('tensor')
+from torch.functional import Tensor
 
 ACC_EPSILON = 1e-9
 
 
-class Accuracy(object):
-    """docstring for """
+class BaseAccuracy(object):
+    """docstring for common accuracy"""
+    __BASEACCURACY_INSTANCE = None
+
+    def __new__(cls, *args: str, **kwargs: str) -> object:
+        if cls.__BASEACCURACY_INSTANCE is None:
+            cls.__BASEACCURACY_INSTANCE = object.__new__(cls)
+        return cls.__BASEACCURACY_INSTANCE
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    @staticmethod
+    def rmse_score(res: Tensor, gt: Tensor) -> Tensor:
+        res = res.view(res.size(0), -1)
+        gt = gt.view(gt.size(0), -1)
+        rmse = torch.sqrt(torch.sum((res - gt) ** 2, dim=1) / res.size(1))
+        return torch.mean(rmse)
+
+
+class SMAccuracy(object):
+    """docstring for accuracy of stereo matching task"""
+    __SMACCURACY_INSTANCE = None
+
+    def __new__(cls, *args: str, **kwargs: str) -> object:
+        if cls.__SMACCURACY_INSTANCE is None:
+            cls.__SMACCURACY_INSTANCE = object.__new__(cls)
+        return cls.__SMACCURACY_INSTANCE
 
     def __init__(self):
         super().__init__()
 
     @staticmethod
-    def d_1(res: tensor, gt: tensor, start_threshold: int = 2,
+    def d_1(res: Tensor, gt: Tensor, start_threshold: int = 2,
             threshold_num: int = 4, relted_error: float = 0.05,
-            invaild_value: int = 0, max_disp: int = 192) -> tensor:
+            invaild_value: int = 0, max_disp: int = 192) -> Tensor:
         mask = (gt != invaild_value) & (gt < max_disp)
         mask.detach_()
         acc_res = []
@@ -36,22 +58,287 @@ class Accuracy(object):
         return acc_res, mae
 
     @staticmethod
-    def r2_score(res: tensor, gt: tensor) -> tensor:
+    def r2_score(res: Tensor, gt: Tensor) -> Tensor:
         gt_mean = torch.mean(gt)
         ss_tot = torch.sum((gt - gt_mean) ** 2) + ACC_EPSILON
         ss_res = torch.sum((gt - res) ** 2)
         return ss_res / ss_tot
 
     @staticmethod
-    def rmspe_score(res: tensor, gt: tensor) -> tensor:
+    def rmspe_score(res: Tensor, gt: Tensor) -> Tensor:
         return torch.sqrt(torch.mean((res - gt)**2 / gt))
 
 
+class SegAccuracy(object):
+    """docstring for accuracy of segmentation task"""
+    __SEGACCURACY_INSTANCE = None
+
+    def __new__(cls, *args: str, **kwargs: str) -> object:
+        if cls.__SEGACCURACY_INSTANCE is None:
+            cls.__SEGACCURACY_INSTANCE = object.__new__(cls)
+        return cls.__SEGACCURACY_INSTANCE
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    @staticmethod
+    def dice_score(res: Tensor, gt: Tensor) -> Tensor:
+        intersection = (res * gt).sum()
+        union = res.sum() + gt.sum() + ACC_EPSILON
+        dice = 2 * intersection / union
+        return dice
+
+    @staticmethod
+    def generate_confusion_matrix(res: Tensor, gt: Tensor, num_classes: int) -> Tensor:
+        res = res.flatten()
+        gt = gt.flatten()
+        mask = (gt >= 0) & (gt < num_classes)
+        confusion_matrix = torch.bincount(num_classes * gt[mask].int() + res[mask].int(),
+                                          minlength=num_classes**2).reshape(num_classes, num_classes)
+        return confusion_matrix
+
+    @staticmethod
+    def precision_score(res: Tensor, gt: Tensor, num_classes: int) -> Tensor:
+
+        cm = SegAccuracy.generate_confusion_matrix(res, gt, num_classes)
+        tp = torch.diag(cm)
+        precision = tp / (cm.sum(dim=0) + ACC_EPSILON)
+        return precision
+
+    @staticmethod
+    def recall_score(res: Tensor, gt: Tensor, num_classes: int) -> Tensor:
+
+        cm = SegAccuracy.generate_confusion_matrix(res, gt, num_classes)
+        tp = torch.diag(cm)
+        recall = tp / (cm.sum(dim=1) + ACC_EPSILON)
+        return recall
+
+    @staticmethod
+    def pa_score(res: Tensor, gt: Tensor, num_classes: int) -> Tensor:
+
+        cm = SegAccuracy.generate_confusion_matrix(res, gt, num_classes)
+        tp = torch.diag(cm)
+        pa = tp.sum() / (cm.sum() + ACC_EPSILON)
+        return pa
+
+    @staticmethod
+    def cpa_score(res: Tensor, gt: Tensor, num_classes: int) -> Tensor:
+
+        cm = SegAccuracy.generate_confusion_matrix(res, gt, num_classes)
+        tp = torch.diag(cm)
+        sum_0 = cm.sum(dim=0)
+        cpa = tp / (sum_0 + ACC_EPSILON)
+        return cpa
+
+    @staticmethod
+    def mpa_score(res: Tensor, gt: Tensor, num_classes: int) -> Tensor:
+
+        cm = SegAccuracy.generate_confusion_matrix(res, gt, num_classes)
+        tp = torch.diag(cm)
+        sum_0 = cm.sum(dim=0)
+        mpa = torch.mean(tp / (sum_0 + ACC_EPSILON))
+        return mpa
+
+    @staticmethod
+    def iou_miou_score(res: Tensor, gt: Tensor, num_classes: int) -> Tensor:
+
+        cm = SegAccuracy.generate_confusion_matrix(res, gt, num_classes)
+        tp = torch.diag(cm)
+        each_class_counts = cm.sum(dim=1) + cm.sum(dim=0) - tp
+        iou = tp / (each_class_counts + ACC_EPSILON)
+        miou = torch.mean(iou)
+        return iou, miou
+
+    @staticmethod
+    def fwiou_score(res: Tensor, gt: Tensor, num_classes: int) -> Tensor:
+
+        cm = SegAccuracy.generate_confusion_matrix(res, gt, num_classes)
+        tp = torch.diag(cm)
+        sum_0 = cm.sum(dim=0)
+        freq_weight = cm.sum(dim=1) / cm.sum()
+        each_class_counts = cm.sum(dim=1) + sum_0 - tp
+        fwiou = (tp * freq_weight / (each_class_counts + ACC_EPSILON)).sum()
+        return fwiou
+
+
+class CDAccuracy(object):
+    """
+    docstring for accuracy of change detection task
+
+    If the key arg: accumulate is True, the functions will caculate
+    all scores by accumulated confusion matrix. Otherwise, by the
+    confusion matrix of current mini-batch data.
+    """
+    __CDACCURACY_INSTANCE = None
+    __CONFUSION_MATRIX = 0
+    __TEMP_CONFUSION_MATRIX = 0
+
+    def __new__(cls, *args: str, **kwargs: str) -> object:
+        if cls.__CDACCURACY_INSTANCE is None:
+            cls.__CDACCURACY_INSTANCE = object.__new__(cls)
+        return cls.__CDACCURACY_INSTANCE
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_cm(accumulate: bool = False):
+        if accumulate:
+            return CDAccuracy.__CONFUSION_MATRIX
+        else:
+            return CDAccuracy.__TEMP_CONFUSION_MATRIX
+
+    @staticmethod
+    def reset_cm():
+        CDAccuracy.__CONFUSION_MATRIX = 0
+
+    @staticmethod
+    def generate_confusion_matrix(res: Tensor,
+                                  gt: Tensor,
+                                  num_classes: int) -> Tensor:
+
+        CDAccuracy.__TEMP_CONFUSION_MATRIX = 0
+        res = res.flatten()
+        gt = gt.flatten()
+        mask = (gt >= 0) & (gt < num_classes)
+        CDAccuracy.__TEMP_CONFUSION_MATRIX = torch.bincount(num_classes * gt[mask].int() + res[mask].int(),
+                                                            minlength=num_classes**2).reshape(num_classes, num_classes)
+        CDAccuracy.__CONFUSION_MATRIX += CDAccuracy.__TEMP_CONFUSION_MATRIX.cpu()
+
+    @staticmethod
+    def oa_score(accumulate: bool = False) -> Tensor:
+        if accumulate:
+            cm = CDAccuracy.__CONFUSION_MATRIX
+        else:
+            cm = CDAccuracy.__TEMP_CONFUSION_MATRIX
+        tp = torch.diag(cm)
+        oa = tp.sum() / (cm.sum() + ACC_EPSILON)
+        return oa
+
+    @staticmethod
+    def precision_score(accumulate: bool = False) -> Tensor:
+        if accumulate:
+            cm = CDAccuracy.__CONFUSION_MATRIX
+        else:
+            cm = CDAccuracy.__TEMP_CONFUSION_MATRIX
+        tp = torch.diag(cm)
+        precision = tp / (cm.sum(dim=0) + ACC_EPSILON)
+        return precision
+
+    @staticmethod
+    def recall_score(accumulate: bool = False) -> Tensor:
+        if accumulate:
+            cm = CDAccuracy.__CONFUSION_MATRIX
+        else:
+            cm = CDAccuracy.__TEMP_CONFUSION_MATRIX
+        tp = torch.diag(cm)
+        recall = tp / (cm.sum(dim=1) + ACC_EPSILON)
+        return recall
+
+    @staticmethod
+    def iou_miou_score(accumulate: bool = False) -> Tensor:
+        if accumulate:
+            cm = CDAccuracy.__CONFUSION_MATRIX
+        else:
+            cm = CDAccuracy.__TEMP_CONFUSION_MATRIX
+        tp = torch.diag(cm)
+        each_class_counts = cm.sum(dim=1) + cm.sum(dim=0) - tp
+        iou = tp / (each_class_counts + ACC_EPSILON)
+        miou = torch.mean(iou)
+        return iou, miou
+
+    @staticmethod
+    def f_score(accumulate: bool = False,
+                beta: int = 1) -> Tensor:
+        if accumulate:
+            cm = CDAccuracy.__CONFUSION_MATRIX
+        else:
+            cm = CDAccuracy.__TEMP_CONFUSION_MATRIX
+        tp = torch.diag(cm)
+        precision = tp / (cm.sum(dim=0) + ACC_EPSILON)
+        recall = tp / (cm.sum(dim=1) + ACC_EPSILON)
+        f = (1 + beta ** 2) * precision * recall / (precision * beta ** 2 + recall + ACC_EPSILON)
+        return f
+
+
 def debug_main():
-    pred = torch.rand(10, 600)
-    gt = torch.rand(10, 600)
-    out = Accuracy.r2_score(pred, gt)
-    print(out)
+
+    from PIL import Image
+    import torchvision.transforms as tfs
+
+    # pred = torch.ones([10, 1, 10, 10])
+    # gt = torch.ones([10, 1, 10, 10])
+
+    # pred = torch.randint(low=0, high=10, size=[10, 1, 10, 10])
+    # gt = torch.randint(low=0, high=10, size=[10, 1, 10, 10])
+    # CDAccuracy.update_confusion_matrix(pred, gt, 10)
+
+    img_path1 = '/home3/liwenyao/Project/STANet/Scripts/MYNet/new_Siam_c3d/aug1/ResultImg1/test_100_22.png'
+    img_path2 = '/home3/liwenyao/Project/STANet/Scripts/MYNet/new_Siam_c3d/aug1/ResultImg1/test_100_23.png'
+    img_path = [img_path1, img_path2]
+    trans = tfs.ToTensor()
+    for i in range(2):
+
+        img = Image.open(img_path[i])
+        img = trans(img)
+        pred = img[:, 2:-2, 2:258].unsqueeze(0).cuda(i+4)
+        gt = img[:, 2:-2, 260:-2].unsqueeze(0).cuda(i+4)
+
+        CDAccuracy.generate_confusion_matrix(pred[0:1], gt[0:1], 2)
+
+        print('------------------change detection accuracy(no accumulation)------------------')
+        precision = CDAccuracy.precision_score()
+        print('precision:', precision)
+        recall = CDAccuracy.recall_score()
+        print('recall:', recall)
+        iou, miou = CDAccuracy.iou_miou_score()
+        print('iou:', iou)
+        print('miou:', miou)
+        f1 = CDAccuracy.f_score(1)
+        print('f1:', f1)
+        oa = CDAccuracy.oa_score()
+        print('oa:', oa)
+        print(CDAccuracy.get_cm())
+
+        print('------------------segmentation accuracy------------------')
+        pa = SegAccuracy.pa_score(pred, gt, 2)
+        print('pa:', pa)
+        cpa = SegAccuracy.cpa_score(pred, gt, 2)
+        print('cpa:', cpa)
+        mpa = SegAccuracy.mpa_score(pred, gt, 2)
+        print('mpa:', mpa)
+        iou, miou = SegAccuracy.iou_miou_score(pred, gt, 2)
+        print('iou:', iou)
+        print('miou:', miou)
+        fwiou = SegAccuracy.fwiou_score(pred, gt, 2)
+        print('fwiou:', fwiou)
+        dice = SegAccuracy.dice_score(pred, gt)
+        print('dice:', dice)
+        precision = SegAccuracy.precision_score(pred, gt, 2)
+        print('precision:', precision)
+        recall = SegAccuracy.recall_score(pred, gt, 2)
+        print('recall:', recall)
+
+        print('------------------base accuracy------------------')
+        rmse = BaseAccuracy.rmse_score(pred, gt)
+        print('rmse:', rmse)
+
+    print('------------------change detection accuracy(accumulation)------------------')
+    precision = CDAccuracy.precision_score(True)
+    print('precision:', precision)
+    recall = CDAccuracy.recall_score(True)
+    print('recall:', recall)
+    iou, miou = CDAccuracy.iou_miou_score(True)
+    print('iou:', iou)
+    print('miou:', miou)
+    f1 = CDAccuracy.f_score(True)
+    print('f1:', f1)
+    oa = CDAccuracy.oa_score(True)
+    print('oa:', oa)
+    print(CDAccuracy.get_cm(True))
+
+    CDAccuracy.reset_cm()
+    print(CDAccuracy.get_cm(True))
 
 
 if __name__ == "__main__":
