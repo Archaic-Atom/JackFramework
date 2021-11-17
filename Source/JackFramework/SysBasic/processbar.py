@@ -95,7 +95,7 @@ class ShowProcess():
             self.close()
 
 
-if __name__ == '__main__':
+def debug_main():
     max_steps = 50
 
     process_bar = ShowProcess(max_steps, 'OK')
@@ -104,3 +104,7 @@ if __name__ == '__main__':
         process_bar.show_process(i + 1)
         time.sleep(0.01)
     time.sleep(50)
+
+
+if __name__ == '__main__':
+    debug_main()
