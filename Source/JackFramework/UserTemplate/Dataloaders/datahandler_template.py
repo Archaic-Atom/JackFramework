@@ -38,7 +38,7 @@ class DataHandlerTemplate(object):
         pass
 
     @abstractmethod
-    def save_result(self, outpu_data: list, supplement: list,
+    def save_result(self, output_data: list, supplement: list,
                     img_id: int, model_id: int) -> None:
         pass
 
