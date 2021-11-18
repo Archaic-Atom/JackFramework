@@ -222,8 +222,8 @@ class Executor(object):
             self.__executor_val_proc(epoch, rank)
             if args.dist:
                 dist.barrier()
+            self.__save_model(epoch, rank)
 
-        self.__save_model(epoch, rank)
         self.__traning_post_proc()
 
     def test(self, rank: object = None) -> None:
