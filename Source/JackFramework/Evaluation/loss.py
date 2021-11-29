@@ -114,12 +114,10 @@ class Loss(object):
     def __dice_loss_func(res: torch.tensor, gt: torch.tensor, batch: int) -> torch.tensor:
         res_vector = res.view(batch, -1)
         gt_vector = gt.view(batch, -1)
-        intersection = (res_vector * gt_vector).sum()
-        return 1 - torch.mean(
-            (2 * intersection) / res_vector.sum()
-            + gt_vector.sum()
-            + Loss.LOSS_EPSILON
-        )
+        intersection = (res_vector * gt_vector).sum(1)
+        return 1 - torch.mean((2 * intersection) / (res_vector.sum(1)
+                              + gt_vector.sum(1)
+                              + Loss.LOSS_EPSILON))
 
     @staticmethod
     def dice_loss(res: torch.tensor, gt: torch.tensor) -> torch.tensor:
