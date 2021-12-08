@@ -20,6 +20,11 @@ class ResultStr(object):
         training_state = "[TrainProcess] " if training else "[ValProcess] "
         return training_state + "e: " + str(epoch) + ', ' +\
             loss_str + ', ' + acc_str + ' (%.3f s/epoch)' % duration
+    
+    def testing_result_str(self, acc: list, info_str: str = None):
+        acc_str = self.acc2str(acc, info_str, decimal_places=DEFAULT_MAX_DECIMAL_PLACES)
+        testing_state = "[TestProcess] "
+        return testing_state + acc_str
 
     def training_intermediate_result(self, epoch: int, loss: list,
                                      acc: list) -> str:
