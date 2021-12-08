@@ -4,11 +4,14 @@
 ![cuDnn 7.3.6](https://img.shields.io/badge/cudnn-7.3.6-green.svg?style=plastic)
 ![License MIT](https://img.shields.io/badge/license-MIT-green.svg?style=plastic)
 
->This is a training framework based on pythorch, which is used to rapidly build the model, without caring about the training process (such as DDP or DP, Tensorboard, et al.). The demo for use can be find in FrameworkTemplate (https://github.com/Archaic-Atom/FrameworkTemplate). if you have any questions, please send an e-mail to raoxi36@foxmail.com
+>This is a training framework based on pythorch, which is used to rapidly build the model, without caring about the training process (such as DDP or DP, Tensorboard, et al.). The demo for use can be find in FrameworkTemplate (https://github.com/Archaic-Atom/Template-jf). if you have any questions, please send an e-mail to raoxi36@foxmail.com
+>
+Document：https://www.wolai.com/archaic-atom/rqKJVi7M1x44mPT8CdM1TL
 
-# add one people
+Demo Project: https://github.com/Archaic-Atom/Demo-jf
+
 --- 
-#### 0. Software Environment
+#### 1. Software Environment
 **1) OS Environment**
 ```
 $ os >= linux 16.04
@@ -26,11 +29,11 @@ $ PIL == 5.1.0
 ```
 
 ---
-#### 1. Hardware Environment
+#### 2. Hardware Environment
 This framework is only used in GPUs.
 
 ---
-#### 2. How to use our framework:
+#### 3. How to use our framework:
 **1) Build env**
 ```
 $ conda env create -f environment.yml
@@ -49,6 +52,8 @@ $ python -c "import JackFramework as jf; print(jf.version())"
 
 you can find the template project in: https://github.com/Archaic-Atom/FameworkTemplate
 
+you can find the demo project in: https://github.com/Archaic-Atom/Demo-jf
+
 **Related Arguments for training or testing process**
 |   Args        |   Type  |      Description                 | Default         |
 |:-------------:|:-------:|:--------------------------------:|:---------------:|
@@ -56,7 +61,7 @@ you can find the template project in: https://github.com/Archaic-Atom/FameworkTe
 | gpu           |  [int]  |        the number of gpus        |    2            |
 | auto_save_num |  [int]  | the number of interval save      |    1            |
 | dataloaderNum |  [int]  |  the number of dataloders        |    8            |
-| pretrain      |  [bool] |    is a new traning process>     |  False          |
+| pretrain      |  [bool] |    is a new traning process      |  False          |
 | ip            |  [str]  | used for distributed training    | 127.0.0.1       |
 | port          |  [str]  | used for distributed training    | 8086            |
 | dist          |  [bool] | distributed training (DDP)       | True            |
