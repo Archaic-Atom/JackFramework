@@ -33,7 +33,7 @@ class ListHandler(object):
     @staticmethod
     def double_list_div(list_A: list, num: float) -> None:
         res = []
-        for _, item in enumerate(list_A):
+        for item in list_A:
             tem_res = ListHandler.list_div(item, num)
             res.append(tem_res)
 

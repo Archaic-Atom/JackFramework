@@ -128,7 +128,7 @@ class BuildGraph(object):
     def __variable2tensor(self, data: list) -> None:
         res = []
         args = self.__args
-        for _, data_item in enumerate(data):
+        for data_item in data:
             if args.dist:
                 log_data = self.__reduce_tensor(
                     data_item.clone().detach_() / (args.gpu))
