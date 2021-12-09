@@ -128,7 +128,7 @@ def debug_main():
             file_dir + CHECK_POINT_LIST_NAME)
         str_line = FileHandler.get_line_fd(fd_checkpoint_list, 0)
         file_name = test_file_name % i
-        if str_line[0:len(LAST_MODEL_NAME)] != LAST_MODEL_NAME:
+        if str_line[: len(LAST_MODEL_NAME)] != LAST_MODEL_NAME:
             print("yes")
             FileHandler.close_file(fd_checkpoint_list)
             fd_checkpoint_list = None

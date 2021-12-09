@@ -83,7 +83,10 @@ class ModelSaver(object):
         else:
             fd_checkpoint_list = FileHandler.open_file(file_dir + sysdefine.CHECK_POINT_LIST_NAME)
             str_line = FileHandler.get_line_fd(fd_checkpoint_list, 0)
-            if str_line[0:len(sysdefine.LAST_MODEL_NAME)] != sysdefine.LAST_MODEL_NAME:
+            if (
+                str_line[: len(sysdefine.LAST_MODEL_NAME)]
+                != sysdefine.LAST_MODEL_NAME
+            ):
                 log.warning("The checklist file is wrong! We will rewrite this file")
                 FileHandler.close_file(fd_checkpoint_list)
                 fd_checkpoint_list = None

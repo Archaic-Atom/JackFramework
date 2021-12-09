@@ -280,7 +280,7 @@ def debug_main():
         pred = img[:, 2:-2, 2:258].unsqueeze(0).cuda(i + 4)
         gt = img[:, 2:-2, 260:-2].unsqueeze(0).cuda(i + 4)
 
-        CDAccuracy.generate_confusion_matrix(pred[0:1], gt[0:1], 2)
+        CDAccuracy.generate_confusion_matrix(pred[:1], gt[:1], 2)
 
         print('------------------change detection accuracy(no accumulation)------------------')
         precision = CDAccuracy.precision_score()
