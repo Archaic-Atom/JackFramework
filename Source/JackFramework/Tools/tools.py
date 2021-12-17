@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 import torch
+import collections
+
+try:
+    collectionsAbc = collections.abc
+except AttributeError:
+    collectionsAbc = collections
 
 
 class Tools(object):
@@ -14,7 +20,7 @@ class Tools(object):
         super().__init__()
 
     @staticmethod
-    def __one_hot_func(label, num_classes):
+    def __one_hot_func(label: torch.tensor, num_classes: int) -> torch.tensor:
         """
         :param label: label tensor with shape [H, W]
         :param num_classes: number of class
@@ -29,16 +35,45 @@ class Tools(object):
         return ones.permute(2, 0, 1)
 
     @staticmethod
-    def get_one_hot(label, num_classes):
+    def get_one_hot(label: torch.tensor, num_classes: int) -> torch.tensor:
         """
         :param label: label tensor with shape [B, 1, H, W]
         :param num_classes: number of class
         :return: one-hot label tensor wish shape [B, num_claeese, H, W]
         """
-
+        off_set = 1
         batch, _, h, w = label.shape
         label_one_hot = torch.zeros([batch, num_classes, h, w], device=label.device)
         for b in range(batch):
-            label_one_hot[b:b + 1] = Tools.__one_hot_func(label[b, 0], num_classes)
+            label_one_hot[b:b + off_set] = Tools.__one_hot_func(label[b, 0], num_classes)
 
         return label_one_hot
+
+    @staticmethod
+    def convert2list(data_object: any) -> list:
+        if isinstance(data_object, collectionsAbc.Iterable):
+            return list(data_object)
+        return [data_object]
+
+
+def debug_main():
+    tools = Tools()
+
+    # class object
+    res = tools
+    res = Tools.convert2list(res)
+    print(res)
+
+    # int
+    res = 1
+    res = Tools.convert2list(res)
+    print(res)
+
+    # tuple
+    res = (1, 2, 3, 4)
+    res = Tools.convert2list(res)
+    print(res)
+
+
+if __name__ == '__main__':
+    debug_main()

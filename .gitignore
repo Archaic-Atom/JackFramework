@@ -1,6 +1,11 @@
+# auto build
 build/
 dist/
 JackFramework.egg-info/
+
+# python cache
 /*__pycache__*/
-sftp-config*.json
 *.pyc
+
+# remote
+sftp-config*.json
