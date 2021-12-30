@@ -13,7 +13,7 @@ from JackFramework.ImgHandler.img_io import ImgIO
 from JackFramework.ImgHandler.img_handler import ImgHandler
 
 # framework
-from JackFramework.Proc.application import Application
+from JackFramework.Core.application import Application
 from JackFramework.SysBasic.result_str import ResultStr
 
 # loss
