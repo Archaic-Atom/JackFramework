@@ -1,8 +1,9 @@
 # -*- coding: UTF-8 -*-
 from JackFramework.SysBasic.inithandler import InitProgram
-from JackFramework.Proc.executor import Executor
+from JackFramework.Core.executor import Executor
 from JackFramework.SysBasic.argparser import ArgsParser
 from JackFramework.SysBasic.loghander import LogHandler
+from .mode import mode_selection
 
 import torch.multiprocessing as mp
 
@@ -25,23 +26,20 @@ class Application(object):
     def set_user_interface(self, user_interface: object) -> None:
         self.__user_interface = user_interface
 
+    @staticmethod
+    def _dist_app_start(mode_func: object, dist: bool, gpu_num: int) -> None:
+        if dist:
+            mp.spawn(mode_func, nprocs=gpu_num, join=True)
+        else:
+            mode_func()
+
     def start(self) -> None:
         args = ArgsParser().parse_args(self.__application_name,
                                        self.__user_interface.user_parser)
         if not InitProgram(args).init_pro():
             return
 
-        if args.dist:
-            if args.mode == 'train':
-                proc_func = Executor(args, self.__user_interface.inference, True).train
-            else:
-                proc_func = Executor(args, self.__user_interface.inference, False).test
-
-            mp.spawn(proc_func, nprocs=args.gpu, join=True)
-
-        elif args.mode == 'train':
-            Executor(args, self.__user_interface.inference, True).train()
-        else:
-            Executor(args, self.__user_interface.inference, False).test()
+        mode_func = mode_selection(args, self.__user_interface.inference, args.mode)
+        self._dist_app_start(mode_func, args.dist, args.gpu)
 
         LogHandler.info("The Application is finished!")
