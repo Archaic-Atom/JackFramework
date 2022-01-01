@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 from JackFramework.SysBasic.inithandler import InitProgram
-from JackFramework.Core.executor import Executor
 from JackFramework.SysBasic.argparser import ArgsParser
 from JackFramework.SysBasic.loghander import LogHandler
 from .mode import mode_selection
