@@ -1,4 +1,5 @@
 [![build test](https://github.com/Archaic-Atom/JackFramework/actions/workflows/build%20test.yml/badge.svg?event=push)](https://github.com/Archaic-Atom/JackFramework/actions/workflows/build%20test.yml)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/1996scarlet/Dense-Head-Pose-Estimation.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Archaic-Atom/JackFramework/context:python)
 ![Python 3.8](https://img.shields.io/badge/python-3.8-green.svg?style=plastic)
 ![Pytorch 1.7](https://img.shields.io/badge/PyTorch%20-%23EE4C2C.svg?style=plastic)
 ![cuDnn 7.3.6](https://img.shields.io/badge/cudnn-7.3.6-green.svg?style=plastic)

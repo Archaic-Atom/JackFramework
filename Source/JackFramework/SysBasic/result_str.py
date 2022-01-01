@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 DEFAULT_MAX_DECIMAL_PLACES = 6
 DEFAULT_MIN_DECIMAL_PLACES = 2
 
@@ -20,7 +19,7 @@ class ResultStr(object):
         training_state = "[TrainProcess] " if training else "[ValProcess] "
         return training_state + "e: " + str(epoch) + ', ' +\
             loss_str + ', ' + acc_str + ' (%.3f s/epoch)' % duration
-    
+
     def testing_result_str(self, acc: list, info_str: str = None):
         acc_str = self.acc2str(acc, info_str, decimal_places=DEFAULT_MAX_DECIMAL_PLACES)
         testing_state = "[TestProcess] "
@@ -30,7 +29,6 @@ class ResultStr(object):
                                      acc: list) -> str:
         loss_str = self.loss2str(loss, decimal_places=3)
         acc_str = self.acc2str(acc, decimal_places=3)
-
         return 'e: ' + str(epoch) + ', ' +\
             loss_str + ', ' + acc_str
 
