@@ -34,11 +34,17 @@ class DataHandlerManager(object):
                 tranining_dataset, shuffle=is_training)
             dataloader_shuffle = False
 
+        try:
+            func = tranining_dataset.collate_fn
+        except AttributeError:
+            func = None
+
         training_dataloader = torch.utils.data.DataLoader(
             tranining_dataset, batch_size=args.batchSize,
             shuffle=dataloader_shuffle, num_workers=args.dataloaderNum,
-            pin_memory=True, sampler=training_sampler
+            pin_memory=True, sampler=training_sampler, collate_fn=func
         )
+
         return training_dataloader, training_sampler
 
     def __init_val_dataloader(self) -> None:
@@ -50,10 +56,15 @@ class DataHandlerManager(object):
             val_sampler = torch.utils.data.distributed.DistributedSampler(
                 val_dataset, shuffle=False)
 
+        try:
+            func = val_dataset.collate_fn
+        except AttributeError:
+            func = None
+
         val_dataloader = torch.utils.data.DataLoader(
             val_dataset, batch_size=args.batchSize,
             num_workers=args.dataloaderNum, pin_memory=True,
-            sampler=val_sampler
+            sampler=val_sampler, collate_fn=func
         )
         return val_dataloader, val_sampler
 
