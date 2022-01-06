@@ -18,7 +18,7 @@ class NamedPipe(object):
     def __init__(self, mode: str = 'server', queue_size: int = 10000,
                  writer_path: str = None, reader_path: str = None) -> None:
         super().__init__()
-        assert mode in ['server', 'client']
+        assert mode in {'server', 'client'}
         self.__mode = mode
         self.__msg_queue = Queue.Queue(maxsize=queue_size)
         self.__exit = False
@@ -32,7 +32,7 @@ class NamedPipe(object):
 
     @staticmethod
     def __get_pipe_default_path(mode: str = 'server') -> tuple:
-        if 'server' == mode:
+        if mode == 'server':
             return sys_def.PIPE_READ_PATH, sys_def.PIPE_WRITE_PATH
         return sys_def.PIPE_WRITE_PATH, sys_def.PIPE_READ_PATH
 
