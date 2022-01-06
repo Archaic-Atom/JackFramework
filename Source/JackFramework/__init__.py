@@ -35,6 +35,7 @@ from JackFramework import UserTemplate
 
 # Tools
 from JackFramework.Tools.tools import Tools
+from JackFramework.Tools.process_comm import NamedPipe
 
 
 def version():

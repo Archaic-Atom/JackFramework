@@ -15,7 +15,7 @@ class ModelHandlerTemplate(object):
         pass
 
     @abstractmethod
-    def interence(self, model: list, input_data: list, model_id: int) -> list:
+    def interence(self, model: object, input_data: list, model_id: int) -> list:
         pass
 
     @abstractmethod
