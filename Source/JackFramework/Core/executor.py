@@ -168,8 +168,7 @@ class Executor(object):
         args = self.__args
         if rank is None:
             return iteration
-        else:
-            return rank + iteration * (args.batchSize * args.gpu)
+        return rank + iteration * (args.batchSize * args.gpu)
 
     def __executor_training_proc(self, epoch: int, rank: object) -> None:
         if self.__training_iteration > 0:
@@ -201,7 +200,8 @@ class Executor(object):
         graph.cleanup()
         log.info("Finish training process!")
 
-    def __testing_post_proc(self, rank: object, process_bar: object) -> None:
+    @staticmethod
+    def __testing_post_proc(rank: object, process_bar: object) -> None:
         if rank == Executor.DEFAULT_RANK_ID or rank is None:
             process_bar.close()
             log.info("Finish testing process!")

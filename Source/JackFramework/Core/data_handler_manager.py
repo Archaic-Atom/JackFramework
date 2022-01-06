@@ -132,3 +132,10 @@ class DataHandlerManager(object):
     def save_result(self, output_data: list, supplement: list, img_id: int):
         for idx, output_item in enumerate(output_data):
             self.__jf_datahandler.save_result(output_item, supplement, img_id, idx)
+
+    def load_test_data(self, cmd: str) -> tuple:
+        return self.__jf_datahandler.load_test_data(cmd)
+
+    def save_test_data(self, output_data: list, supplement: list, cmd: str) -> None:
+        for idx, output_item in enumerate(output_data):
+            return self.__jf_datahandler.save_test_data(output_item, supplement, cmd, idx)

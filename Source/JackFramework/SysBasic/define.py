@@ -29,6 +29,10 @@ CHECK_POINT_NAME = 'model_epoch_%d.pth'
 #
 LAST_MODEL_NAME = 'last model name:'
 
+# define name pipe
+PIPE_WRITE_PATH = '/tmp/jackframework_pipe.in'
+PIPE_READ_PATH = '/tmp/jackframework_pipe.out'
+
 # image's setting
 # We use this data to crop the image in training process;
 # We ues this data to pad the image in testing process.

@@ -47,3 +47,10 @@ class DataHandlerTemplate(object):
                                  loss: list, acc: list) -> str:
         # return data+str
         pass
+
+    # optional
+    def load_test_data(self, cmd: str) -> tuple:
+        pass
+
+    def save_test_data(self, output_data: list, supplement: list, cmd: str, model_id: int) -> None:
+        pass

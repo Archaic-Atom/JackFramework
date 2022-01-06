@@ -3,6 +3,7 @@ from JackFramework.SysBasic.switch import Switch
 from JackFramework.SysBasic.loghander import LogHandler as log
 
 from .executor import Executor
+from .background import BackGround
 
 
 def mode_selection(args: object, inference: object, mode: str) -> object:
@@ -18,6 +19,7 @@ def mode_selection(args: object, inference: object, mode: str) -> object:
             break
         if case('background'):
             log.info("Enter background mode")
+            mode_func = BackGround(args, inference, False).exec
             break
         if case('online'):
             log.info("Enter online mode")
