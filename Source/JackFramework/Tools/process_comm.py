@@ -78,11 +78,11 @@ class NamedPipe(object):
 
     def __create_reciver_pipe(self, reader_path: str = None) -> tuple:
         pipe_reader = None
-        log.info('%s creats a reciver' % self.__mode)
         if os.path.exists(reader_path):
             log.info('%s creats a reciver' % self.__mode)
+            log.info('%s is waiting a message' % self.__mode)
             pipe_reader = os.open(reader_path, os.O_RDONLY)
-            log.info('%s creats a reciver' % self.__mode)
+
         return pipe_reader
 
     def __create_pipe(self, writer_path: str = None, reader_path: str = None) -> tuple:

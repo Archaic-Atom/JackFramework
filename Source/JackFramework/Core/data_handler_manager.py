@@ -13,13 +13,13 @@ class DataHandlerManager(object):
         self.__training_dataloader, self.__val_dataloader, self.__training_sampler,\
             self.__val_sampler = self.__init_dataloader()
 
-    @staticmethod
-    def __init_dataloader_object():
-        training_dataloader = None
-        val_dataloader = None
-        training_sampler = None
-        val_sampler = None
-        return training_dataloader, val_dataloader, training_sampler, val_sampler
+    @property
+    def training_dataloader(self) -> object:
+        return self.__training_dataloader
+
+    @property
+    def val_dataloader(self) -> object:
+        return self.__val_dataloader
 
     def __init_training_dataloader(self, is_training: bool) -> None:
         args = self.__args
@@ -91,14 +91,6 @@ class DataHandlerManager(object):
 
         return training_dataloader, val_dataloader, training_sampler, val_sampler
 
-    @property
-    def training_dataloader(self) -> object:
-        return self.__training_dataloader
-
-    @property
-    def val_dataloader(self) -> object:
-        return self.__val_dataloader
-
     def get_dataloader(self, is_traning: bool) -> object:
         if is_traning:
             return self.training_dataloader
@@ -115,8 +107,7 @@ class DataHandlerManager(object):
     def split_data(self, batch_data: tuple, is_training: bool) -> object:
         return self.__jf_datahandler.split_data(batch_data, is_training)
 
-    def show_training_info(self, epoch: int, loss:
-                           list, acc: list, duration: float,
+    def show_training_info(self, epoch: int, loss: list, acc: list, duration: float,
                            is_training: bool) -> None:
         assert self.__jf_datahandler is not None
 
@@ -139,3 +130,8 @@ class DataHandlerManager(object):
     def save_test_data(self, output_data: list, supplement: list, cmd: str) -> None:
         for idx, output_item in enumerate(output_data):
             return self.__jf_datahandler.save_test_data(output_item, supplement, cmd, idx)
+
+    @staticmethod
+    def __init_dataloader_object():
+        training_dataloader, val_dataloader, training_sampler, val_sampler = None, None, None, None
+        return training_dataloader, val_dataloader, training_sampler, val_sampler

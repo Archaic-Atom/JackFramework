@@ -17,29 +17,6 @@ class ShowProcess():
         self.__counter = self._INIT_COUNTER
         self.__info_done = info_done
 
-    # [>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>]100.00%
-    def show_process(self, start_counter: int = None,
-                     show_info: str = '',
-                     rest_time: str = '',
-                     duration: str = '',
-                     queue_size: str = ''):
-        self.__count(start_counter)
-        num_arrow, num_line, percent = self.__cal_bar()
-
-        info_done = self.__genearte_info_done()
-        queue_size = self.__generate_queue_size(queue_size)
-        rest_time = self.__generate_rest_time(rest_time, duration)
-
-        process_str = self.__generate_show_data(num_arrow, num_line,
-                                                percent, show_info,
-                                                info_done, queue_size,
-                                                rest_time)
-        self.__print(process_str)
-
-    def close(self):
-        print('')
-        self.__counter = self._INIT_COUNTER
-
     def __count(self, start_counter: int) -> None:
         if start_counter is not None:
             self.__counter = start_counter
@@ -55,21 +32,36 @@ class ShowProcess():
     def __genearte_info_done(self) -> str:
         if self.__counter >= self.__max_steps:
             return ', ' + self.__info_done
-        else:
-            return ''
+        return ''
+
+    def show_process(self, start_counter: int = None, show_info: str = '',
+                     rest_time: str = '', duration: str = '', queue_size: str = '') -> None:
+        # [>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>]100.00%
+        self.__count(start_counter)
+        num_arrow, num_line, percent = self.__cal_bar()
+
+        info_done = self.__genearte_info_done()
+        queue_size = self.__generate_queue_size(queue_size)
+        rest_time = self.__generate_rest_time(rest_time, duration)
+
+        process_str = self.__generate_show_data(num_arrow, num_line, percent, show_info,
+                                                info_done, queue_size, rest_time)
+        self.__print(process_str)
+
+    def close(self) -> None:
+        print('')
+        self.__counter = self._INIT_COUNTER
 
     @staticmethod
     def __generate_queue_size(queue_size: int) -> str:
         if queue_size != '':
             queue_size = '(qs: %d), ' % queue_size
-
         return queue_size
 
     @staticmethod
     def __generate_rest_time(rest_time: int, duration: int) -> str:
         if rest_time != '':
             rest_time = '(rt: %.3f s' % rest_time
-
         rest_time += ', bs: %.3f s)' % duration if duration != '' else ')'
         return rest_time
 
@@ -97,7 +89,6 @@ class ShowProcess():
 
 def debug_main():
     max_steps = 50
-
     process_bar = ShowProcess(max_steps, 'OK')
 
     for i in range(max_steps):

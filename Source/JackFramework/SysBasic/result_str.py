@@ -48,10 +48,8 @@ class ResultStr(object):
 
         return self.__data2str(acc, info_str, decimal_places)
 
-    def __gen_info_str(self, info_str: str, num: int) -> str:
-        return [info_str + str(i) for i in range(num)]
-
-    def __data2str(self, data: list, info_str: list,
+    @staticmethod
+    def __data2str(data: list, info_str: list,
                    decimal_places: int) -> str:
         assert len(data) == len(info_str)
         res = ""
@@ -63,3 +61,7 @@ class ResultStr(object):
         char_offset = len(char_interval)
         res = res[:len(res) - char_offset]
         return res
+
+    @staticmethod
+    def __gen_info_str(info_str: str, num: int) -> str:
+        return [info_str + str(i) for i in range(num)]

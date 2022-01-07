@@ -14,19 +14,6 @@ class InitProgram(object):
         super().__init__()
         self.__args = args
 
-    def init_pro(self) -> bool:
-        args = self.__args
-        self.__build_result_directory()
-        log().init_log(args.outputDir, args.pretrain)
-        log.info("Welcome to use the JackFramework")
-        self.__show_args()
-        res = self.__check_args() and self.__check_env()
-
-        if not res:
-            log.error("Failed in the init programs")
-
-        return res
-
     def __build_result_directory(self) -> None:
         args = self.__args
         FileHandler.mkdir(args.outputDir)
@@ -97,3 +84,16 @@ class InitProgram(object):
     def __check_env(self) -> bool:
         log.info('Begin to check the env')
         return DeviceManager.check_cuda(self.__args)
+
+    def init_pro(self) -> bool:
+        args = self.__args
+        self.__build_result_directory()
+        log().init_log(args.outputDir, args.pretrain)
+        log.info("Welcome to use the JackFramework")
+        self.__show_args()
+        res = self.__check_args() and self.__check_env()
+
+        if not res:
+            log.error("Failed in the init programs")
+
+        return res
