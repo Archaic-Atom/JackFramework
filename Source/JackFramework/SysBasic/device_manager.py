@@ -26,6 +26,37 @@ class DeviceManager(object):
     def device(self):
         return self.__device
 
+    def __init_gpu_device(self) -> object:
+        log.info("Start initializing device!")
+
+        torch.backends.cudnn.deterministic = False
+        torch.backends.cudnn.benchmark = True
+        device = torch.device(DeviceManager.DEFAULT_OUTPUT_DEVICE)
+
+        log.info("Finish initializing device!")
+        return device
+
+    def init_distributed_gpu_device(self, rank: int) -> None:
+        log.info("Start initializing distributed device!")
+        assert rank is not None
+
+        args = self.__args
+        os.environ['MASTER_ADDR'] = args.ip
+        os.environ['MASTER_PORT'] = args.port
+
+        torch.backends.cudnn.deterministic = False
+        torch.backends.cudnn.benchmark = True
+
+        dist.init_process_group("nccl", rank=rank, world_size=self.__args.gpu)
+        torch.cuda.set_device(rank)
+
+        return None
+
+    def cleanup(self):
+        args = self.__args
+        if args.dist:
+            dist.destroy_process_group()
+
     @staticmethod
     def check_cuda(args):
         if not torch.cuda.is_available():
@@ -87,34 +118,3 @@ class DeviceManager(object):
                 break
 
         return port, find_res_bool
-
-    def init_distributed_gpu_device(self, rank: int) -> None:
-        log.info("Start initializing distributed device!")
-        assert rank is not None
-
-        args = self.__args
-        os.environ['MASTER_ADDR'] = args.ip
-        os.environ['MASTER_PORT'] = args.port
-
-        torch.backends.cudnn.deterministic = False
-        torch.backends.cudnn.benchmark = True
-
-        dist.init_process_group("nccl", rank=rank, world_size=self.__args.gpu)
-        torch.cuda.set_device(rank)
-
-        return None
-
-    def cleanup(self):
-        args = self.__args
-        if args.dist:
-            dist.destroy_process_group()
-
-    def __init_gpu_device(self) -> object:
-        log.info("Start initializing device!")
-
-        torch.backends.cudnn.deterministic = False
-        torch.backends.cudnn.benchmark = True
-        device = torch.device(DeviceManager.DEFAULT_OUTPUT_DEVICE)
-
-        log.info("Finish initializing device!")
-        return device

@@ -54,12 +54,8 @@ class Executor(object):
         return data_manager, graph
 
     def __init_training_para(self, epoch: int, rank: object, is_training: bool = True) -> tuple:
-        total_iteration = 0
-        off_set = 1
-        tower_loss = None
-        tower_acc = None
-        ave_tower_acc = None
-        ave_tower_loss = None
+        total_iteration, off_set = 0, 1
+        tower_loss, tower_acc, ave_tower_acc, ave_tower_loss = None, None, None, None
         graph, data_manager = self.__get_graph_and_data_manager()
 
         graph.set_model_mode(is_training)
@@ -69,13 +65,6 @@ class Executor(object):
 
         return total_iteration, off_set, dataloader, tower_loss,\
             tower_acc, ave_tower_acc, ave_tower_loss
-
-    @staticmethod
-    def __calculate_ave_runtime(start_time: object, end_time: object,
-                                total_iteration: int, training_iteration: int) -> tuple:
-        duration = (end_time - start_time) / (total_iteration)
-        rest_time = (training_iteration - total_iteration) * duration
-        return duration, rest_time
 
     def __training_data_proc(self, batch_data: list, tower_loss: list,
                              tower_acc: list, total_iteration: int, is_training: bool) -> tuple:
@@ -92,12 +81,6 @@ class Executor(object):
         input_data, supplement = data_manager.split_data(batch_data, False)
         outputs_data = graph.test_model(input_data)
         return outputs_data, supplement
-
-    @staticmethod
-    def __init_show_setting(training_iteration: int, bar_info: str) -> tuple:
-        process_bar = ShowProcess(training_iteration, bar_info)
-        start_time = time.time()
-        return process_bar, start_time
 
     def __show_iteration_result(self, rank: object, process_bar: object, start_time: object,
                                 total_iteration: int, training_iteration: int, epoch: int,
@@ -153,9 +136,9 @@ class Executor(object):
                                          training_iteration, epoch, ave_tower_loss,
                                          ave_tower_acc)
 
-        self.__show_epoch_result(rank, process_bar, start_time, epoch,
-                                 ave_tower_loss, ave_tower_acc, total_iteration,
-                                 training_iteration, bar_info, is_training)
+        self.__show_epoch_result(rank, process_bar, start_time, epoch, ave_tower_loss,
+                                 ave_tower_acc, total_iteration, training_iteration,
+                                 bar_info, is_training)
         self.__adjust_lr_scheduler_and_post_proc(epoch, rank, ave_tower_loss,
                                                  ave_tower_acc, is_training)
 
@@ -200,12 +183,6 @@ class Executor(object):
         graph.cleanup()
         log.info("Finish training process!")
 
-    @staticmethod
-    def __testing_post_proc(rank: object, process_bar: object) -> None:
-        if rank == Executor.DEFAULT_RANK_ID or rank is None:
-            process_bar.close()
-            log.info("Finish testing process!")
-
     def init_datahandler_modelhandler(self, rank: object) -> None:
         self.__data_manager, self.__graph = self.__init_datahandler_modelhandler(rank)
 
@@ -245,3 +222,22 @@ class Executor(object):
 
         graph.postprocess(0, rank)
         self.__testing_post_proc(rank, process_bar)
+
+    @staticmethod
+    def __calculate_ave_runtime(start_time: object, end_time: object,
+                                total_iteration: int, training_iteration: int) -> tuple:
+        duration = (end_time - start_time) / (total_iteration)
+        rest_time = (training_iteration - total_iteration) * duration
+        return duration, rest_time
+
+    @staticmethod
+    def __init_show_setting(training_iteration: int, bar_info: str) -> tuple:
+        process_bar = ShowProcess(training_iteration, bar_info)
+        start_time = time.time()
+        return process_bar, start_time
+
+    @staticmethod
+    def __testing_post_proc(rank: object, process_bar: object) -> None:
+        if rank == Executor.DEFAULT_RANK_ID or rank is None:
+            process_bar.close()
+            log.info("Finish testing process!")

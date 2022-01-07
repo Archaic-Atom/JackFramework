@@ -262,13 +262,6 @@ def debug_main():
     from PIL import Image
     import torchvision.transforms as tfs
 
-    # pred = torch.ones([10, 1, 10, 10])
-    # gt = torch.ones([10, 1, 10, 10])
-
-    # pred = torch.randint(low=0, high=10, size=[10, 1, 10, 10])
-    # gt = torch.randint(low=0, high=10, size=[10, 1, 10, 10])
-    # CDAccuracy.update_confusion_matrix(pred, gt, 10)
-
     img_path1 = 'TestExample/Accuracy_test1.png'
     img_path2 = 'TestExample/Accuracy_test2.png'
     img_path = [img_path1, img_path2]

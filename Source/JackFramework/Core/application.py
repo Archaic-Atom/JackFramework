@@ -25,13 +25,6 @@ class Application(object):
     def set_user_interface(self, user_interface: object) -> None:
         self.__user_interface = user_interface
 
-    @staticmethod
-    def _dist_app_start(mode_func: object, dist: bool, gpu_num: int) -> None:
-        if dist:
-            mp.spawn(mode_func, nprocs=gpu_num, join=True)
-        else:
-            mode_func()
-
     def start(self) -> None:
         args = ArgsParser().parse_args(self.__application_name,
                                        self.__user_interface.user_parser)
@@ -42,3 +35,10 @@ class Application(object):
         self._dist_app_start(mode_func, args.dist, args.gpu)
 
         LogHandler.info("The Application is finished!")
+
+    @staticmethod
+    def _dist_app_start(mode_func: object, dist: bool, gpu_num: int) -> None:
+        if dist:
+            mp.spawn(mode_func, nprocs=gpu_num, join=True)
+        else:
+            mode_func()

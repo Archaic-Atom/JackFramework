@@ -31,9 +31,7 @@ class BuildGraph(object):
             self.__device_manager.init_distributed_gpu_device(rank)
         self.__device = self.__device_manager.device
 
-        self.__model = None
-        self.__opt = None
-        self.__sch = None
+        self.__model, self.__opt, self.__sch = None, None, None
         self.__init_training_graph()
 
     def __init_training_graph(self) -> None:
@@ -69,19 +67,6 @@ class BuildGraph(object):
         opt, sch = self.__jf_model.optimizer(self.__model, args.lr)
         log.info("Successfully get user's optimizer!")
         return opt, sch
-
-    @staticmethod
-    def __init_tower_loss_and_tower_acc():
-        tower_loss_iteration = []
-        tower_acc_iteration = []
-        return tower_loss_iteration, tower_acc_iteration
-
-    @staticmethod
-    def __init_calculation_result():
-        output_data = None
-        loss = None
-        acc = None
-        return output_data, loss, acc
 
     def __pass_model2device(self) -> None:
         log.info("Loading model to GPUs!")
@@ -119,11 +104,6 @@ class BuildGraph(object):
             acc = self.__jf_model.accuary(output_data, label_data, model_id)
 
         return output_data, loss, acc
-
-    @staticmethod
-    def __reduce_tensor(data: torch.tensor) -> torch.tensor:
-        dist.all_reduce(data, op=dist.ReduceOp.SUM)
-        return data
 
     def __variable2tensor(self, data: list) -> None:
         res = []
@@ -230,18 +210,6 @@ class BuildGraph(object):
 
         return tower_loss_iteration, tower_acc_iteration
 
-    @staticmethod
-    def cal_tower_loss_acc(tower_loss: list, tower_acc: list,
-                           tower_loss_iteration: list,
-                           tower_acc_iteration: list,
-                           total_iteration: int) -> list:
-        tower_loss = ListHandler.double_list_add(tower_loss_iteration, tower_loss)
-        tower_acc = ListHandler.double_list_add(tower_acc_iteration, tower_acc)
-
-        ave_tower_loss = ListHandler.double_list_div(tower_loss, total_iteration)
-        ave_tower_acc = ListHandler.double_list_div(tower_acc, total_iteration)
-        return tower_loss, tower_acc, ave_tower_loss, ave_tower_acc
-
     def adjust_lr_scheduler(self, loss: list, rank: int) -> None:
         for i, sch_item in enumerate(self.__sch):
             if sch_item is not None:
@@ -266,3 +234,28 @@ class BuildGraph(object):
     def postprocess(self, epoch: int, rank: object,
                     ave_tower_loss: list = None, ave_tower_acc: list = None) -> None:
         self.__jf_model.postprocess(epoch, rank, ave_tower_loss, ave_tower_acc)
+
+    @staticmethod
+    def cal_tower_loss_acc(tower_loss: list, tower_acc: list, tower_loss_iteration: list,
+                           tower_acc_iteration: list, total_iteration: int) -> list:
+        tower_loss = ListHandler.double_list_add(tower_loss_iteration, tower_loss)
+        tower_acc = ListHandler.double_list_add(tower_acc_iteration, tower_acc)
+
+        ave_tower_loss = ListHandler.double_list_div(tower_loss, total_iteration)
+        ave_tower_acc = ListHandler.double_list_div(tower_acc, total_iteration)
+        return tower_loss, tower_acc, ave_tower_loss, ave_tower_acc
+
+    @staticmethod
+    def __reduce_tensor(data: torch.tensor) -> torch.tensor:
+        dist.all_reduce(data, op=dist.ReduceOp.SUM)
+        return data
+
+    @staticmethod
+    def __init_tower_loss_and_tower_acc():
+        tower_loss_iteration, tower_acc_iteration = [], []
+        return tower_loss_iteration, tower_acc_iteration
+
+    @staticmethod
+    def __init_calculation_result():
+        output_data, loss, acc = None, None, None
+        return output_data, loss, acc

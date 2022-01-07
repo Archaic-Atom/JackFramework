@@ -31,21 +31,17 @@ class ArgsParser(object):
                             help='train or test')
         parser.add_argument('--gpu', type=int, default=sysdefine.GPU_NUM,
                             help='state the num of gpu: 0, 1, 2 or 3 ...')
-        parser.add_argument('--auto_save_num', type=int,
-                            default=sysdefine.AUTO_SAVE_NUM,
+        parser.add_argument('--auto_save_num', type=int, default=sysdefine.AUTO_SAVE_NUM,
                             help='AUTO_SAVE_NUM')
-        parser.add_argument('--dataloaderNum', type=int,
-                            default=sysdefine.DATA_LOADER_NUM,
+        parser.add_argument('--dataloaderNum', type=int, default=sysdefine.DATA_LOADER_NUM,
                             help='the number of dataloders')
-        parser.add_argument('--pretrain', default=False,
-                            type=ArgsParser.__str2bool,
+        parser.add_argument('--pretrain', default=False, type=ArgsParser.__str2bool,
                             help='true or false')
         parser.add_argument('--ip', default=sysdefine.IP,
                             help='ip')
         parser.add_argument('--port', default=sysdefine.PORT,
                             help='port')
-        parser.add_argument('--dist', default=sysdefine.DIST,
-                            type=ArgsParser.__str2bool,
+        parser.add_argument('--dist', default=sysdefine.DIST, type=ArgsParser.__str2bool,
                             help='distrobution')
         return parser
 
@@ -70,14 +66,12 @@ class ArgsParser(object):
         parser.add_argument('--sampleNum', type=int, default=sysdefine.SAMPLE_NUM,
                             help='the number of sample')
         # training setting
-        parser.add_argument('--batchSize', type=int,
-                            default=sysdefine.BATCH_SIZE,
+        parser.add_argument('--batchSize', type=int, default=sysdefine.BATCH_SIZE,
                             help='Batch Size')
-        parser.add_argument('--lr', default=sysdefine.LEARNING_RATE,
-                            type=float,
+        parser.add_argument('--lr',  type=float, default=sysdefine.LEARNING_RATE,
                             help="Learning rate. e.g. 0.01, 0.001, 0.0001")
-        parser.add_argument('--maxEpochs', default=sysdefine.MAX_EPOCHS,
-                            type=int, help="Max step. e.g. 500")
+        parser.add_argument('--maxEpochs',  type=int, default=sysdefine.MAX_EPOCHS,
+                            help="Max step. e.g. 500")
 
         return parser
 
