@@ -30,6 +30,11 @@ class FileHandler(object):
         return open(path, 'a+')
 
     @staticmethod
+    def remove_file(path: str) -> None:
+        if os.path.isfile(path):
+            os.remove(path)
+
+    @staticmethod
     def close_file(fd_file: object) -> None:
         fd_file.close()
 

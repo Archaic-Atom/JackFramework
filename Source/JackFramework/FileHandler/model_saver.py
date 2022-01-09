@@ -2,7 +2,7 @@
 import os
 import torch
 
-import JackFramework.SysBasic.define as sysdefine
+import JackFramework.SysBasic.define as sys_def
 from JackFramework.SysBasic.loghander import LogHandler as log
 from .filehandler import FileHandler
 
@@ -16,6 +16,57 @@ class ModelSaver(object):
         super().__init__()
 
     @staticmethod
+    def __get_model_name(file_path: str) -> str:
+        str_line = FileHandler.get_line(file_path, ModelSaver.ROW_ONE)
+        return str_line[len(sys_def.LAST_MODEL_NAME):len(str_line)]
+
+    @staticmethod
+    def __check_list(file_dir: str, fd_checkpoint_list: object) -> object:
+        str_line = FileHandler.get_line_fd(fd_checkpoint_list, 0)
+        if str_line[: len(sys_def.LAST_MODEL_NAME)] != sys_def.LAST_MODEL_NAME:
+            log.warning("The checklist file is wrong! We will rewrite this file")
+            FileHandler.close_file(fd_checkpoint_list)
+            os.remove(file_dir + sys_def.CHECK_POINT_LIST_NAME)
+            fd_checkpoint_list = None
+        return fd_checkpoint_list
+
+    @staticmethod
+    def __write_check_point_list_title(file_dir: str) -> object:
+        if ModelSaver.FIST_SAVE_TIME:
+            FileHandler.remove_file(file_dir + sys_def.CHECK_POINT_LIST_NAME)
+            ModelSaver.FIST_SAVE_TIME = False
+            return None
+
+        fd_checkpoint_list = FileHandler.open_file(file_dir + sys_def.CHECK_POINT_LIST_NAME)
+        fd_checkpoint_list = ModelSaver.__check_list(file_dir, fd_checkpoint_list)
+
+        return fd_checkpoint_list
+
+    @staticmethod
+    def __write_new_check_point_file(file_dir: str, file_name: str) -> None:
+        fd_checkpoint_list = FileHandler.open_file(file_dir + sys_def.CHECK_POINT_LIST_NAME)
+        FileHandler.write_file(fd_checkpoint_list, sys_def.LAST_MODEL_NAME + file_name)
+        FileHandler.write_file(fd_checkpoint_list, file_name)
+        FileHandler.close_file(fd_checkpoint_list)
+
+    @staticmethod
+    def __write_old_check_point_file(fd_checkpoint_list: object,
+                                     file_dir: str, file_name: str) -> None:
+        fd_checkpoint_temp_list = FileHandler.open_file(
+            file_dir + sys_def.CHECK_POINT_LIST_NAME + '.temp')
+
+        FileHandler.write_file(fd_checkpoint_temp_list, sys_def.LAST_MODEL_NAME + file_name)
+        FileHandler.copy_file(fd_checkpoint_list, fd_checkpoint_temp_list, 1)
+        FileHandler.write_file(fd_checkpoint_temp_list, file_name)
+
+        FileHandler.close_file(fd_checkpoint_list)
+        FileHandler.close_file(fd_checkpoint_temp_list)
+
+        os.remove(file_dir + sys_def.CHECK_POINT_LIST_NAME)
+        os.rename(file_dir + sys_def.CHECK_POINT_LIST_NAME + '.temp',
+                  file_dir + sys_def.CHECK_POINT_LIST_NAME)
+
+    @staticmethod
     def get_check_point_path(path: str) -> str:
         checkpoint_path = None
         if os.path.isfile(path):
@@ -23,7 +74,7 @@ class ModelSaver(object):
             checkpoint_path = path
         else:
             log.info("Begin loading checkpoint from this folder: '{}'".format(path))
-            checkpoint_list_file = path + sysdefine.CHECK_POINT_LIST_NAME
+            checkpoint_list_file = path + sys_def.CHECK_POINT_LIST_NAME
             if not os.path.isfile(checkpoint_list_file):
                 log.warning("We don't find the checkpoint list file: '{}'!".format(
                     checkpoint_list_file))
@@ -69,44 +120,13 @@ class ModelSaver(object):
         ModelSaver.write_check_point_list(file_dir, file_name)
 
     @staticmethod
-    def __get_model_name(file_path: str) -> str:
-        str_line = FileHandler.get_line(file_path, ModelSaver.ROW_ONE)
-        return str_line[len(sysdefine.LAST_MODEL_NAME):len(str_line)]
-
-    @staticmethod
     def write_check_point_list(file_dir: str, file_name: str) -> None:
-        fd_checkpoint_list = None
-        if ModelSaver.FIST_SAVE_TIME:
-            if os.path.isfile(file_dir + sysdefine.CHECK_POINT_LIST_NAME):
-                os.remove(file_dir + sysdefine.CHECK_POINT_LIST_NAME)
-            ModelSaver.FIST_SAVE_TIME = False
-        else:
-            fd_checkpoint_list = FileHandler.open_file(file_dir + sysdefine.CHECK_POINT_LIST_NAME)
-            str_line = FileHandler.get_line_fd(fd_checkpoint_list, 0)
-            if (
-                str_line[: len(sysdefine.LAST_MODEL_NAME)]
-                != sysdefine.LAST_MODEL_NAME
-            ):
-                log.warning("The checklist file is wrong! We will rewrite this file")
-                FileHandler.close_file(fd_checkpoint_list)
-                fd_checkpoint_list = None
-                os.remove(file_dir + sysdefine.CHECK_POINT_LIST_NAME)
+        fd_checkpoint_list = ModelSaver.__write_check_point_list_title(file_dir)
 
         if fd_checkpoint_list is None:
-            fd_checkpoint_list = FileHandler.open_file(file_dir + sysdefine.CHECK_POINT_LIST_NAME)
-            FileHandler.write_file(fd_checkpoint_list, sysdefine.LAST_MODEL_NAME + file_name)
-            FileHandler.write_file(fd_checkpoint_list, file_name)
-            FileHandler.close_file(fd_checkpoint_list)
+            ModelSaver.__write_new_check_point_file(file_dir, file_name)
         else:
-            fd_checkpoint_temp_list = FileHandler.open_file(file_dir + sysdefine.CHECK_POINT_LIST_NAME + '.temp')
-            FileHandler.write_file(fd_checkpoint_temp_list,
-                                   sysdefine.LAST_MODEL_NAME + file_name)
-            FileHandler.copy_file(fd_checkpoint_list, fd_checkpoint_temp_list, 1)
-            FileHandler.write_file(fd_checkpoint_temp_list, file_name)
-            FileHandler.close_file(fd_checkpoint_list)
-            FileHandler.close_file(fd_checkpoint_temp_list)
-            os.remove(file_dir + sysdefine.CHECK_POINT_LIST_NAME)
-            os.rename(file_dir + sysdefine.CHECK_POINT_LIST_NAME + '.temp', file_dir + sysdefine.CHECK_POINT_LIST_NAME)
+            ModelSaver.__write_old_check_point_file(fd_checkpoint_list, file_dir, file_name)
 
 
 def debug_main():

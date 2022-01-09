@@ -16,7 +16,7 @@ class BackGround(object):
     def __init__(self, args: object, user_inference_func: object,
                  is_training: bool = False) -> object:
         super().__init__()
-        log.warning('background mode is not supperst distributed')
+        log.warning('background mode does not support distributed')
         assert not args.dist and not is_training and args.batchSize == 1
         self.__args = args
         self.__is_training = is_training
@@ -55,7 +55,7 @@ class BackGround(object):
     def __save_result(self, outputs_data: list, supplement: list, msg: str) -> None:
         _, data_manager = self.__get_graph_and_data_manager()
         data_manager.save_test_data(outputs_data, supplement, msg)
-        log.info('jf server has save the results')
+        log.info('jf server has saved the results')
 
     def __try_load_data(self, msg: str) -> tuple:
         res = True
@@ -96,9 +96,9 @@ class BackGround(object):
         return res
 
     def __msg_handler(self, named_pipe: object) -> str:
-        msg = named_pipe.recive()
+        msg = named_pipe.receive()
         named_pipe.send(self.__RELY_MSG % msg)
-        log.info('jf get message: %s' % msg)
+        log.info('jf gets message: %s' % msg)
         return msg
 
     def __exit_cmd(self, msg: str) -> bool:
@@ -127,7 +127,7 @@ class BackGround(object):
 
     def exec(self, rank: object = None) -> None:
         assert rank is None and self.__named_pipe is None
-        log.info('background mode is starting')
+        log.info('background mode starts')
         named_pipe = self.__init_setting(rank)
 
         self.__info_processing_loop(named_pipe)
