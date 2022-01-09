@@ -99,15 +99,15 @@ class NamedPipe(object):
 
         os.write(self.__pipe_writer, msg.encode())
 
-    def recive(self) -> str:
+    def receive(self) -> str:
         return self.__msg_queue.get()
 
     def __recive_thread(self, reader_path) -> None:
-        log.info('The recive thread is start!')
+        log.info('The receive thread starts!')
 
         while(True):
             if self.__exit:
-                log.info('The recive thread in %d has exited!' % self.__mode)
+                log.info('The receive thread in %d has exited!' % self.__mode)
                 return
 
             if self.__pipe_reader is None:
