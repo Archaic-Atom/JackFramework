@@ -92,18 +92,14 @@ class BuildGraph(object):
 
         return data
 
-    def __calculation_process(self, model_item: object, input_data: list, label_data: list,
-                              model_id: int, is_training: bool = True) -> tuple:
-        output_data, loss, acc = self.__init_calculation_result()
+    def __calculation_process(self, model_item: object, input_data: list,
+                              model_id: int) -> tuple:
+        output_data, _, _ = self.__init_calculation_result()
 
         # get ouput
         output_data = self.__jf_model.inference(model_item, input_data, model_id)
-        # loss and acc
-        if is_training:
-            loss = self.__jf_model.loss(output_data, label_data, model_id)
-            acc = self.__jf_model.accuary(output_data, label_data, model_id)
 
-        return output_data, loss, acc
+        return output_data
 
     def __variable2tensor(self, data: list) -> None:
         res = []
@@ -178,9 +174,15 @@ class BuildGraph(object):
         input_data = self.__pass_data2device(input_data)
         label_data = self.__pass_data2device(label_data)
 
+        output_data_list = []
         for i, model_item in enumerate(self.__model):
             self.__opt[i].zero_grad()
-            _, loss, acc = self.__calculation_process(model_item, input_data, label_data, i)
+            output_data = self.__calculation_process(model_item, input_data, i)
+            output_data_list.append(output_data)
+
+        for i, output_data in enumerate(output_data_list):
+            loss = self.__jf_model.loss(output_data, label_data, i)
+            acc = self.__jf_model.accuary(output_data, label_data, i)
 
             loss[self.OPT_LOSS_ID].backward()
             self.__opt[i].step()
@@ -200,8 +202,14 @@ class BuildGraph(object):
         label_data = self.__pass_data2device(label_data)
 
         with torch.no_grad():
+            output_data_list = []
             for i, model_item in enumerate(self.__model):
-                _, loss, acc = self.__calculation_process(model_item, input_data, label_data, i)
+                output_data = self.__calculation_process(model_item, input_data, i)
+                output_data_list.append(output_data)
+
+            for i, output_data in enumerate(output_data_list):
+                loss = self.__jf_model.loss(output_data, label_data, i)
+                acc = self.__jf_model.accuary(output_data, label_data, i)
                 tower_loss_iteration.append(self.__variable2tensor(loss))
                 tower_acc_iteration.append(self.__variable2tensor(acc))
 
