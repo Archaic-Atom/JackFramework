@@ -64,8 +64,8 @@ class ResultStr(object):
         res = ""
         char_interval = ", "
         for i in range(len(info_str)):
-            res = res + info_str[i] +
-            (": %." + str(decimal_places) + "f") % data[i] + char_interval
+            res = res + info_str[i] +\
+                (": %." + str(decimal_places) + "f") % data[i] + char_interval
 
         char_offset = len(char_interval)
         res = res[:len(res) - char_offset]
