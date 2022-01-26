@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-import math
 import time
-
 from JackFramework.SysBasic.loghander import LogHandler as log
 from .meta_mode import MetaMode
 

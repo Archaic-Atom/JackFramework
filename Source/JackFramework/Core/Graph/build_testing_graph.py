@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 import torch
 
 from .meta_ops import MetaOps
