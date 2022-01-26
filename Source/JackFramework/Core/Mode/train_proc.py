@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import math
 import time
 import torch.distributed as dist
 

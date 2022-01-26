@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
-import time
-
 from JackFramework.SysBasic.loghander import LogHandler as log
 from JackFramework.Tools.process_comm import NamedPipe
 
-from ..Graph import graph_selection
-from ..Graph.data_handler_manager import DataHandlerManager
 from .meta_mode import MetaMode
 
 
@@ -21,48 +17,31 @@ class BackGround(MetaMode):
         log.warning('background mode does not support distributed')
         assert not args.dist and not is_training and args.batchSize == 1
         self.__args = args
-        self.__is_training = is_training
-        self.__user_inference_func = user_inference_func
-        self.__data_manager = None
-        self.__graph = None
-        self.init_datahandler_modelhandler()
         self.__named_pipe = None
 
-    def __init_datahandler_modelhandler(self) -> object:
-        model, dataloader = self.__user_inference_func(self.__args)
-        assert model is not None and dataloader is not None
-
-        graph = graph_selection(self.__args, model, None)
-        data_manager = DataHandlerManager(self.__args, dataloader)
-        return data_manager, graph
-
-    def __get_graph_and_data_manager(self):
-        return self.__graph, self.__data_manager
-
     def __init_setting(self, rank: object) -> object:
-        graph, _ = self.__get_graph_and_data_manager()
+        graph = self._graph
         graph.restore_model(rank)
         graph.set_model_mode(False)
         graph.pretreatment(None, rank)
-
         self.__named_pipe = NamedPipe('server')
         return self.__named_pipe
 
     def __testing_data_proc(self, batch_data: list) -> tuple:
-        graph, data_manager = self.__get_graph_and_data_manager()
+        graph, data_manager = self._get_graph_and_data_manager
         input_data, supplement = data_manager.split_data(batch_data, False)
         outputs_data = graph.exec(input_data, None)
         return outputs_data, supplement
 
     def __save_result(self, outputs_data: list, supplement: list, msg: str) -> None:
-        _, data_manager = self.__get_graph_and_data_manager()
+        _, data_manager = self._get_graph_and_data_manager
         data_manager.save_test_data(outputs_data, supplement, msg)
         log.info('jf server has saved the results')
 
     def __try_load_data(self, msg: str) -> tuple:
         res = True
         try:
-            _, data_manager = self.__get_graph_and_data_manager()
+            _, data_manager = self._get_graph_and_data_manager
             batch_data = data_manager.load_test_data(msg)
         except Exception:
             log.error('Any error of load_test_data funcution or split in dataloader!')
@@ -112,24 +91,19 @@ class BackGround(MetaMode):
     def __info_processing_loop(self, named_pipe: object) -> None:
         while(True):
             msg = self.__msg_handler(named_pipe)
-
             res = self.__exit_cmd(msg)
             if res:
                 break
-
             res = self.__data_handler(msg)
-
             if res:
                 named_pipe.send(self.__RELY_FINISH)
             else:
                 named_pipe.send(self.__RELY_EEROR)
 
-    def init_datahandler_modelhandler(self) -> tuple:
-        self.__data_manager, self.__graph = self.__init_datahandler_modelhandler()
-
     def exec(self, rank: object = None) -> None:
         assert rank is None and self.__named_pipe is None
         log.info('background mode starts')
+        self._init_datahandler_modelhandler(rank)
         named_pipe = self.__init_setting(rank)
 
         self.__info_processing_loop(named_pipe)
