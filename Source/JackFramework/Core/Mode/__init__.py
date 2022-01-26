@@ -2,24 +2,25 @@
 from JackFramework.SysBasic.switch import Switch
 from JackFramework.SysBasic.loghander import LogHandler as log
 
-from .executor import Executor
+from .test_proc import TestProc
+from .train_proc import TrainProc
 from .background import BackGround
 
 
-def mode_selection(args: object, inference: object, mode: str) -> object:
+def mode_selection(args: object, user_inference_func: object, mode: str) -> object:
     mode_func = None
     for case in Switch(mode):
         if case('train'):
             log.info("Enter training mode")
-            mode_func = Executor(args, inference, True).train
+            mode_func = TrainProc(args, user_inference_func, True).exec
             break
         if case('test'):
             log.info("Enter testing mode")
-            mode_func = Executor(args, inference, False).test
+            mode_func = TestProc(args, user_inference_func, False).exec
             break
         if case('background'):
             log.info("Enter background mode")
-            mode_func = BackGround(args, inference, False).exec
+            mode_func = BackGround(args, user_inference_func, False).exec
             break
         if case('online'):
             log.info("Enter online mode")

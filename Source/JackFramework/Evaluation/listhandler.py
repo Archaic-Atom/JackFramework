@@ -6,34 +6,34 @@ class ListHandler(object):
         super().__init__()
 
     @staticmethod
-    def list_add(list_A: list, list_B: list) -> list:
-        assert len(list_A) == len(list_B)
-        return [item + list_B[i] for i, item in enumerate(list_A)]
+    def list_add(list_a: list, list_b: list) -> list:
+        assert len(list_a) == len(list_b)
+        return [item + list_b[i] for i, item in enumerate(list_a)]
 
     @staticmethod
-    def list_div(list_A: list, num: float) -> list:
-        return [item / num for _, item in enumerate(list_A)]
+    def list_div(list_a: list, num: float) -> list:
+        return [item / num for _, item in enumerate(list_a)]
 
     @staticmethod
-    def list_mean(list_A: list) -> list:
-        return [item for _, item in enumerate(list_A)]
+    def list_mean(list_a: list) -> list:
+        return [item for _, item in enumerate(list_a)]
 
     @staticmethod
-    def double_list_add(list_A: list, list_B: list = None) -> list:
-        assert type(list_A) == list
-        assert type(list_A[0]) == list
-        if list_B is None:
-            return list_A
+    def double_list_add(list_a: list, list_b: list = None) -> list:
+        assert isinstance(list_a, list) and isinstance(list_a[0], list)
 
-        for i, item in enumerate(list_A):
-            list_A[i] = ListHandler.list_add(item, list_B[i])
+        if list_b is None:
+            return list_a
 
-        return list_A
+        for i, item in enumerate(list_a):
+            list_a[i] = ListHandler.list_add(item, list_b[i])
+
+        return list_a
 
     @staticmethod
-    def double_list_div(list_A: list, num: float) -> None:
+    def double_list_div(list_a: list, num: float) -> None:
         res = []
-        for item in list_A:
+        for item in list_a:
             tem_res = ListHandler.list_div(item, num)
             res.append(tem_res)
 

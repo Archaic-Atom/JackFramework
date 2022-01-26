@@ -1,10 +1,11 @@
 # -*- coding: UTF-8 -*-
+import torch.multiprocessing as mp
+
 from JackFramework.SysBasic.inithandler import InitProgram
 from JackFramework.SysBasic.argparser import ArgsParser
-from JackFramework.SysBasic.loghander import LogHandler
-from .mode import mode_selection
+from JackFramework.SysBasic.loghander import LogHandler as log
 
-import torch.multiprocessing as mp
+from .Mode import mode_selection
 
 
 class Application(object):
@@ -34,7 +35,7 @@ class Application(object):
         mode_func = mode_selection(args, self.__user_interface.inference, args.mode)
         self._dist_app_start(mode_func, args.dist, args.gpu)
 
-        LogHandler.info("The Application is finished!")
+        log.info("The Application is finished!")
 
     @staticmethod
     def _dist_app_start(mode_func: object, dist: bool, gpu_num: int) -> None:
