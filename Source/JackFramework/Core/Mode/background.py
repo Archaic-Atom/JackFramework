@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 import time
-from .build_training_graph import BuildGraph
-from .data_handler_manager import DataHandlerManager
 
 from JackFramework.SysBasic.loghander import LogHandler as log
 from JackFramework.Tools.process_comm import NamedPipe
 
+from ..Graph import graph_selection
+from ..Graph.data_handler_manager import DataHandlerManager
+from .meta_mode import MetaMode
 
-class BackGround(object):
+
+class BackGround(MetaMode):
     __EXIT_COMAND = 'jf stop'
     __RELY_MSG = 'the server has recived message: %s'
     __RELY_FINISH = 'jf finish'
@@ -15,7 +17,7 @@ class BackGround(object):
 
     def __init__(self, args: object, user_inference_func: object,
                  is_training: bool = False) -> object:
-        super().__init__()
+        super().__init__(args, user_inference_func, is_training)
         log.warning('background mode does not support distributed')
         assert not args.dist and not is_training and args.batchSize == 1
         self.__args = args
@@ -30,7 +32,7 @@ class BackGround(object):
         model, dataloader = self.__user_inference_func(self.__args)
         assert model is not None and dataloader is not None
 
-        graph = BuildGraph(self.__args, model, None)
+        graph = graph_selection(self.__args, model, None)
         data_manager = DataHandlerManager(self.__args, dataloader)
         return data_manager, graph
 
@@ -49,7 +51,7 @@ class BackGround(object):
     def __testing_data_proc(self, batch_data: list) -> tuple:
         graph, data_manager = self.__get_graph_and_data_manager()
         input_data, supplement = data_manager.split_data(batch_data, False)
-        outputs_data = graph.test_model(input_data)
+        outputs_data = graph.exec(input_data, None)
         return outputs_data, supplement
 
     def __save_result(self, outputs_data: list, supplement: list, msg: str) -> None:
