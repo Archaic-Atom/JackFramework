@@ -1,24 +1,22 @@
 # -*- coding: utf-8 -*-
 import math
-import time
 from abc import ABCMeta, abstractmethod
 
 from JackFramework.SysBasic.loghander import LogHandler as log
-from JackFramework.SysBasic.processbar import ShowProcess
 from JackFramework.FileHandler.tensorboard_handler import TensorboardHandler
 
 from ..Graph import graph_selection
 from ..Graph.data_handler_manager import DataHandlerManager
+from .show_handler import ShowHandler
 
 
-class MetaMode(object):
+class MetaMode(ShowHandler):
     DEFAULT_RANK_ID = 0
     __metaclass__ = ABCMeta
 
     def __init__(self, args: object, user_inference_func: object,
                  is_training: bool = True) -> object:
         super().__init__()
-
         self.__args = args
         self.__is_training = is_training
         self.__user_inference_func = user_inference_func
@@ -114,22 +112,13 @@ class MetaMode(object):
         # do something in this mode
         pass
 
-    @staticmethod
-    def _calculate_ave_runtime(start_time: object, end_time: object,
-                               total_iteration: int, training_iteration: int) -> tuple:
-        duration = (end_time - start_time) / (total_iteration)
-        rest_time = (training_iteration - total_iteration) * duration
-        return duration, rest_time
-
-    @staticmethod
-    def _init_show_setting(rank, training_iteration: int, bar_info: str) -> tuple:
-        process_bar = None
+    def _write_tensorboard(self, rank: object, epoch: int, bar_info: str) -> None:
         if rank == MetaMode.DEFAULT_RANK_ID or rank is None:
-            process_bar = ShowProcess(training_iteration, bar_info)
-        start_time = time.time()
-        return process_bar, start_time
+            self._tensorboard_handler.write_data(
+                epoch, self._graph.ave_tower_loss, self._graph.ave_tower_acc, bar_info)
 
-    @staticmethod
-    def _stop_show_setting(rank: object, process_bar: object) -> None:
+    def _write_epoch_log(self, rank: object, epoch: int) -> None:
         if rank == MetaMode.DEFAULT_RANK_ID or rank is None:
-            process_bar.close()
+            graph, data_manager = self._get_graph_and_data_manager
+            data_manager.show_training_info(epoch, graph.ave_tower_loss,
+                                            graph.ave_tower_acc, self.duration(), self._is_training)
