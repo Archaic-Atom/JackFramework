@@ -89,13 +89,11 @@ class BackGround(MetaMode):
         return False
 
     def __info_processing_loop(self, named_pipe: object) -> None:
-        while(True):
+        while True:
             msg = self.__msg_handler(named_pipe)
-            res = self.__exit_cmd(msg)
-            if res:
+            if res := self.__exit_cmd(msg):
                 break
-            res = self.__data_handler(msg)
-            if res:
+            if res := self.__data_handler(msg):
                 named_pipe.send(self.__RELY_FINISH)
             else:
                 named_pipe.send(self.__RELY_EEROR)
