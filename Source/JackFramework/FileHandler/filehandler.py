@@ -96,10 +96,8 @@ class FileHandler(object):
     def __line2offset(fd_file: object) -> list:
         current_off_set = fd_file.tell()
         fd_file.seek(0, 0)
-        off_set_list = []
         off_set = 0
-        off_set_list.append(off_set)
-
+        off_set_list = [off_set]
         for line in fd_file:
             off_set += len(line)
             off_set_list.append(off_set)
