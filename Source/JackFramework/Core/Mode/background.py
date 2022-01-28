@@ -76,9 +76,7 @@ class BackGround(TestProc):
         return msg
 
     def __exit_cmd(self, msg: str) -> bool:
-        if msg == self.__EXIT_COMAND:
-            return True
-        return False
+        return msg == self.__EXIT_COMAND
 
     def __info_processing_loop(self, named_pipe: object) -> None:
         while True:
