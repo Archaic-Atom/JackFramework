@@ -10,7 +10,8 @@ class BuildTrainingGraph(MetaOps, ResultContainer):
     OPT_LOSS_ID = 0
 
     def __init__(self, args: object, jf_model: object) -> object:
-        super().__init__(args, jf_model)
+        MetaOps.__init__(self, args, jf_model)
+        ResultContainer.__init__(self)
         self.__args = args
 
     def __calculation_process(self, model_item: object, input_data: list, label_data: list,
