@@ -36,11 +36,8 @@ class ImgIO(object):
     @staticmethod
     def read_pfm(path: str) -> tuple:
         file = open(path, 'rb')
-        color = None
-        width = None
-        height = None
-        scale = None
-        endian = None
+        color, scale, endian = None, None, None
+        width, height = None, None
 
         header = file.readline().decode('utf-8').rstrip()
         if header == 'PF':

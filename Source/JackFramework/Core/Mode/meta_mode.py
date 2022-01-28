@@ -79,11 +79,6 @@ class MetaMode(ShowHandler):
         img_id = self._get_img_id(iteration)
         self._data_manager.user_save_result(outputs_data, supplement, img_id)
 
-    @abstractmethod
-    def exec(self, rank: object = None) -> None:
-        # do something in this mode
-        pass
-
     @ShowHandler.show_method
     def _save_model(self, epoch: int) -> None:
         off_set = 1
@@ -96,3 +91,8 @@ class MetaMode(ShowHandler):
         data_manager.user_show_training_info(epoch, graph.ave_tower_loss,
                                              graph.ave_tower_acc, self.duration(),
                                              self._is_training)
+
+    @abstractmethod
+    def exec(self, rank: object = None) -> None:
+        # do something in this mode
+        pass

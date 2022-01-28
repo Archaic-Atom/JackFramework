@@ -31,7 +31,7 @@ class MetaOps(UserModel):
 
     def __init_training_graph(self) -> None:
         self.user_init_model()
-        self.__pass_model2device()
+        self._pass_model2device()
         self.user_init_optimizer()
         self.count_parameter_num()
 
@@ -50,10 +50,9 @@ class MetaOps(UserModel):
         for i, model_item in enumerate(self._model):
             self._model[i].to(self.__device)
 
-    def __pass_model2device(self) -> None:
+    def _pass_model2device(self) -> None:
         log.info("Loading model to GPUs!")
-        args = self.__args
-        if args.dist:
+        if self.__args.dist:
             self._init_ddp_model()
         else:
             self._init_dp_model()
@@ -74,8 +73,7 @@ class MetaOps(UserModel):
         res = []
         for data_item in data:
             if self.__args.dist:
-                log_data = self._reduce_tensor(
-                    data_item.clone().detach_() / (self.__args.gpu))
+                log_data = self._reduce_tensor(data_item.clone().detach_() / (self.__args.gpu))
                 res.append(log_data.item())
             else:
                 res.append(data_item.item())
@@ -93,16 +91,17 @@ class MetaOps(UserModel):
         log.info("Model_" + str(idx) + " Current lr: " +
                  str(self._opt[idx].param_groups[self.__OPT_LR_GROUP_ID]['lr']))
 
+    @ShowHandler.show_method
+    def count_parameter_num(self) -> None:
+        for i, model_item in enumerate(self._model):
+            num_params = sum(param.numel() for param in model_item.parameters())
+            log.info('Model ' + str(i) + ': The total parameter - %d' % num_params)
+
     def adjust_lr_scheduler(self, loss: list) -> None:
         for i, sch_item in enumerate(self._sch):
             if sch_item is not None:
                 self.user_lr_scheduler(sch_item, loss, i)
                 self.show_lr_scheduler_info(i)
-
-    def count_parameter_num(self) -> None:
-        for i, model_item in enumerate(self._model):
-            num_params = sum(param.numel() for param in model_item.parameters())
-            log.info('Model ' + str(i) + ': The total parameter - %d' % num_params)
 
     def cleanup(self):
         self.__device_manager.cleanup()
@@ -124,8 +123,7 @@ class MetaOps(UserModel):
         ModelSaver.save(self.__args.modelDir, file_name, model_dict)
 
     def set_model_mode(self, is_training: bool = True) -> None:
-        if self._model is None:
-            log.error("There is no mdoel!")
+        assert self._model is not None
         for i, _ in enumerate(self._model):
             if is_training:
                 self._model[i].train()
