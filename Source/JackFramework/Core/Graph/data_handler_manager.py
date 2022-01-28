@@ -95,9 +95,7 @@ class DataHandlerManager(UserDataloader):
         return self.__val_dataloader
 
     def get_dataloader(self, is_traning: bool) -> object:
-        if is_traning:
-            return self.training_dataloader
-        return self.val_dataloader
+        return self.training_dataloader if is_traning else self.val_dataloader
 
     def set_epoch(self, epoch: int, is_traning: bool) -> None:
         args = self.__args
