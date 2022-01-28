@@ -9,8 +9,8 @@ class BuildTrainingGraph(MetaOps, ResultContainer):
     """docstring for ClassName"""
     OPT_LOSS_ID = 0
 
-    def __init__(self, args: object, jf_model: object, rank: object) -> object:
-        super().__init__(args, jf_model, rank)
+    def __init__(self, args: object, jf_model: object) -> object:
+        super().__init__(args, jf_model)
         self.__args = args
 
     def __calculation_process(self, model_item: object, input_data: list, label_data: list,
@@ -47,7 +47,8 @@ class BuildTrainingGraph(MetaOps, ResultContainer):
             loss[self.OPT_LOSS_ID].backward()
             self._opt[i].step()
 
-            self.append_iteration_loss_acc(self._variable2tensor(loss), self._variable2tensor(acc))
+            self.append_iteration_loss_acc(self._variable2tensor(loss),
+                                           self._variable2tensor(acc))
             if args.dist:
                 torch.cuda.synchronize()
 
@@ -61,7 +62,8 @@ class BuildTrainingGraph(MetaOps, ResultContainer):
         with torch.no_grad():
             for i, model_item in enumerate(self._model):
                 _, loss, acc = self.__calculation_process(model_item, input_data, label_data, i)
-                self.append_iteration_loss_acc(self._variable2tensor(loss), self._variable2tensor(acc))
+                self.append_iteration_loss_acc(self._variable2tensor(loss),
+                                               self._variable2tensor(acc))
 
                 if args.dist:
                     torch.cuda.synchronize()

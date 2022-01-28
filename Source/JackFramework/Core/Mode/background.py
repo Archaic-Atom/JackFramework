@@ -2,10 +2,10 @@
 from JackFramework.SysBasic.loghander import LogHandler as log
 from JackFramework.Tools.process_comm import NamedPipe
 
-from .meta_mode import MetaMode
+from .test_proc import TestProc
 
 
-class BackGround(MetaMode):
+class BackGround(TestProc):
     __EXIT_COMAND = 'jf stop'
     __RELY_MSG = 'the server has recived message: %s'
     __RELY_FINISH = 'jf finish'
@@ -16,22 +16,15 @@ class BackGround(MetaMode):
         super().__init__(args, user_inference_func, is_training)
         log.warning('background mode does not support distributed')
         assert not args.dist and not is_training and args.batchSize == 1
-        self.__args = args
         self.__named_pipe = None
 
-    def __init_setting(self, rank: object) -> object:
+    def __init_setting(self) -> object:
         graph = self._graph
-        graph.restore_model(rank)
+        graph.restore_model()
         graph.set_model_mode(False)
-        graph.pretreatment(None, rank)
+        graph.pretreatment(None)
         self.__named_pipe = NamedPipe('server')
         return self.__named_pipe
-
-    def __testing_data_proc(self, batch_data: list) -> tuple:
-        graph, data_manager = self._get_graph_and_data_manager
-        input_data, supplement = data_manager.split_data(batch_data, False)
-        outputs_data = graph.exec(input_data, None)
-        return outputs_data, supplement
 
     def __save_result(self, outputs_data: list, supplement: list, msg: str) -> None:
         _, data_manager = self._get_graph_and_data_manager
@@ -102,7 +95,7 @@ class BackGround(MetaMode):
         assert rank is None and self.__named_pipe is None
         log.info('background mode starts')
         self._init_datahandler_modelhandler(rank)
-        named_pipe = self.__init_setting(rank)
+        named_pipe = self.__init_setting()
 
         self.__info_processing_loop(named_pipe)
         log.info('background mode has exited!')

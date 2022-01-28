@@ -6,20 +6,20 @@ from .build_training_graph import BuildTrainingGraph
 from .build_testing_graph import BuildTestingGraph
 
 
-def graph_selection(args: object, jf_model: object, rank: object) -> object:
+def graph_selection(args: object, jf_model: object) -> object:
     graph = None
     for case in Switch(args.mode):
         if case('train'):
             log.info("Enter training graph")
-            graph = BuildTrainingGraph(args, jf_model, rank)
+            graph = BuildTrainingGraph(args, jf_model)
             break
         if case('test'):
             log.info("Enter testing graph")
-            graph = BuildTestingGraph(args, jf_model, rank)
+            graph = BuildTestingGraph(args, jf_model)
             break
         if case('background'):
             log.info("Enter background graph")
-            graph = BuildTestingGraph(args, jf_model, rank)
+            graph = BuildTestingGraph(args, jf_model)
             break
         if case('online'):
             log.info("Enter online graph")
