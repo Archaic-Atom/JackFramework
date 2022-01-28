@@ -77,7 +77,7 @@ class MetaMode(ShowHandler):
 
     def _save_result(self, iteration: int, outputs_data: list, supplement: list):
         img_id = self._get_img_id(iteration)
-        self._data_manager.save_result(outputs_data, supplement, img_id)
+        self._data_manager.user_save_result(outputs_data, supplement, img_id)
 
     @abstractmethod
     def exec(self, rank: object = None) -> None:
@@ -93,6 +93,6 @@ class MetaMode(ShowHandler):
     @ShowHandler.show_method
     def _write_epoch_log(self, epoch: int) -> None:
         graph, data_manager = self._get_graph_and_data_manager
-        data_manager.show_training_info(epoch, graph.ave_tower_loss,
-                                        graph.ave_tower_acc, self.duration(),
-                                        self._is_training)
+        data_manager.user_show_training_info(epoch, graph.ave_tower_loss,
+                                             graph.ave_tower_acc, self.duration(),
+                                             self._is_training)

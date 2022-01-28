@@ -19,11 +19,11 @@ class BuildTrainingGraph(MetaOps, ResultContainer):
         output_data, loss, acc = self.__init_calculation_result()
 
         # get ouput
-        output_data = self.inference(model_item, input_data, model_id)
+        output_data = self.user_inference(model_item, input_data, model_id)
         # loss and acc
         if is_training:
-            loss = self.loss(output_data, label_data, model_id)
-            acc = self.accuary(output_data, label_data, model_id)
+            loss = self.user_loss(output_data, label_data, model_id)
+            acc = self.user_accuary(output_data, label_data, model_id)
 
         return output_data, loss, acc
 
