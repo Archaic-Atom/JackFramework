@@ -81,6 +81,13 @@ class MetaOps(UserModel):
                 res.append(data_item.item())
         return res
 
+    def _restore_model_opt(self, checkpoint: object) -> None:
+        for i, _ in enumerate(self._model):
+            if not self.user_load_model(checkpoint, i):
+                ModelSaver.load_model(self._model[i], checkpoint, i)
+            if not self.user_load_opt(checkpoint, i):
+                ModelSaver.load_opt(self._opt[i], checkpoint, i)
+
     @ShowHandler.show_method
     def show_lr_scheduler_info(self, idx: int) -> None:
         log.info("Model_" + str(idx) + " Current lr: " +
@@ -104,11 +111,7 @@ class MetaOps(UserModel):
         checkpoint_path = ModelSaver.get_check_point_path(self.__args.modelDir)
         if checkpoint_path is not None and os.path.isfile(checkpoint_path):
             checkpoint = ModelSaver.load_checkpoint(checkpoint_path, self.rank)
-            for i, _ in enumerate(self._model):
-                if not self.user_load_model(checkpoint, i):
-                    ModelSaver.load_model(self._model[i], checkpoint, i)
-                if not self.user_load_opt(checkpoint, i):
-                    ModelSaver.load_opt(self._opt[i], checkpoint, i)
+            self._restore_model_opt(checkpoint)
         else:
             log.warning("no checkpoint found at '{}'".format(checkpoint_path))
 
