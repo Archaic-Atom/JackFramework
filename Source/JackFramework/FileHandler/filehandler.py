@@ -53,15 +53,9 @@ class FileHandler(object):
     @staticmethod
     def insert_str2line(fd_file: object,
                         data_str: str, line_num: int) -> None:
-        current_off_set = fd_file.tell()
         off_set = FileHandler.__get_line_offset(fd_file, line_num)
         fd_file.seek(off_set)
         FileHandler.write_file(fd_file, data_str)
-
-        if current_off_set > off_set:
-            current_off_set = current_off_set + off_set
-
-        fd_file.seek(off_set)
 
     @staticmethod
     def get_line_fd(fd_file: object, line_num: int) -> str:
@@ -78,18 +72,18 @@ class FileHandler(object):
         return line
 
     @staticmethod
-    def copy_file(fd_file_A: object, fd_file_B: object, line_num: int) -> None:
-        off_set = FileHandler.__get_line_offset(fd_file_A, line_num)
-        fd_file_A.seek(off_set, 0)
-        off_set = FileHandler.__get_line_offset(fd_file_B, line_num)
-        fd_file_B.seek(off_set, 0)
+    def copy_file(fd_file_a: object, fd_file_b: object, line_num: int) -> None:
+        off_set = FileHandler.__get_line_offset(fd_file_a, line_num)
+        fd_file_a.seek(off_set, 0)
+        off_set = FileHandler.__get_line_offset(fd_file_b, line_num)
+        fd_file_b.seek(off_set, 0)
 
-        next_line = fd_file_A.readline()
+        next_line = fd_file_a.readline()
         while next_line:
             next_line = next_line.rstrip("\n")
 
-            FileHandler.write_file(fd_file_B, next_line)
-            next_line = fd_file_A.readline()
+            FileHandler.write_file(fd_file_b, next_line)
+            next_line = fd_file_a.readline()
 
     @staticmethod
     def __get_line_offset(fd_file: object, line_num: int):

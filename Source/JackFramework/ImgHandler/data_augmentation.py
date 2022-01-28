@@ -109,7 +109,7 @@ def debug_main():
     # img_crop = img_crop.save('TestExample/DataAug_crop.png')
     # img_rotate = img_rotate.save('TestExample/DataAug_rotate.png')
     # img_flip = img_flip.save('TestExample/DataAug_flip.png')
-    img1 = img1.save('TestExample/DataAug_vflip.png')
+    img1.save('TestExample/DataAug_vflip.png')
 
 
 if __name__ == "__main__":
