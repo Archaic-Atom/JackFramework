@@ -1,32 +1,23 @@
 # -*- coding: utf-8 -*-
 import torch
 from JackFramework.SysBasic.loghander import LogHandler as log
+from .user_dataloader import UserDataloader
 
 
-class DataHandlerManager(object):
+class DataHandlerManager(UserDataloader):
     """docstring for ClassName"""
 
     def __init__(self, args: object, jf_datahandler: object) -> None:
-        super().__init__()
-        self.__jf_datahandler = jf_datahandler
+        super().__init__(args, jf_datahandler)
         self.__args = args
         self.__training_dataloader, self.__val_dataloader, self.__training_sampler,\
             self.__val_sampler = self.__init_dataloader()
-
-    @property
-    def training_dataloader(self) -> object:
-        return self.__training_dataloader
-
-    @property
-    def val_dataloader(self) -> object:
-        return self.__val_dataloader
 
     def __init_training_dataloader(self, is_training: bool) -> None:
         args = self.__args
         training_sampler = None
 
-        tranining_dataset = self.__jf_datahandler.get_train_dataset(
-            args.trainListPath, is_training)
+        tranining_dataset = self.user_get_train_dataset(is_training)
         dataloader_shuffle = is_training
 
         if args.dist:
@@ -51,7 +42,7 @@ class DataHandlerManager(object):
         args = self.__args
         val_sampler = None
 
-        val_dataset = self.__jf_datahandler.get_val_dataset(args.valListPath)
+        val_dataset = self.user_get_val_dataset()
         if args.dist:
             val_sampler = torch.utils.data.distributed.DistributedSampler(
                 val_dataset, shuffle=False)
@@ -88,8 +79,20 @@ class DataHandlerManager(object):
             log.warning("The val images is 0")
 
         log.info("Finish constrcuting the dataloader")
-
         return training_dataloader, val_dataloader, training_sampler, val_sampler
+
+    @staticmethod
+    def __init_dataloader_object():
+        training_dataloader, val_dataloader, training_sampler, val_sampler = None, None, None, None
+        return training_dataloader, val_dataloader, training_sampler, val_sampler
+
+    @property
+    def training_dataloader(self) -> object:
+        return self.__training_dataloader
+
+    @property
+    def val_dataloader(self) -> object:
+        return self.__val_dataloader
 
     def get_dataloader(self, is_traning: bool) -> object:
         if is_traning:
@@ -103,35 +106,3 @@ class DataHandlerManager(object):
                 self.__training_sampler.set_epoch(epoch)
             else:
                 self.__val_sampler.set_epoch(epoch)
-
-    def split_data(self, batch_data: tuple, is_training: bool) -> object:
-        return self.__jf_datahandler.split_data(batch_data, is_training)
-
-    def show_training_info(self, epoch: int, loss: list, acc: list, duration: float,
-                           is_training: bool) -> None:
-        assert self.__jf_datahandler is not None
-
-        if is_training:
-            self.__jf_datahandler.show_train_result(epoch, loss, acc, duration)
-        else:
-            self.__jf_datahandler.show_val_result(epoch, loss, acc, duration)
-
-    def show_intermediate_result(self, epoch: int,
-                                 loss: list, acc: list) -> str:
-        return self.__jf_datahandler.show_intermediate_result(epoch, loss, acc)
-
-    def save_result(self, output_data: list, supplement: list, img_id: int):
-        for idx, output_item in enumerate(output_data):
-            self.__jf_datahandler.save_result(output_item, supplement, img_id, idx)
-
-    def load_test_data(self, cmd: str) -> tuple:
-        return self.__jf_datahandler.load_test_data(cmd)
-
-    def save_test_data(self, output_data: list, supplement: list, cmd: str) -> None:
-        for idx, output_item in enumerate(output_data):
-            return self.__jf_datahandler.save_test_data(output_item, supplement, cmd, idx)
-
-    @staticmethod
-    def __init_dataloader_object():
-        training_dataloader, val_dataloader, training_sampler, val_sampler = None, None, None, None
-        return training_dataloader, val_dataloader, training_sampler, val_sampler

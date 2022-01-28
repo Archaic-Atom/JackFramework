@@ -13,6 +13,6 @@ class BuildTestingGraph(MetaOps):
         outputs_data = []
         with torch.no_grad():
             for i, model_item in enumerate(self._model):
-                output_data = self.inference(model_item, input_data, i)
+                output_data = self.user_inference(model_item, input_data, i)
                 outputs_data.append(output_data)
         return outputs_data

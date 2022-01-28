@@ -22,14 +22,14 @@ class TrainProc(MetaMode):
         graph.set_model_mode(is_training)
         dataloader = data_manager.get_dataloader(is_training)
         data_manager.set_epoch(epoch, is_training)
-        graph.pretreatment(epoch)
+        graph.user_pretreatment(epoch)
 
         return total_iteration, off_set, dataloader
 
     def __training_data_proc(self, batch_data: list,
                              total_iteration: int, is_training: bool) -> tuple:
         graph, data_manager = self._get_graph_and_data_manager
-        input_data, output_data = data_manager.split_data(batch_data, True)
+        input_data, output_data = data_manager.user_split_data(batch_data, True)
         graph.exec(input_data, output_data, is_training)
         graph.cal_tower_loss_acc(total_iteration)
 
@@ -65,14 +65,14 @@ class TrainProc(MetaMode):
         graph = self._graph
         if is_training:
             graph.adjust_lr_scheduler(graph.ave_tower_loss)
-        graph.postprocess(epoch, graph.ave_tower_loss, graph.ave_tower_acc)
+        graph.user_postprocess(epoch, graph.ave_tower_loss, graph.ave_tower_acc)
 
     @ShowHandler.show_method
     def _show_iteration_result(self, total_iteration: int,
                                training_iteration: int, epoch: int):
         graph, data_manager = self._get_graph_and_data_manager
         self.calculate_ave_runtime(total_iteration, training_iteration)
-        info_str = data_manager.show_intermediate_result(
+        info_str = data_manager.user_show_intermediate_result(
             epoch, graph.ave_tower_loss, graph.ave_tower_acc)
         self.update_show_bar(info_str)
 

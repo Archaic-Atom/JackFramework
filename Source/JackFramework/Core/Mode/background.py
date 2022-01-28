@@ -22,20 +22,20 @@ class BackGround(TestProc):
         graph = self._graph
         graph.restore_model()
         graph.set_model_mode(False)
-        graph.pretreatment(None)
+        graph.user_pretreatment(None)
         self.__named_pipe = NamedPipe('server')
         return self.__named_pipe
 
     def __save_result(self, outputs_data: list, supplement: list, msg: str) -> None:
         _, data_manager = self._get_graph_and_data_manager
-        data_manager.save_test_data(outputs_data, supplement, msg)
+        data_manager.user_save_test_data(outputs_data, supplement, msg)
         log.info('jf server has saved the results')
 
     def __try_load_data(self, msg: str) -> tuple:
         res = True
         try:
             _, data_manager = self._get_graph_and_data_manager
-            batch_data = data_manager.load_test_data(msg)
+            batch_data = data_manager.user_load_test_data(msg)
         except Exception:
             log.error('Any error of load_test_data funcution or split in dataloader!')
             res = False

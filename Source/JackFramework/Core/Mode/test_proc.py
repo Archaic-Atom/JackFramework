@@ -16,12 +16,12 @@ class TestProc(MetaMode):
         graph.set_model_mode(is_training)
         dataloader = data_manager.get_dataloader(is_training)
         data_manager.set_epoch(epoch, is_training)
-        graph.pretreatment(epoch)
+        graph.user_pretreatment(epoch)
         return total_iteration, off_set, dataloader
 
     def __testing_data_proc(self, batch_data: list) -> tuple:
         graph, data_manager = self._get_graph_and_data_manager
-        input_data, supplement = data_manager.split_data(batch_data, False)
+        input_data, supplement = data_manager.user_split_data(batch_data, False)
         outputs_data = graph.exec(input_data, None)
         return outputs_data, supplement
 
@@ -51,5 +51,5 @@ class TestProc(MetaMode):
             self._save_result(iteration, outputs_data, supplement)
             self._show_testing_proc(total_iteration)
 
-        graph.postprocess(0)
+        graph.user_postprocess(0)
         self._testing_post_proc()
