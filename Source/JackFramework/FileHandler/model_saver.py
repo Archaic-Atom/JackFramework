@@ -84,11 +84,11 @@ class ModelSaver(object):
 
     @staticmethod
     def get_check_point_path(path: str) -> str:
-        if os.path.isfile(path):
-            checkpoint_path = ModelSaver.__load_model_path(path)
-        else:
-            checkpoint_path = ModelSaver.__load_model_folder(path)
-        return checkpoint_path
+        return (
+            ModelSaver.__load_model_path(path)
+            if os.path.isfile(path)
+            else ModelSaver.__load_model_folder(path)
+        )
 
     @staticmethod
     def load_checkpoint(file_path: str, rank: object = None) -> object:
