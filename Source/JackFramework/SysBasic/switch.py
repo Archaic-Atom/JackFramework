@@ -12,10 +12,9 @@ class Switch(object):
     def match(self, *args: tuple) -> bool:
         """Indicate whether or not to enter a case suite"""
         if self.__fall or not args:
-            res = True
+            return True
         elif self.__value in args:  # changed for v1.5, see below
             self.__fall = True
-            res = True
+            return True
         else:
-            res = False
-        return res
+            return False
