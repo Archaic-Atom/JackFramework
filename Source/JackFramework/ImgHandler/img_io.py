@@ -47,8 +47,9 @@ class ImgIO(object):
         else:
             raise Exception('Not a PFM file.')
 
-        dim_match = re.match(r'^(\d+)\s(\d+)\s$', file.readline().decode('utf-8'))
-        if dim_match:
+        if dim_match := re.match(
+            r'^(\d+)\s(\d+)\s$', file.readline().decode('utf-8')
+        ):
             width, height = map(int, dim_match.groups())
         else:
             raise Exception('Malformed PFM header.')
