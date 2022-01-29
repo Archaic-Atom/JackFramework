@@ -15,9 +15,9 @@ class ImgHandler(object):
         return imgs
 
     @staticmethod
-    def SSIM(x: torch.tensor, y: torch.tensor) -> torch.tensor:
-        C1 = 0.01 ** 2
-        C2 = 0.03 ** 2
+    def ssim(x: torch.tensor, y: torch.tensor) -> torch.tensor:
+        c1 = 0.01 ** 2
+        c2 = 0.03 ** 2
 
         mu_x = nn.AvgPool2d(3, 1)(x)
         mu_y = nn.AvgPool2d(3, 1)(y)
@@ -29,8 +29,8 @@ class ImgHandler(object):
         sigma_y = nn.AvgPool2d(3, 1)(y * y) - mu_y_sq
         sigma_xy = nn.AvgPool2d(3, 1)(x * y) - mu_x_mu_y
 
-        SSIM_n = (2 * mu_x_mu_y + C1) * (2 * sigma_xy + C2)
-        SSIM_d = (mu_x_sq + mu_y_sq + C1) * (sigma_x + sigma_y + C2)
-        SSIM = SSIM_n / SSIM_d
+        ssim_n = (2 * mu_x_mu_y + c1) * (2 * sigma_xy + c2)
+        ssim_d = (mu_x_sq + mu_y_sq + c1) * (sigma_x + sigma_y + c2)
+        res = ssim_n / ssim_d
 
-        return torch.clamp((1 - SSIM) / 2, 0, 1)
+        return torch.clamp((1 - res) / 2, 0, 1)

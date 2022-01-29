@@ -9,19 +9,14 @@ from .layer import Layer, NormActLayer
 class Res2DBlock(nn.Module):
     """docstring for Res2DBlock"""
 
-    def __init__(self, in_channels: int, out_channels: int,
-                 kernel_size: int = 3, stride: int = 1,
-                 padding: int = 1, dilation: int = 1,
-                 act: object = NormActLayer.act_layer,
-                 norm: object = NormActLayer.norm_layer,
-                 downsample: object = None) -> object:
+    def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3, stride: int = 1,
+                 padding: int = 1, dilation: int = 1, act: object = NormActLayer.act_layer,
+                 norm: object = NormActLayer.norm_layer, downsample: object = None) -> object:
         super().__init__()
-        self.conv_2d_layer_1 = Layer.conv_2d_layer(
-            in_channels, out_channels, kernel_size,
-            stride, padding, dilation, norm=norm, act=act)
-        self.conv_2d_layer_2 = Layer.conv_2d_layer(
-            in_channels, out_channels, kernel_size, padding=padding,
-            dilation=dilation, norm=norm)
+        self.conv_2d_layer_1 = Layer.conv_2d_layer(in_channels, out_channels, kernel_size,
+                                                   stride, padding, dilation, norm=norm, act=act)
+        self.conv_2d_layer_2 = Layer.conv_2d_layer(in_channels, out_channels, kernel_size,
+                                                   padding=padding, dilation=dilation, norm=norm)
         self.downsample = downsample
         self.act_layer = act()
 
@@ -41,14 +36,10 @@ class Res2DBlock(nn.Module):
 class Bottleneck2DBlcok(nn.Module):
     """docstring for Bottleneck2DBlcok"""
 
-    def __init__(self, in_channels: int, out_channels: int,
-                 kernel_size: int = 3, stride: int = 1,
-                 padding: int = 1,
-                 act: object = NormActLayer.act_layer,
-                 norm: object = NormActLayer.norm_layer,
-                 downsample: object = None) -> object:
+    def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3, stride: int = 1,
+                 padding: int = 1, act: object = NormActLayer.act_layer,
+                 norm: object = NormActLayer.norm_layer, downsample: object = None) -> object:
         super().__init__()
-
         bottleneck_out_channels = out_channels // 4
         self.conv_2d_layer_1 = Layer.conv_2d_layer(
             in_channels, bottleneck_out_channels, 1, 1, 0, norm=norm, act=act)
@@ -77,10 +68,8 @@ class Bottleneck2DBlcok(nn.Module):
 class Res3DBlock(nn.Module):
     """docstring for Res3DBlock"""
 
-    def __init__(self, in_channels: int, out_channels: int,
-                 kernel_size: int = 3, stride: int = 1,
-                 padding: int = 1, downsample: object = None,
-                 act: object = NormActLayer.act_layer,
+    def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3, stride: int = 1,
+                 padding: int = 1, downsample: object = None, act: object = NormActLayer.act_layer,
                  norm: object = NormActLayer.norm_layer):
         super().__init__()
         self.conv_3d_layer_1 = Layer.conv_3d_layer(
@@ -107,13 +96,10 @@ class Res3DBlock(nn.Module):
 class Bottleneck3DBlcok(nn.Module):
     """docstring for Bottleneck3DBlcok"""
 
-    def __init__(self, in_channels: int, out_channels: int,
-                 kernel_size: int = 3, stride: int = 1,
-                 padding: int = 1, downsample: object = None,
-                 act: object = NormActLayer.act_layer,
+    def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3, stride: int = 1,
+                 padding: int = 1, downsample: object = None, act: object = NormActLayer.act_layer,
                  norm: object = NormActLayer.norm_layer) -> object:
         super().__init__()
-
         bottleneck_out_channels = out_channels // 4
         self.conv_3d_layer_1 = Layer.conv_3d_layer(
             in_channels, bottleneck_out_channels, 1, 1, 0,
@@ -180,8 +166,6 @@ class SPPBlock(nn.Module):
                  act: object = NormActLayer.act_layer,
                  norm: object = NormActLayer.norm_layer) -> object:
         super().__init__()
-        # print(act)
-        # print(norm)
         self.act = act
         self.norm = norm
         self.branch_1 = self.__make_block(in_channels, out_channels, 64)

@@ -21,13 +21,10 @@ class ListHandler(object):
     @staticmethod
     def double_list_add(list_a: list, list_b: list = None) -> list:
         assert isinstance(list_a, list) and isinstance(list_a[0], list)
-
         if list_b is None:
             return list_a
-
         for i, item in enumerate(list_a):
             list_a[i] = ListHandler.list_add(item, list_b[i])
-
         return list_a
 
     @staticmethod

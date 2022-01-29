@@ -3,7 +3,7 @@ import sys
 import time
 
 
-class ShowProcess():
+class ShowProcess(object):
     _INIT_COUNTER = 0
     _MAX_STEP = 0
     _MAX_ARROW = 5
@@ -12,6 +12,7 @@ class ShowProcess():
     _INFO_DONE = 'done'
 
     def __init__(self, max_steps: int, info: str = '', info_done='Done') -> object:
+        super().__init__()
         self.__info = info
         self.__max_steps = max_steps
         self.__counter = self._INIT_COUNTER
@@ -34,6 +35,16 @@ class ShowProcess():
             return ', ' + self.__info_done
         return ''
 
+    def __generate_show_data(self, num_arrow: int, num_line: int, percent: float, show_info: str,
+                             info_done: str, queue_size: str, rest_time: str) -> str:
+        return '[' + self.__info + '] [' + '>' * num_arrow   \
+            + '-' * num_line + ']'                                  \
+            + ' %d / %d, ' % (self.__counter, self.__max_steps)     \
+            + '%.2f' % percent + '%' + ' '                          \
+            + show_info + ' ' + queue_size                          \
+            + rest_time + info_done                                 \
+            + '\r'
+
     def show_process(self, start_counter: int = None, show_info: str = '',
                      rest_time: str = '', duration: str = '', queue_size: str = '') -> None:
         # [>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>]100.00%
@@ -52,6 +63,10 @@ class ShowProcess():
         print('')
         self.__counter = self._INIT_COUNTER
 
+    def check_finish(self) -> None:
+        if self.__counter >= self.__max_steps:
+            self.close()
+
     @staticmethod
     def __generate_queue_size(queue_size: int) -> str:
         if queue_size != '':
@@ -65,26 +80,10 @@ class ShowProcess():
         rest_time += ', bs: %.3f s)' % duration if duration != '' else ')'
         return rest_time
 
-    def __generate_show_data(self, num_arrow: int, num_line: int,
-                             percent: float, show_info: str,
-                             info_done: str, queue_size: str,
-                             rest_time: str) -> str:
-        return '[' + self.__info + '] [' + '>' * num_arrow   \
-            + '-' * num_line + ']'                                  \
-            + ' %d / %d, ' % (self.__counter, self.__max_steps)     \
-            + '%.2f' % percent + '%' + ' '                          \
-            + show_info + ' ' + queue_size                          \
-            + rest_time + info_done                                 \
-            + '\r'
-
     @staticmethod
     def __print(process_str: str) -> None:
         sys.stdout.write(process_str)
         sys.stdout.flush()
-
-    def __check_finish(self):
-        if self.__counter >= self.__max_steps:
-            self.close()
 
 
 def debug_main():

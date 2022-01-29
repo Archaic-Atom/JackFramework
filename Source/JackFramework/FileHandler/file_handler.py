@@ -15,18 +15,13 @@ class FileHandler(object):
         # new folder
         path = path.strip()
         path = path.rstrip("\\")
-
-        # check the file path
-        is_exists = os.path.exists(path)
-
-        if not is_exists:
+        if not os.path.exists(path):
             os.makedirs(path)
 
     @staticmethod
     def open_file(path: str, is_continue: bool = True) -> object:
         if not is_continue and os.path.exists(path):
             os.remove(path)
-
         return open(path, 'a+')
 
     @staticmethod
@@ -51,8 +46,7 @@ class FileHandler(object):
         return path
 
     @staticmethod
-    def insert_str2line(fd_file: object,
-                        data_str: str, line_num: int) -> None:
+    def insert_str2line(fd_file: object, data_str: str, line_num: int) -> None:
         off_set = FileHandler.__get_line_offset(fd_file, line_num)
         fd_file.seek(off_set)
         FileHandler.write_file(fd_file, data_str)
@@ -61,10 +55,8 @@ class FileHandler(object):
     def get_line_fd(fd_file: object, line_num: int) -> str:
         current_off_set = fd_file.tell()
         fd_file.seek(0, 0)
-
         if len(fd_file.readlines()) <= line_num:
             return ''
-
         fd_file.seek(FileHandler.__get_line_offset(fd_file, line_num))
         line = fd_file.readline()
         line = line.rstrip("\n")
@@ -81,7 +73,6 @@ class FileHandler(object):
         next_line = fd_file_a.readline()
         while next_line:
             next_line = next_line.rstrip("\n")
-
             FileHandler.write_file(fd_file_b, next_line)
             next_line = fd_file_a.readline()
 
@@ -96,8 +87,7 @@ class FileHandler(object):
     def __line2offset(fd_file: object) -> list:
         current_off_set = fd_file.tell()
         fd_file.seek(0, 0)
-        off_set_list = []
-        off_set = 0
+        off_set_list, off_set = [], 0
         off_set_list.append(off_set)
 
         for line in fd_file:

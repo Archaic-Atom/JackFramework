@@ -11,9 +11,9 @@ import JackFramework.SysBasic.define as sysdefine
 from JackFramework.SysBasic.loghander import LogHandler as log
 from JackFramework.SysBasic.device_manager import DeviceManager
 from JackFramework.SysBasic.show_handler import ShowHandler
-
 from JackFramework.FileHandler.model_saver import ModelSaver
-from .user_model import UserModel
+
+from ._user_model import UserModel
 
 
 class MetaOps(UserModel):
@@ -39,8 +39,7 @@ class MetaOps(UserModel):
         assert self._model is not None
         for i, model_item in enumerate(self._model):
             model_item = model_item.to(self.rank)
-            self._model[i] = DDP(model_item, device_ids=[self.rank],
-                                 find_unused_parameters=True)
+            self._model[i] = DDP(model_item, device_ids=[self.rank], find_unused_parameters=True)
 
     def _init_dp_model(self) -> None:
         assert self._model is not None
@@ -66,7 +65,6 @@ class MetaOps(UserModel):
             assert self.__device is not None
             for i, data_item in enumerate(data):
                 data[i] = data_item.to(self.__device)
-
         return data
 
     def _variable2tensor(self, data: list) -> None:
@@ -130,11 +128,11 @@ class MetaOps(UserModel):
             else:
                 self._model[i].eval()
 
-    @abstractmethod
-    def exec(self, input_data: list, label_data: list, is_training: bool = True) -> list:
-        pass
-
     @staticmethod
     def _reduce_tensor(data: torch.tensor) -> torch.tensor:
         dist.all_reduce(data, op=dist.ReduceOp.SUM)
         return data
+
+    @abstractmethod
+    def exec(self, input_data: list, label_data: list, is_training: bool = True) -> list:
+        pass

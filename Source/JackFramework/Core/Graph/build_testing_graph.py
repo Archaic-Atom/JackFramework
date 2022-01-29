@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import torch
-from .meta_ops import MetaOps
+from ._meta_ops import MetaOps
 
 
 class BuildTestingGraph(MetaOps):

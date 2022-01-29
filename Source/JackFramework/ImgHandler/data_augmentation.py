@@ -19,7 +19,6 @@ class DataAugmentation(object):
 
     @staticmethod
     def standardize(img: object) -> object:
-        """ normalize image input """
         img = img.astype(np.float32)
         var = np.var(img, axis=(0, 1), keepdims=True)
         mean = np.mean(img, axis=(0, 1), keepdims=True)
@@ -46,7 +45,7 @@ class DataAugmentation(object):
             imgs = list(map(lambda img: np.flip(img, 0), imgs))
         if np.random.random() < thro:
             imgs = list(map(lambda img: np.flip(img, 1), imgs))
-            return imgs
+        return imgs
 
     @staticmethod
     def random_horizontalflip(imgs: list, thro: float = 0.5) -> list:

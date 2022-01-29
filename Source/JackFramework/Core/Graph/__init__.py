@@ -4,6 +4,7 @@ from JackFramework.SysBasic.loghander import LogHandler as log
 
 from .build_training_graph import BuildTrainingGraph
 from .build_testing_graph import BuildTestingGraph
+from .data_handler_manager import DataHandlerManager
 
 
 def graph_selection(args: object, jf_model: object) -> object:
@@ -30,3 +31,7 @@ def graph_selection(args: object, jf_model: object) -> object:
         if case(''):
             log.error("The mode's name is error!!!")
     return graph
+
+
+def dataloader_selection(args: object, jf_dataloader: object) -> object:
+    return DataHandlerManager(args, jf_dataloader)

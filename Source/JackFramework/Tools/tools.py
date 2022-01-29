@@ -21,11 +21,6 @@ class Tools(object):
 
     @staticmethod
     def __one_hot_func(label: torch.tensor, num_classes: int) -> torch.tensor:
-        """
-        :param label: label tensor with shape [H, W]
-        :param num_classes: number of class
-        :return: one-hot label tensor wish shape [num_claeese, H, W]
-        """
         size = list(label.size())
         label = label.view(-1)
         ones = torch.sparse.torch.eye(num_classes)
@@ -36,17 +31,11 @@ class Tools(object):
 
     @staticmethod
     def get_one_hot(label: torch.tensor, num_classes: int) -> torch.tensor:
-        """
-        :param label: label tensor with shape [B, 1, H, W]
-        :param num_classes: number of class
-        :return: one-hot label tensor wish shape [B, num_claeese, H, W]
-        """
         off_set = 1
         batch, _, h, w = label.shape
         label_one_hot = torch.zeros([batch, num_classes, h, w], device=label.device)
         for b in range(batch):
             label_one_hot[b:b + off_set] = Tools.__one_hot_func(label[b, 0], num_classes)
-
         return label_one_hot
 
     @staticmethod
@@ -58,17 +47,14 @@ class Tools(object):
 
 def debug_main():
     tools = Tools()
-
     # class object
     res = tools
     res = Tools.convert2list(res)
     print(res)
-
     # int
     res = 1
     res = Tools.convert2list(res)
     print(res)
-
     # tuple
     res = (1, 2, 3, 4)
     res = Tools.convert2list(res)

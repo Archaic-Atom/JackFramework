@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from JackFramework.SysBasic.show_handler import ShowHandler
 from JackFramework.SysBasic.loghander import LogHandler as log
-from .meta_mode import MetaMode
+from ._meta_mode import MetaMode
 
 
 class TestProc(MetaMode):
@@ -12,11 +12,11 @@ class TestProc(MetaMode):
 
     def __init_testing_para(self, epoch: int, is_training: bool = True) -> tuple:
         total_iteration, off_set = 0, 1
-        graph, data_manager = self._get_graph_and_data_manager
-        graph.set_model_mode(is_training)
-        dataloader = data_manager.get_dataloader(is_training)
-        data_manager.set_epoch(epoch, is_training)
-        graph.user_pretreatment(epoch)
+        self._graph.set_model_mode(is_training)
+        dataloader = self._data_manager.get_dataloader(is_training)
+        self._data_manager.set_epoch(epoch, is_training)
+        self._graph.set_model_mode(False)
+        self._graph.user_pretreatment(epoch)
         return total_iteration, off_set, dataloader
 
     def __testing_data_proc(self, batch_data: list) -> tuple:
@@ -35,21 +35,23 @@ class TestProc(MetaMode):
         self.stop_show_setting()
         log.info("Finish testing process!")
 
-    def exec(self, rank: object = None) -> None:
-        self._init_datahandler_modelhandler(rank)
-        log.info("Start the testing process!")
-        graph = self._graph
-        graph.restore_model()
+    def __test_loop(self) -> None:
         total_iteration, off_set, dataloader = self.__init_testing_para(0, True)
-        graph.set_model_mode(False)
         self.init_show_setting(self._training_iteration, "Test")
-
         log.info("Start testing iteration!")
         for iteration, batch_data in enumerate(dataloader):
             total_iteration = iteration + off_set
             outputs_data, supplement = self.__testing_data_proc(batch_data)
             self._save_result(iteration, outputs_data, supplement)
             self._show_testing_proc(total_iteration)
+        self._graph.user_postprocess(0)
 
-        graph.user_postprocess(0)
+    def __preparation_proc(self) -> None:
+        self._graph.restore_model()
+
+    def exec(self, rank: object = None) -> None:
+        self._init_datahandler_modelhandler(rank)
+        log.info("Start the testing process!")
+        self.__preparation_proc()
+        self.__test_loop()
         self._testing_post_proc()

@@ -26,7 +26,8 @@ class DeviceManager(object):
     def device(self):
         return self.__device
 
-    def __init_gpu_device(self) -> object:
+    @staticmethod
+    def __init_gpu_device() -> object:
         log.info("Start initializing device!")
 
         torch.backends.cudnn.deterministic = False
@@ -40,21 +41,18 @@ class DeviceManager(object):
         log.info("Start initializing distributed device!")
         assert rank is not None
 
-        args = self.__args
-        os.environ['MASTER_ADDR'] = args.ip
-        os.environ['MASTER_PORT'] = args.port
+        os.environ['MASTER_ADDR'] = self.__args.ip
+        os.environ['MASTER_PORT'] = self.__args.port
 
         torch.backends.cudnn.deterministic = False
         torch.backends.cudnn.benchmark = True
 
         dist.init_process_group("nccl", rank=rank, world_size=self.__args.gpu)
         torch.cuda.set_device(rank)
-
         return None
 
     def cleanup(self):
-        args = self.__args
-        if args.dist:
+        if self.__args.dist:
             dist.destroy_process_group()
 
     @staticmethod
@@ -70,11 +68,9 @@ class DeviceManager(object):
     @staticmethod
     def check_cuda_count(args) -> object:
         res_bool = True
-
         if torch.cuda.device_count() < args.gpu:
-            log.warning(
-                "The setting of GPUs is more than actually owned GPUs: %d vs %d"
-                % (args.gpu, torch.cuda.device_count()))
+            log.warning("The setting of GPUs is more than actually owned GPUs: %d vs %d"
+                        % (args.gpu, torch.cuda.device_count()))
             log.info("We will use all actually owned GPUs.")
             args.gpu = torch.cuda.device_count()
 
@@ -96,9 +92,7 @@ class DeviceManager(object):
 
     @staticmethod
     def find_unused_port(port: str) -> bool:
-        max_failed_num = 5
-        try_index = 0
-        off_set = 1
+        max_failed_num, try_index, off_set = 5, 0, 1
         find_res_bool = False
         while True:
             try_index += off_set
@@ -107,14 +101,11 @@ class DeviceManager(object):
                 log.warning("Port: " + str(port) + " is using")
                 port = str(int(port) + off_set)
                 res_bool = False
-
             if res_bool:
                 log.info("We will use the port: " + str(port))
                 find_res_bool = True
                 break
-
             if try_index >= max_failed_num:
                 log.error("We do not find unused port!")
                 break
-
         return port, find_res_bool

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import torch
 
-from .meta_ops import MetaOps
-from .loss_computer import ResultContainer
+from ._meta_ops import MetaOps
+from ._loss_computer import ResultContainer
 
 
 class BuildTrainingGraph(MetaOps, ResultContainer):
@@ -46,9 +46,7 @@ class BuildTrainingGraph(MetaOps, ResultContainer):
             self._opt[i].zero_grad()
             _, loss, acc = self.__calculation_process(model_item, input_data, label_data, i)
             self.__update_model(loss, i)
-
-            self.append_iteration_loss_acc(self._variable2tensor(loss),
-                                           self._variable2tensor(acc))
+            self.append_iteration_loss_acc(self._variable2tensor(loss), self._variable2tensor(acc))
             self.__synchronize_data()
 
     def _val_model(self, input_data: list, label_data: list) -> list:

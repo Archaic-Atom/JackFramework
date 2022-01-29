@@ -50,7 +50,6 @@ class NormActLayer(object):
 
 class Layer(object):
     """docstring for ClassName"""
-
     __LAYER = None
 
     def __init__(self):
