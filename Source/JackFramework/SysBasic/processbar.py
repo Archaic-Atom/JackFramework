@@ -31,9 +31,7 @@ class ShowProcess(object):
         return num_arrow, num_line, percent
 
     def __genearte_info_done(self) -> str:
-        if self.__counter >= self.__max_steps:
-            return ', ' + self.__info_done
-        return ''
+        return ', ' + self.__info_done if self.__counter >= self.__max_steps else ''
 
     def __generate_show_data(self, num_arrow: int, num_line: int, percent: float, show_info: str,
                              info_done: str, queue_size: str, rest_time: str) -> str:
