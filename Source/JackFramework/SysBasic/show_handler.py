@@ -1,42 +1,29 @@
 # -*- coding: utf-8 -*-
 import time
-from functools import wraps
 
 from JackFramework.SysBasic.loghander import LogHandler as log
 from JackFramework.FileHandler.tensorboard_handler import TensorboardHandler
+
 from .processbar import ShowProcess
+from ._show_manager import ShowManager
 
 
-class ShowHandler(object):
+class ShowHandler(ShowManager):
     __ShowHandler = None
-    __DEFAULT_RANK_ID = 0
-    __RANK = None
+    __TENSORBOARD_HANDLER = None
     __PROCESS_BAR, __START_TIME = None, None
     __DURATION, __REST_TIME = None, None
-    __TENSORBOARD_HANDLER = None
 
     def __init__(self) -> object:
         super().__init__()
 
-    @property
-    def rank(self) -> object:
-        return self.__RANK
+    @ShowManager.show_method
+    def __init_tensorboard_handler(self, args: object) -> None:
+        self.init_tensorboard_handler(args)
 
-    @staticmethod
-    def get_rank() -> object:
-        return ShowHandler.__RANK
-
-    @property
-    def default_rank_id(self):
-        return self.__DEFAULT_RANK_ID
-
-    @staticmethod
-    def set_rank(rank: object) -> None:
-        ShowHandler.__RANK = rank
-
-    @staticmethod
-    def set_default_rank_id(default_rank_id: int) -> None:
-        ShowHandler.__DEFAULT_RANK_ID = default_rank_id
+    def reinit_log_tensorboard_handler(self, args: object) -> None:
+        self.__reinit_log_handler(args)
+        self.__init_tensorboard_handler(args)
 
     @staticmethod
     def init_show_setting(training_iteration: int, bar_info: str) -> tuple:
@@ -48,8 +35,7 @@ class ShowHandler(object):
         ShowHandler.__TENSORBOARD_HANDLER = TensorboardHandler(args)
 
     @staticmethod
-    def calculate_ave_runtime(total_iteration: int,
-                              training_iteration: int) -> tuple:
+    def calculate_ave_runtime(total_iteration: int, training_iteration: int) -> tuple:
         ShowHandler.__DURATION = (time.time() - ShowHandler.__START_TIME) / (total_iteration)
         ShowHandler.__REST_TIME = (training_iteration - total_iteration) * ShowHandler.__DURATION
 
@@ -61,13 +47,11 @@ class ShowHandler(object):
     def duration():
         return time.time() - ShowHandler.__START_TIME
 
-    @classmethod
-    def show_method(cls, func):
-        @wraps(func)
-        def wrapped_func(*args, **kwargs):
-            if cls.__RANK == cls.__DEFAULT_RANK_ID or cls.__RANK is None:
-                func(*args, **kwargs)
-        return wrapped_func
+    @staticmethod
+    def __reinit_log_handler(args: object) -> None:
+        if args.dist:
+            log().init_log(args.outputDir, args.pretrain)
+            log().info("LogHandler is reinitialized!")
 
     @staticmethod
     def update_show_bar(info_str: str) -> None:
@@ -78,14 +62,4 @@ class ShowHandler(object):
     @staticmethod
     def write_tensorboard(epoch: int, ave_tower_loss: list,
                           ave_tower_acc: list, bar_info: str) -> None:
-        ShowHandler.__TENSORBOARD_HANDLER.write_data(
-            epoch, ave_tower_loss, ave_tower_acc, bar_info)
-
-    def reinit_log_tensorboard_handler(self, args: object) -> None:
-        if not args.dist:
-            self.init_tensorboard_handler(args)
-        elif self.rank == self.default_rank_id:
-            # dist reinit log
-            log().init_log(args.outputDir, args.pretrain)
-            log().info("LogHandler is reinitialized!")
-            self.init_tensorboard_handler(args)
+        ShowHandler.__TENSORBOARD_HANDLER.write_data(epoch, ave_tower_loss, ave_tower_acc, bar_info)

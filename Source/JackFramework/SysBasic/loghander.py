@@ -5,7 +5,6 @@ import logging
 
 class LogHandler(object):
     """docstring for LogHandler"""
-
     # output file setting
     LOG_FILE = 'output.log'  # log file's path
     # define some struct
@@ -19,35 +18,19 @@ class LogHandler(object):
     COLOR_YELLOW = 33
     COLOR_RED = 31
 
-    def __init__(self, info_format: str = None,
-                 data_format: str = None,
+    def __init__(self, info_format: str = None, data_format: str = None,
                  file_name: str = None) -> None:
         super().__init__()
-
-        self.__info_format = info_format
-        if info_format is None:
-            self.__info_format = LogHandler.LOG_FORMAT
-
-        self.__data_format = data_format
-        if data_format is None:
-            self.__data_format = LogHandler.LOG_DATE_FORMAT
-
-        self.__file_name = file_name
-        if file_name is None:
-            self.__file_name = LogHandler.LOG_FILE
+        self.__info_format = LogHandler.LOG_FORMAT if info_format is None else info_format
+        self.__data_format = LogHandler.LOG_FILE if data_format is None else data_format
+        self.__file_name = LogHandler.LOG_FILE if file_name is None else file_name
 
     def init_log(self, path: str, renew: bool) -> None:
         path += self.__file_name
-
         if renew and os.path.exists(path):
             os.remove(path)
-
-        logging.basicConfig(level=logging.INFO,
-                            format=self.__info_format,
-                            datefmt=self.__data_format,
-                            filename=path,
-                            filemode='a')
-        return
+        logging.basicConfig(level=logging.INFO, format=self.__info_format,
+                            datefmt=self.__data_format, filename=path, filemode='a')
 
     @staticmethod
     def info(data_str: str) -> None:

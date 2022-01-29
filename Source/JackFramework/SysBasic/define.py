@@ -62,7 +62,7 @@ AUTO_SAVE_NUM = 1
 GPU_NUM = 2
 # the number of Dataloader
 DATA_LOADER_NUM = 4
-
+# the training and val's image number
 IMG_NUM = 4500
 VAL_IMG_NUM = 0
 

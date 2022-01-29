@@ -5,7 +5,7 @@ from JackFramework.SysBasic import define as sys_define
 # custom lib
 from JackFramework.SysBasic.loghander import LogHandler as log
 from JackFramework.SysBasic.switch import Switch
-from JackFramework.FileHandler.filehandler import FileHandler
+from JackFramework.FileHandler.file_handler import FileHandler
 
 # image handler
 from JackFramework.ImgHandler.data_augmentation import DataAugmentation

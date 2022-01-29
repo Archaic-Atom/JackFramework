@@ -4,7 +4,7 @@ import torch
 
 import JackFramework.SysBasic.define as sys_def
 from JackFramework.SysBasic.loghander import LogHandler as log
-from .filehandler import FileHandler
+from .file_handler import FileHandler
 
 
 class ModelSaver(object):
@@ -39,7 +39,6 @@ class ModelSaver(object):
 
         fd_checkpoint_list = FileHandler.open_file(file_dir + sys_def.CHECK_POINT_LIST_NAME)
         fd_checkpoint_list = ModelSaver.__check_list(file_dir, fd_checkpoint_list)
-
         return fd_checkpoint_list
 
     @staticmethod
@@ -67,21 +66,28 @@ class ModelSaver(object):
                   file_dir + sys_def.CHECK_POINT_LIST_NAME)
 
     @staticmethod
-    def get_check_point_path(path: str) -> str:
-        checkpoint_path = None
-        if os.path.isfile(path):
-            log.info("Begin loading checkpoint from this file: '{}'".format(path))
-            checkpoint_path = path
+    def __load_model_folder(path: str) -> str:
+        log.info("Begin loading checkpoint from this folder: '{}'".format(path))
+        checkpoint_list_file = path + sys_def.CHECK_POINT_LIST_NAME
+        if not os.path.isfile(checkpoint_list_file):
+            log.warning("We don't find the checkpoint list file: '{}'!".format(checkpoint_list_file))
+            checkpoint_path = None
         else:
-            log.info("Begin loading checkpoint from this folder: '{}'".format(path))
-            checkpoint_list_file = path + sys_def.CHECK_POINT_LIST_NAME
-            if not os.path.isfile(checkpoint_list_file):
-                log.warning("We don't find the checkpoint list file: '{}'!".format(
-                    checkpoint_list_file))
-            else:
-                checkpoint_path = path + ModelSaver.__get_model_name(checkpoint_list_file)
-                log.info("Get the path of model: '{}'".format(checkpoint_path))
+            checkpoint_path = path + ModelSaver.__get_model_name(checkpoint_list_file)
+            log.info("Get the path of model: '{}'".format(checkpoint_path))
+        return checkpoint_path
 
+    @staticmethod
+    def __load_model_path(path: str) -> str:
+        log.info("Begin loading checkpoint from this file: '{}'".format(path))
+        return path
+
+    @staticmethod
+    def get_check_point_path(path: str) -> str:
+        if os.path.isfile(path):
+            checkpoint_path = ModelSaver.__load_model_path(path)
+        else:
+            checkpoint_path = ModelSaver.__load_model_folder(path)
         return checkpoint_path
 
     @staticmethod
@@ -110,7 +116,6 @@ class ModelSaver(object):
             opt_name = 'opt_%d' % i
             model_dict[model_name] = model_list[i].state_dict()
             model_dict[opt_name] = opt_list[i].state_dict()
-
         return model_dict
 
     @staticmethod
@@ -122,7 +127,6 @@ class ModelSaver(object):
     @staticmethod
     def write_check_point_list(file_dir: str, file_name: str) -> None:
         fd_checkpoint_list = ModelSaver.__write_check_point_list_title(file_dir)
-
         if fd_checkpoint_list is None:
             ModelSaver.__write_new_check_point_file(file_dir, file_name)
         else:

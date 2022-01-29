@@ -46,7 +46,6 @@ class NamedPipe(object):
         if self.__pipe_writer is not None:
             os.close(self.__pipe_writer)
             self.__pipe_writer = None
-
         if self.__pipe_reader is not None:
             os.close(self.__pipe_reader)
             self.__pipe_reader = None
@@ -96,7 +95,6 @@ class NamedPipe(object):
         return pipe_writer, pipe_reader
 
     def send(self, msg: str) -> None:
-
         os.write(self.__pipe_writer, msg.encode())
 
     def receive(self) -> str:
@@ -104,8 +102,7 @@ class NamedPipe(object):
 
     def __recive_thread(self, reader_path) -> None:
         log.info('The receive thread starts!')
-
-        while(True):
+        while True:
             if self.__exit:
                 log.info('The receive thread in %d has exited!' % self.__mode)
                 return

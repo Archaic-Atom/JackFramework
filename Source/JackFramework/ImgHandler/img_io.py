@@ -25,31 +25,31 @@ class ImgIO(object):
     @staticmethod
     def write_img(path: str, img: np.array) -> None:
         img = np.array(img, np.uint8).squeeze()
-        if len(img.shape) == 2 or len(img.shape) == 3 \
-                and img.shape[2] == 3:
+        if len(img.shape) == 2 or len(img.shape) == 3 and img.shape[2] == 3:
             img = Image.fromarray(img)
             img.save(path)
         else:
-            raise Exception('Image must have H x W x 3, \
-                        H x W x 1 or H x W dimensions.')
+            raise Exception('Image must have H x W x 3, H x W x 1 or H x W dimensions.')
 
     @staticmethod
-    def read_pfm(path: str) -> tuple:
-        file = open(path, 'rb')
-        color, scale, endian = None, None, None
-        width, height = None, None
-
-        header = file.readline().decode('utf-8').rstrip()
+    def __get_color(header: str) -> bool:
         if header == 'PF':
             color = True
         elif header == 'Pf':
             color = False
         else:
             raise Exception('Not a PFM file.')
+        return color
 
-        if dim_match := re.match(
-            r'^(\d+)\s(\d+)\s$', file.readline().decode('utf-8')
-        ):
+    @staticmethod
+    def read_pfm(path: str) -> tuple:
+        file = open(path, 'rb')
+
+        header = file.readline().decode('utf-8').rstrip()
+        color = ImgIO.__get_color(header)
+
+        if (dim_match := re.match(r'^(\d+)\s(\d+)\s$',
+                                  file.readline().decode('utf-8'))):
             width, height = map(int, dim_match.groups())
         else:
             raise Exception('Malformed PFM header.')
@@ -89,7 +89,6 @@ class ImgIO(object):
             file.write(str.encode('%d %d\n' % (image.shape[1], image.shape[0])))
 
             endian = image.dtype.byteorder
-
             if endian == '<' or endian == '=' and sys.byteorder == 'little':
                 scale = -scale
 

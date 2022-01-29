@@ -7,11 +7,10 @@ from JackFramework.SysBasic.show_handler import ShowHandler
 class UserModel(ShowHandler):
     def __init__(self, args: object, jf_model: object) -> object:
         super().__init__()
+        assert isinstance(jf_model, ModelHandlerTemplate)
         self.__jf_model = jf_model
         self.__args = args
-        assert isinstance(self.__jf_model, ModelHandlerTemplate)
-        self.__model = None
-        self.__opt, self.__sch = None, None
+        self.__model, self.__opt, self.__sch = None, None, None
 
     @property
     def _model(self):

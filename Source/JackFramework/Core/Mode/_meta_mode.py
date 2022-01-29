@@ -3,8 +3,7 @@ import math
 from abc import ABCMeta, abstractmethod
 
 from JackFramework.SysBasic.show_handler import ShowHandler
-from ..Graph import graph_selection
-from ..Graph.data_handler_manager import DataHandlerManager
+from JackFramework.Core.Graph import graph_selection, dataloader_selection
 
 
 class MetaMode(ShowHandler):
@@ -35,15 +34,9 @@ class MetaMode(ShowHandler):
     def _training_iteration(self) -> int:
         return self.__training_iteration
 
-    def set_training_iteration(self, iteration: int) -> None:
-        self.__training_iteration = iteration
-
     @property
     def _val_iteration(self) -> int:
         return self.__val_iteration
-
-    def set_val_iteration(self, iteration: int) -> None:
-        self.__val_iteration = iteration
 
     @property
     def _get_graph_and_data_manager(self):
@@ -51,7 +44,6 @@ class MetaMode(ShowHandler):
 
     def __calculate_batch_size(self):
         args = self.__args
-        training_iteration, val_iteration = 0, 0
         if args.dist:
             training_iteration = math.ceil(
                 args.imgNum * args.sampleNum / (args.batchSize * args.gpu))
@@ -68,7 +60,7 @@ class MetaMode(ShowHandler):
         jf_model, jf_dataloader = self.__user_inference_func(self.__args)
         assert jf_model is not None and jf_dataloader is not None
         self.__graph = graph_selection(self.__args, jf_model)
-        self.__data_manager = DataHandlerManager(self.__args, jf_dataloader)
+        self.__data_manager = dataloader_selection(self.__args, jf_dataloader)
 
     def _get_img_id(self, iteration: int) -> int:
         if self.rank is None:
@@ -87,10 +79,15 @@ class MetaMode(ShowHandler):
 
     @ShowHandler.show_method
     def _write_epoch_log(self, epoch: int) -> None:
-        graph, data_manager = self._get_graph_and_data_manager
-        data_manager.user_show_training_info(epoch, graph.ave_tower_loss,
-                                             graph.ave_tower_acc, self.duration(),
-                                             self._is_training)
+        self._data_manager.user_show_training_info(
+            epoch, self._graph.ave_tower_loss, self._graph.ave_tower_acc,
+            self.duration(), self._is_training)
+
+    def set_training_iteration(self, iteration: int) -> None:
+        self.__training_iteration = iteration
+
+    def set_val_iteration(self, iteration: int) -> None:
+        self.__val_iteration = iteration
 
     @abstractmethod
     def exec(self, rank: object = None) -> None:

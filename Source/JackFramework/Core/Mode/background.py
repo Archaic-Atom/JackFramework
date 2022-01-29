@@ -91,9 +91,8 @@ class BackGround(TestProc):
 
     def exec(self, rank: object = None) -> None:
         assert rank is None and self.__named_pipe is None
-        log.info('background mode starts')
         self._init_datahandler_modelhandler(rank)
+        log.info('background mode starts')
         named_pipe = self.__init_setting()
-
         self.__info_processing_loop(named_pipe)
         log.info('background mode has exited!')

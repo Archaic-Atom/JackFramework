@@ -2,9 +2,9 @@
 import os
 
 from JackFramework.SysBasic.loghander import LogHandler as log
-from .device_manager import DeviceManager
+from JackFramework.FileHandler.file_handler import FileHandler
 
-from JackFramework.FileHandler.filehandler import FileHandler
+from .device_manager import DeviceManager
 
 
 class InitProgram(object):
@@ -48,52 +48,41 @@ class InitProgram(object):
         log.info('└── imgHeight: ' + str(args.imgHeight))
 
     def __check_args(self) -> bool:
-        args = self.__args
-
         res = True
         log.info('Begin to check the args')
-        if not os.path.exists(args.trainListPath):
+        if not os.path.exists(self.__args.trainListPath):
             log.error('the training list is not existed!')
             res = False
-
-        if not os.path.exists(args.valListPath):
+        if not os.path.exists(self.__args.valListPath):
             log.warning('the val list is not existed!')
-
-        if os.path.isfile(args.outputDir):
+        if os.path.isfile(self.__args.outputDir):
             log.error("A file was passed as `--outputDir`, please pass a directory!")
             res = False
-
-        if os.path.isfile(args.modelDir):
+        if os.path.isfile(self.__args.modelDir):
             log.warning("A file was passed as `--modelDir`, suggest to pass a directory!")
-
-        if os.path.isfile(args.resultImgDir):
+        if os.path.isfile(self.__args.resultImgDir):
             log.error("A file was passed as `--resultImgDir`, please pass a directory!")
             res = False
-
-        if os.path.isfile(args.log):
+        if os.path.isfile(self.__args.log):
             log.error("A file was passed as `--log`, please pass a directory!")
             res = False
-
         if res:
             log.info('Finish checking the args')
         else:
             log.info('Error in the process of checking args')
-
         return res
 
     def __check_env(self) -> bool:
         log.info('Begin to check the env')
         return DeviceManager.check_cuda(self.__args)
 
-    def init_pro(self) -> bool:
+    def init_program(self) -> bool:
         args = self.__args
         self.__build_result_directory()
         log().init_log(args.outputDir, args.pretrain)
         log.info("Welcome to use the JackFramework")
         self.__show_args()
         res = self.__check_args() and self.__check_env()
-
         if not res:
             log.error("Failed in the init programs")
-
         return res

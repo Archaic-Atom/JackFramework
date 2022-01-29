@@ -20,8 +20,7 @@ class Loss(object):
         super().__init__()
 
     @staticmethod
-    def smooth_l1(res: torch.tensor, gt: torch.tensor,
-                  mask_threshold_min: int,
+    def smooth_l1(res: torch.tensor, gt: torch.tensor, mask_threshold_min: int,
                   mask_threshold_max: int) -> torch.tensor:
         mask = (gt > mask_threshold_min) & (gt < mask_threshold_max)
         mask.detach_()
@@ -29,31 +28,8 @@ class Loss(object):
         return F.smooth_l1_loss(res[mask], gt[mask], reduction='sum') / total_num
 
     @staticmethod
-    def focal_loss(res: torch.tensor,
-                   gt: torch.tensor,
-                   alpha: float = -1,
-                   gamma: float = 2,
-                   reduction: str = 'mean',
-                   mode: str = 'bce') -> torch.tensor:
-        """
-        Params:
-            res: Outputs of model with shape [B, C, H, W]
-            gt: Labels of datasets with shape [B, C, H, W]
-            alpha: Weighting factor in range (0, 1) to balance positive
-                   and negative examples. For example: 0.75 means weighting
-                   factor for positive examples.
-            gamma: Exponent of the modulating factor (1 - p_t) to
-                   balance easy vs hard examples.
-            reduction: 'none' | 'mean' | 'sum'
-                 'none': No reduction will be applied to the output.
-                 'mean': The output will be averaged.
-                 'sum': The output will be summed.
-            mode: 'ce' | 'bce'
-                'ce': The channel num of res is 2, that means caculating
-                    focal_loss by using cross_entropy_loss
-                'bce': The channel num of res is 1, that means caculating
-                    focal_loss by using binary_cross_entropy_loss
-        """
+    def focal_loss(res: torch.tensor, gt: torch.tensor, alpha: float = -1, gamma: float = 2,
+                   reduction: str = 'mean', mode: str = 'bce') -> torch.tensor:
         if mode == 'ce':
             gt = gt.long()
             logp_t = F.cross_entropy(res, gt.squeeze(1), reduction='none')
@@ -76,16 +52,10 @@ class Loss(object):
         return loss
 
     @ staticmethod
-    def mutil_focal_loss(res: list,
-                         gt: torch.tensor,
-                         alpha: float = -1,
-                         gamma: float = 2,
-                         reduction: str = 'mean',
-                         mode: str = 'bce',
+    def mutil_focal_loss(res: list, gt: torch.tensor, alpha: float = -1, gamma: float = 2,
+                         reduction: str = 'mean', mode: str = 'bce',
                          lambdas: list = None) -> torch.tensor:
-
-        loss = 0
-        length = len(res)
+        loss, length = 0, len(res)
         _, _, h, w = gt.shape
         if lambdas is None:
             lambdas = [1] * length
@@ -101,12 +71,6 @@ class Loss(object):
 
     @staticmethod
     def contrastive_loss(res: torch.tensor, gt: torch.tensor, margin: float) -> torch.tensor:
-        """
-        :param res: Tensor with shape [B, C, H, W]
-        :param gt: Tensor with shape [B, 1, H, W]
-        :param margin:
-        :return: Average loss of batch data
-        """
         return torch.mean((1 - gt) * torch.pow(res, 2) +
                           gt * torch.pow(torch.clamp(margin - res, min=0), 2))
 
@@ -116,29 +80,19 @@ class Loss(object):
         gt_vector = gt.view(batch, -1)
         intersection = (res_vector * gt_vector).sum(1)
         return 1 - torch.mean((2 * intersection) / (res_vector.sum(1)
-                              + gt_vector.sum(1)
-                              + Loss.LOSS_EPSILON))
+                              + gt_vector.sum(1) + Loss.LOSS_EPSILON))
 
     @staticmethod
     def dice_loss(res: torch.tensor, gt: torch.tensor) -> torch.tensor:
-        """
-        :param res: Tensor with shape [B, C, H, W]
-        :param gt: Tensor with shape [B, 1, H, W]
-        :return: Average loss of batch data
-        """
         batch, num_classes, _, _ = res.shape
         if num_classes >= 2:
             res = F.softmax(res, dim=1)
             gt_one_hot = Tools.get_one_hot(gt, num_classes)
-            loss = sum(
-                Loss.__dice_loss_func(res[:, c], gt_one_hot[:, c], batch)
-                for c in range(num_classes)
-            )
-
+            loss = sum(Loss.__dice_loss_func(res[:, c], gt_one_hot[:, c], batch)
+                       for c in range(num_classes))
             loss /= num_classes
         else:
             loss = Loss.__dice_loss_func(res, gt, batch)
-
         return loss
 
 
