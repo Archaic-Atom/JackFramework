@@ -71,7 +71,7 @@ class MetaOps(UserModel):
         res = []
         for data_item in data:
             if self.__args.dist:
-                log_data = self._reduce_tensor(data_item.clone().detach_() / (self.__args.gpu))
+                log_data = self._reduce_tensor(data_item.clone().detach_() / self.__args.gpu)
                 res.append(log_data.item())
             else:
                 res.append(data_item.item())

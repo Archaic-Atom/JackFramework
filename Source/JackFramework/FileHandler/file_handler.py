@@ -7,7 +7,7 @@ class FileHandler(object):
     """docstring for FileHandler"""
     ERROR_LINE_NUM = -1
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     @staticmethod
@@ -109,7 +109,6 @@ def debug_main():
 
     # Checkpoint's list file
     CHECK_POINT_LIST_NAME = 'checkpoint.list'
-    #
     LAST_MODEL_NAME = 'last model name:'
 
     for i in range(50):

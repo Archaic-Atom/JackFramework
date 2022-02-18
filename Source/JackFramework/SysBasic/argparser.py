@@ -21,7 +21,9 @@ class ArgsParser(object):
         parser = self.__load_user_define(parser, user_define_func)
         return parser.parse_args()
 
-    def __load_user_define(self, parser: object, user_define_func: object) -> object:
+    # noinspection PyCallingNonCallable
+    @staticmethod
+    def __load_user_define(parser: object, user_define_func: object) -> object:
         if user_define_func is not None:
             user_parser = user_define_func(parser)
             if isinstance(user_parser, type(parser)):
@@ -37,7 +39,7 @@ class ArgsParser(object):
         parser.add_argument('--auto_save_num', type=int, default=sys_define.AUTO_SAVE_NUM,
                             help='AUTO_SAVE_NUM')
         parser.add_argument('--dataloaderNum', type=int, default=sys_define.DATA_LOADER_NUM,
-                            help='the number of dataloaders')
+                            help='the number of dataloader')
         parser.add_argument('--pretrain', default=False, type=ArgsParser.__str2bool,
                             help='true or false')
         parser.add_argument('--ip', default=sys_define.IP,

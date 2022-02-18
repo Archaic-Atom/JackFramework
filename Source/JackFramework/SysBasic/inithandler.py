@@ -23,7 +23,7 @@ class InitProgram(object):
 
     def __show_args(self) -> None:
         args = self.__args
-        log.info("The hyperparameters are set as follows:")
+        log.info("The hyper-parameters are set as follows:")
         log.info('├── mode: ' + str(args.mode))
         log.info('├── dataset: ' + str(args.dataset))
         log.info('├── trainListPath: ' + str(args.trainListPath))

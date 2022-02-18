@@ -7,8 +7,8 @@ from ._user_dataloader import UserDataloader
 class DataHandlerManager(UserDataloader):
     """docstring for ClassName"""
 
-    def __init__(self, args: object, jf_datahandler: object) -> None:
-        super().__init__(args, jf_datahandler)
+    def __init__(self, args: object, jf_data_handler: object) -> None:
+        super().__init__(args, jf_data_handler)
         self.__args = args
         self.__training_dataloader, self.__training_sampler = self.__check_training_dataloader()
         self.__val_dataloader, self.__val_sampler = self.__check_val_dataloader()

@@ -11,7 +11,7 @@ class TrainProc(MetaMode):
     """docstring for Executor"""
 
     def __init__(self, args: object, user_inference_func: object,
-                 is_training: bool = True) -> object:
+                 is_training: bool = True) -> None:
         super().__init__(args, user_inference_func, is_training)
         self.__args = args
 
@@ -25,7 +25,7 @@ class TrainProc(MetaMode):
         return total_iteration, off_set, dataloader
 
     def __training_data_proc(self, batch_data: list,
-                             total_iteration: int, is_training: bool) -> tuple:
+                             total_iteration: int, is_training: bool) -> None:
         input_data, output_data = self._data_manager.user_split_data(batch_data, True)
         self._graph.exec(input_data, output_data, is_training)
         self._graph.cal_tower_loss_acc(total_iteration)
@@ -57,7 +57,7 @@ class TrainProc(MetaMode):
     def _adjust_lr_scheduler_and_post_proc(self, epoch: int, is_training: bool) -> None:
         if is_training:
             self._graph.adjust_lr_scheduler(self._graph.ave_tower_loss)
-        self._graph.user_postprocess(epoch, self._graph.ave_tower_loss, self._graph.ave_tower_acc)
+        self._graph.user_post_process(epoch, self._graph.ave_tower_loss, self._graph.ave_tower_acc)
 
     @ShowHandler.show_method
     def _show_iteration_result(self, total_iteration: int,

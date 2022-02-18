@@ -61,7 +61,7 @@ you can find the demo project in: https://github.com/Archaic-Atom/Demo-jf
 | mode          |  [str]  |         train or test            |  train          |
 | gpu           |  [int]  |        the number of gpus        |    2            |
 | auto_save_num |  [int]  | the number of interval save      |    1            |
-| dataloaderNum |  [int]  |  the number of dataloaders       |    8            |
+| dataloaderNum |  [int]  |  the number of dataloader        |    8            |
 | pretrain      |  [bool] |    is a new training process     |  False          |
 | ip            |  [str]  | used for distributed training    | 127.0.0.1       |
 | port          |  [str]  | used for distributed training    | 8086            |

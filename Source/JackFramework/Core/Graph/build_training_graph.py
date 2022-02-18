@@ -20,7 +20,7 @@ class BuildTrainingGraph(MetaOps, ResultContainer):
         output_data = self.user_inference(model_item, input_data, model_id)
         if is_training:
             loss = self.user_loss(output_data, label_data, model_id)
-            acc = self.user_accuary(output_data, label_data, model_id)
+            acc = self.user_accuracy(output_data, label_data, model_id)
         return output_data, loss, acc
 
     def __pass_input_label2device(self, input_data: torch.tensor,

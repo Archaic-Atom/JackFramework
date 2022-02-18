@@ -5,7 +5,7 @@ from JackFramework.SysBasic.show_handler import ShowHandler
 
 
 class UserModel(ShowHandler):
-    def __init__(self, args: object, jf_model: object) -> None:
+    def __init__(self, args: object, jf_model: ModelHandlerTemplate) -> None:
         super().__init__()
         assert isinstance(jf_model, ModelHandlerTemplate)
         self.__jf_model = jf_model
@@ -27,9 +27,9 @@ class UserModel(ShowHandler):
     def user_pretreatment(self, epoch: int) -> None:
         self.__jf_model.pretreatment(epoch, self.rank)
 
-    def user_postprocess(self, epoch: int, ave_tower_loss: list = None,
-                         ave_tower_acc: list = None) -> None:
-        self.__jf_model.postprocess(epoch, self.rank, ave_tower_loss, ave_tower_acc)
+    def user_post_process(self, epoch: int, ave_tower_loss: list = None,
+                          ave_tower_acc: list = None) -> None:
+        self.__jf_model.post_process(epoch, self.rank, ave_tower_loss, ave_tower_acc)
 
     def user_inference(self, model_item: object, input_data: list, model_id: int) -> list:
         return self.__jf_model.inference(model_item, input_data, model_id)
@@ -37,8 +37,8 @@ class UserModel(ShowHandler):
     def user_loss(self, output_data: list, label_data: list, model_id: int) -> list:
         return self.__jf_model.loss(output_data, label_data, model_id)
 
-    def user_accuary(self, output_data: list, label_data: list, model_id: int) -> list:
-        return self.__jf_model.accuary(output_data, label_data, model_id)
+    def user_accuracy(self, output_data: list, label_data: list, model_id: int) -> list:
+        return self.__jf_model.accuracy(output_data, label_data, model_id)
 
     def user_load_model(self, checkpoint: dict, model_id: int) -> bool:
         return self.__jf_model.load_model(self._model[model_id], checkpoint, model_id)

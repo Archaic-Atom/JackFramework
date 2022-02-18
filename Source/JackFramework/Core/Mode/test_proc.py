@@ -6,7 +6,7 @@ from ._meta_mode import MetaMode
 
 class TestProc(MetaMode):
     def __init__(self, args: object, user_inference_func: object,
-                 is_training: bool = True) -> object:
+                 is_training: bool = True) -> None:
         super().__init__(args, user_inference_func, is_training)
         self.__args = args
 
@@ -44,7 +44,7 @@ class TestProc(MetaMode):
             outputs_data, supplement = self.__testing_data_proc(batch_data)
             self._save_result(iteration, outputs_data, supplement)
             self._show_testing_proc(total_iteration)
-        self._graph.user_postprocess(0)
+        self._graph.user_post_process(0)
 
     def __preparation_proc(self) -> None:
         self._graph.restore_model()

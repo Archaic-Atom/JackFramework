@@ -9,6 +9,7 @@ from .layer import Layer, NormActLayer
 class Res2DBlock(nn.Module):
     """docstring for Res2DBlock"""
 
+    # noinspection PyCallingNonCallable
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3, stride: int = 1,
                  padding: int = 1, dilation: int = 1, act: object = NormActLayer.act_layer,
                  norm: object = NormActLayer.norm_layer, downsample: object = None) -> None:
@@ -20,6 +21,7 @@ class Res2DBlock(nn.Module):
         self.downsample = downsample
         self.act_layer = act()
 
+    # noinspection PyCallingNonCallable
     def forward(self, x: torch.tensor) -> torch.tensor:
         identity = x
         x = self.conv_2d_layer_1(x)
@@ -36,6 +38,7 @@ class Res2DBlock(nn.Module):
 class Bottleneck2DBlock(nn.Module):
     """docstring for Bottleneck2DBlock"""
 
+    # noinspection PyCallingNonCallable
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3, stride: int = 1,
                  padding: int = 1, act: object = NormActLayer.act_layer,
                  norm: object = NormActLayer.norm_layer, downsample: object = None) -> None:
@@ -51,6 +54,7 @@ class Bottleneck2DBlock(nn.Module):
         self.downsample = downsample
         self.act_layer = act()
 
+    # noinspection PyCallingNonCallable
     def forward(self, x: torch.tensor) -> torch.tensor:
         identity = x
         x = self.conv_2d_layer_1(x)
@@ -68,6 +72,7 @@ class Bottleneck2DBlock(nn.Module):
 class Res3DBlock(nn.Module):
     """docstring for Res3DBlock"""
 
+    # noinspection PyCallingNonCallable
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3, stride: int = 1,
                  padding: int = 1, downsample: object = None, act: object = NormActLayer.act_layer,
                  norm: object = NormActLayer.norm_layer):
@@ -80,6 +85,7 @@ class Res3DBlock(nn.Module):
         self.downsample = downsample
         self.act_layer = act()
 
+    # noinspection PyCallingNonCallable
     def forward(self, x: torch.tensor) -> torch.tensor:
         identity = x
         x = self.conv_3d_layer_1(x)
@@ -96,6 +102,7 @@ class Res3DBlock(nn.Module):
 class Bottleneck3DBlock(nn.Module):
     """docstring for Bottleneck3DBlock"""
 
+    # noinspection PyCallingNonCallable
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3, stride: int = 1,
                  padding: int = 1, downsample: object = None, act: object = NormActLayer.act_layer,
                  norm: object = NormActLayer.norm_layer) -> None:
@@ -112,6 +119,7 @@ class Bottleneck3DBlock(nn.Module):
         self.downsample = downsample
         self.act_layer = act()
 
+    # noinspection PyCallingNonCallable
     def forward(self, x: torch.tensor) -> torch.tensor:
         identity = x
         x = self.conv_3d_layer_1(x)
@@ -150,6 +158,7 @@ class ASPPBlock(nn.Module):
         self.block_4 = Layer.conv_2d_layer(in_channels, out_channels, 3, padding=dilation[2],
                                            dilation=dilation[2], norm=norm, act=act)
 
+    # noinspection PyCallingNonCallable
     def forward(self, x: torch.tensor) -> torch.tensor:
         branch_1 = self.block_1(x)
         branch_2 = self.block_2(x)
@@ -175,13 +184,10 @@ class SPPBlock(nn.Module):
 
     def __make_block(self, in_channels: int, out_channels: int, ave_pool_size: int):
         layer = [
-            nn.AvgPool2d(
-                (ave_pool_size, ave_pool_size),
-                stride=(ave_pool_size, ave_pool_size),
-            )
+            nn.AvgPool2d((ave_pool_size, ave_pool_size), stride=(ave_pool_size, ave_pool_size),),
+            Layer.conv_2d_layer(in_channels, out_channels, kernel_size=1,
+                                padding=0, norm=self.norm, act=self.act)
         ]
-        layer.append(Layer.conv_2d_layer(in_channels, out_channels, kernel_size=1,
-                                         padding=0, norm=self.norm, act=self.act))
         return nn.Sequential(*layer)
 
     def forward(self, x: torch.tensor) -> torch.tensor:

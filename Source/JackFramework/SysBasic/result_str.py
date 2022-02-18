@@ -59,5 +59,5 @@ class ResultStr(object):
         return res[:len(res) - char_offset]
 
     @staticmethod
-    def __gen_info_str(info_str: str, num: int) -> str:
+    def __gen_info_str(info_str: str, num: int) -> list:
         return [info_str + str(i) for i in range(num)]

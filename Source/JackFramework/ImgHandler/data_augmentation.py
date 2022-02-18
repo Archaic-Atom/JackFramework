@@ -99,7 +99,7 @@ def debug_main():
     # img_crop = DataAugmentation.random_crop(imgs, 947, 432, 400, 400)
     # img_rotate = DataAugmentation.random_rotate(imgs, thro=1)
     # img_flip = DataAugmentation.random_flip(imgs, 1)
-    img1 = DataAugmentation.random_verticalflip(imgs, 1)
+    img1 = DataAugmentation.random_vertical_flip(imgs, 1)
     # img_crop = Image.fromarray(img_crop[0])
     # img_rotate = Image.fromarray(img_rotate[0])
     # img_flip = Image.fromarray(img_flip[0])

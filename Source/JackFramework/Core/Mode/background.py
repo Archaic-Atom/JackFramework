@@ -56,7 +56,7 @@ class BackGround(TestProc):
         try:
             self.__save_result(outputs_data, supplement, msg)
         except Exception:
-            log.error('Any error of save_test_data funcution in dataloader!')
+            log.error('Any error of save_test_data function in dataloader!')
             res = False
         return res
 
