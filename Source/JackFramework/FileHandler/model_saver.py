@@ -18,7 +18,7 @@ class ModelSaver(object):
     @staticmethod
     def __get_model_name(file_path: str) -> str:
         str_line = FileHandler.get_line(file_path, ModelSaver.ROW_ONE)
-        return str_line[len(sys_def.LAST_MODEL_NAME):len(str_line)]
+        return str_line[len(sys_def.LAST_MODEL_NAME):]
 
     @staticmethod
     def __check_list(file_dir: str, fd_checkpoint_list: object) -> object:
