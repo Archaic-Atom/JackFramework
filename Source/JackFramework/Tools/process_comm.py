@@ -23,7 +23,7 @@ class NamedPipe(object):
         self.__msg_queue = Queue.Queue(maxsize=queue_size)
         self.__exit = False
         self.__pipe_writer, self.__pipe_reader = self.__create_pipe(writer_path, reader_path)
-        thread.start_new_thread(self.__recive_thread, ((reader_path),))
+        thread.start_new_thread(self.__receive_thread, ((reader_path),))
 
     def __new__(cls, *args: str, **kwargs: str) -> object:
         if cls.__SERVER_OBJECT is None:
@@ -39,7 +39,7 @@ class NamedPipe(object):
     def __del__(self) -> None:
         self.__exit = True
         time.sleep(self.__EXIT_WAIT_TIME)
-        log.info('The stop command of recive thread in %s has sended!' % self.__mode)
+        log.info('The stop command of receive thread in %s has been sent!' % self.__mode)
         self.__close_pipe()
 
     def __close_pipe(self) -> None:
@@ -68,17 +68,17 @@ class NamedPipe(object):
             self.__create_pipe_file(writer_path)
             self.__create_pipe_file(reader_path)
 
-    def __create_sender_pipe(self, writer_path: str = None) -> tuple:
+    def __create_sender_pipe(self, writer_path: str = None) -> object:
         pipe_writer = None
         if os.path.exists(writer_path):
             pipe_writer = os.open(writer_path, os.O_SYNC | os.O_CREAT | os.O_RDWR)
-            log.info('%s creats a sender' % self.__mode)
+            log.info('%s creates a sender' % self.__mode)
         return pipe_writer
 
-    def __create_reciver_pipe(self, reader_path: str = None) -> tuple:
+    def __create_receiver_pipe(self, reader_path: str = None) -> object:
         pipe_reader = None
         if os.path.exists(reader_path):
-            log.info('%s creats a reciver' % self.__mode)
+            log.info('%s creates a receiver' % self.__mode)
             log.info('%s is waiting a message' % self.__mode)
             pipe_reader = os.open(reader_path, os.O_RDONLY)
 
@@ -90,7 +90,7 @@ class NamedPipe(object):
         log.info("The pipe's path: %s, %s , %s" % (self.__mode, writer_path, reader_path))
 
         pipe_writer = self.__create_sender_pipe(writer_path)
-        pipe_reader = self.__create_reciver_pipe(reader_path) if self.__mode == 'server' else None
+        pipe_reader = self.__create_receiver_pipe(reader_path) if self.__mode == 'server' else None
 
         return pipe_writer, pipe_reader
 
@@ -100,7 +100,7 @@ class NamedPipe(object):
     def receive(self) -> str:
         return self.__msg_queue.get()
 
-    def __recive_thread(self, reader_path) -> None:
+    def __receive_thread(self, reader_path) -> None:
         log.info('The receive thread starts!')
         while True:
             if self.__exit:
@@ -109,7 +109,7 @@ class NamedPipe(object):
 
             if self.__pipe_reader is None:
                 _, reader_path = self.__get_path(None, reader_path)
-                self.__pipe_reader = self.__create_reciver_pipe(reader_path)
+                self.__pipe_reader = self.__create_receiver_pipe(reader_path)
 
             msg = os.read(self.__pipe_reader, self.__BUFF_SIZE)
             if len(msg) == 0:

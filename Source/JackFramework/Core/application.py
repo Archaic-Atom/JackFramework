@@ -37,6 +37,7 @@ class Application(object):
 
         log.info("The Application is finished!")
 
+    # noinspection PyCallingNonCallable
     @staticmethod
     def _dist_app_start(mode_func: object, dist: bool, gpu_num: int) -> None:
         if dist:

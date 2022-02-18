@@ -54,7 +54,8 @@ class MetaMode(ShowHandler):
             val_iteration = math.ceil(args.valImgNum * args.sampleNum / args.batchSize)
         return training_iteration, val_iteration
 
-    def _init_datahandler_modelhandler(self, rank: object) -> object:
+    # noinspection PyCallingNonCallable
+    def _init_data_model_handler(self, rank: object) -> None:
         self.set_rank(rank)
         self.reinit_log_tensorboard_handler(self.__args)
         jf_model, jf_dataloader = self.__user_inference_func(self.__args)

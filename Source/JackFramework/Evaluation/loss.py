@@ -32,13 +32,13 @@ class Loss(object):
                    reduction: str = 'mean', mode: str = 'bce') -> torch.tensor:
         if mode == 'ce':
             gt = gt.long()
-            logp_t = F.cross_entropy(res, gt.squeeze(1), reduction='none')
+            log_t = F.cross_entropy(res, gt.squeeze(1), reduction='none')
         elif mode == 'bce':
             gt = gt.float()
-            logp_t = F.binary_cross_entropy_with_logits(res, gt, reduction="none")
+            log_t = F.binary_cross_entropy_with_logits(res, gt, reduction="none")
 
-        p_t = torch.exp(-logp_t)
-        loss = (1 - p_t) ** gamma * logp_t
+        p_t = torch.exp(-log_t)
+        loss = (1 - p_t) ** gamma * log_t
 
         if alpha >= 0:
             alpha_t = alpha * gt + (1 - alpha) * (1 - gt)

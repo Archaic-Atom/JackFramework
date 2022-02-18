@@ -5,7 +5,7 @@ from abc import ABCMeta, abstractmethod
 class ModelHandlerTemplate(object):
     __metaclass__ = ABCMeta
 
-    def __init__(self, args: object) -> object:
+    def __init__(self, args: object) -> None:
         super().__init__()
         self.__args = args
 
@@ -15,13 +15,13 @@ class ModelHandlerTemplate(object):
         pass
 
     @abstractmethod
-    def interence(self, model: object, input_data: list, model_id: int) -> list:
+    def inference(self, model: object, input_data: list, model_id: int) -> list:
         pass
 
     @abstractmethod
     def optimizer(self, model: list, lr: float) -> list:
-        # return optimizer's list
-        # return scheduler's list
+        # return list of optimizer
+        # return list of scheduler
         pass
 
     @abstractmethod
@@ -29,8 +29,8 @@ class ModelHandlerTemplate(object):
         pass
 
     @abstractmethod
-    def accuary(self, output_data: list, label_data: list, model_id: int) -> list:
-        # return accuary's list
+    def accuracy(self, output_data: list, label_data: list, model_id: int) -> list:
+        # return accuracy's list
         pass
 
     @abstractmethod
@@ -42,8 +42,7 @@ class ModelHandlerTemplate(object):
         # do something before training epoch
         pass
 
-    def postprocess(self, epoch: int, rank: object,
-                    ave_tower_loss: list, ave_tower_acc: list) -> None:
+    def post_process(self, epoch: int, rank: object, ave_tower_loss: list, ave_tower_acc: list) -> None:
         # do something after training epoch
         pass
 

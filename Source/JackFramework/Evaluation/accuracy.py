@@ -38,15 +38,15 @@ class SMAccuracy(object):
 
     @staticmethod
     def d_1(res: torch.tensor, gt: torch.tensor, start_threshold: int = 2,
-            threshold_num: int = 4, relted_error: float = 0.05,
-            invaild_value: int = 0, max_disp: int = 192) -> torch.tensor:
-        mask = (gt != invaild_value) & (gt < max_disp)
+            threshold_num: int = 4, related_error: float = 0.05,
+            invalid_value: int = 0, max_disp: int = 192) -> torch.tensor:
+        mask = (gt != invalid_value) & (gt < max_disp)
         mask.detach_()
         acc_res = []
         with torch.no_grad():
             total_num = mask.int().sum()
             error = torch.abs(res[mask] - gt[mask])
-            related_threshold = gt[mask] * relted_error
+            related_threshold = gt[mask] * related_error
             for i in range(threshold_num):
                 threshold = start_threshold + i
                 acc = (error > threshold) & (error > related_threshold)
@@ -317,8 +317,8 @@ def debug_main():
     recall = CDAccuracy.recall_score(True)
     print('recall:', recall)
     iou, miou = CDAccuracy.iou_miou_score(True)
-    print('iou:', iou)
-    print('miou:', miou)
+    print('IoU:', iou)
+    print('mIoU:', miou)
     f1 = CDAccuracy.f_score(True)
     print('f1:', f1)
     oa = CDAccuracy.oa_score(True)

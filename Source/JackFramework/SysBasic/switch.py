@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 class Switch(object):
-    def __init__(self, value: str) -> object:
+    def __init__(self, value: str) -> None:
         self.__value = value
         self.__fall = False
 
