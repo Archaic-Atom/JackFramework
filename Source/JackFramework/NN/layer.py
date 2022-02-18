@@ -36,6 +36,7 @@ class NormActLayer(object):
             return NormActLayer.__NORM_LAYER_FUNC(out_channels)
         return Ops.gn(8, out_channels)
 
+    # noinspection PyCallingNonCallable
     @staticmethod
     def norm_act_layer(layer: list, out_channels: int,
                        norm: object = None, act: object = None) -> list:

@@ -9,14 +9,14 @@ MODEL_PATH = './Checkpoint/'
 TRAIN_LIST_PATH = './Datasets/msd_training_list.csv'
 # Validation list
 VAL_LIST_PATH = './Datasets/msd_val_list.csv'
-# result img's path
+# result image's path
 RESULT_OUTPUT_PATH = './ResultImg/'
-# log img's path
+# log path
 LOG_OUTPUT_PATH = './log/'
 # The user's directory
 USER_DIRECTORY = './Source/UserModelImplementation/'
 
-# defaut program's name
+# default program's name
 # Dataset's name
 DATASET_NAME = 'Default_Dataset'
 # Model's name
@@ -30,8 +30,8 @@ CHECK_POINT_NAME = 'model_epoch_%d.pth'
 LAST_MODEL_NAME = 'last model name:'
 
 # define name pipe
-PIPE_WRITE_PATH = '/tmp/jackframework_pipe.in'
-PIPE_READ_PATH = '/tmp/jackframework_pipe.out'
+PIPE_WRITE_PATH = '/tmp/jf_pipe.in'
+PIPE_READ_PATH = '/tmp/jf_pipe.out'
 
 # image's setting
 # We use this data to crop the image in training process;
@@ -51,7 +51,7 @@ PORT = '8886'
 # dist
 DIST = True
 
-# learning setting
+# the learning settings
 # batch size
 BATCH_SIZE = 64
 # learn rate

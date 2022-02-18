@@ -91,7 +91,7 @@ class DeviceManager(object):
             return False
 
     @staticmethod
-    def find_unused_port(port: str) -> bool:
+    def find_unused_port(port: str) -> tuple:
         max_failed_num, try_index, off_set = 5, 0, 1
         find_res_bool = False
         while True:

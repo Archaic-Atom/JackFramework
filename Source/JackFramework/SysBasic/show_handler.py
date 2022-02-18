@@ -14,7 +14,7 @@ class ShowHandler(ShowManager):
     __PROCESS_BAR, __START_TIME = None, None
     __DURATION, __REST_TIME = None, None
 
-    def __init__(self) -> object:
+    def __init__(self) -> None:
         super().__init__()
 
     @ShowManager.show_method
@@ -26,7 +26,7 @@ class ShowHandler(ShowManager):
         self.__init_tensorboard_handler(args)
 
     @staticmethod
-    def init_show_setting(training_iteration: int, bar_info: str) -> tuple:
+    def init_show_setting(training_iteration: int, bar_info: str) -> None:
         ShowHandler.__PROCESS_BAR = ShowProcess(training_iteration, bar_info)
         ShowHandler.__START_TIME = time.time()
 
@@ -35,8 +35,8 @@ class ShowHandler(ShowManager):
         ShowHandler.__TENSORBOARD_HANDLER = TensorboardHandler(args)
 
     @staticmethod
-    def calculate_ave_runtime(total_iteration: int, training_iteration: int) -> tuple:
-        ShowHandler.__DURATION = (time.time() - ShowHandler.__START_TIME) / (total_iteration)
+    def calculate_ave_runtime(total_iteration: int, training_iteration: int) -> None:
+        ShowHandler.__DURATION = (time.time() - ShowHandler.__START_TIME) / total_iteration
         ShowHandler.__REST_TIME = (training_iteration - total_iteration) * ShowHandler.__DURATION
 
     @staticmethod

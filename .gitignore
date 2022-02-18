@@ -3,6 +3,7 @@ build/
 dist/
 JackFramework.egg-info/
 .DS_Store
+.idea/
 
 # python cache
 /*__pycache__*/

@@ -11,7 +11,7 @@ class Res2DBlock(nn.Module):
 
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3, stride: int = 1,
                  padding: int = 1, dilation: int = 1, act: object = NormActLayer.act_layer,
-                 norm: object = NormActLayer.norm_layer, downsample: object = None) -> object:
+                 norm: object = NormActLayer.norm_layer, downsample: object = None) -> None:
         super().__init__()
         self.conv_2d_layer_1 = Layer.conv_2d_layer(in_channels, out_channels, kernel_size,
                                                    stride, padding, dilation, norm=norm, act=act)
@@ -33,12 +33,12 @@ class Res2DBlock(nn.Module):
         return x
 
 
-class Bottleneck2DBlcok(nn.Module):
+class Bottleneck2DBlock(nn.Module):
     """docstring for Bottleneck2DBlcok"""
 
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3, stride: int = 1,
                  padding: int = 1, act: object = NormActLayer.act_layer,
-                 norm: object = NormActLayer.norm_layer, downsample: object = None) -> object:
+                 norm: object = NormActLayer.norm_layer, downsample: object = None) -> None:
         super().__init__()
         bottleneck_out_channels = out_channels // 4
         self.conv_2d_layer_1 = Layer.conv_2d_layer(
@@ -93,12 +93,12 @@ class Res3DBlock(nn.Module):
         return x
 
 
-class Bottleneck3DBlcok(nn.Module):
-    """docstring for Bottleneck3DBlcok"""
+class Bottleneck3DBlock(nn.Module):
+    """docstring for Bottleneck3DBlock"""
 
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3, stride: int = 1,
                  padding: int = 1, downsample: object = None, act: object = NormActLayer.act_layer,
-                 norm: object = NormActLayer.norm_layer) -> object:
+                 norm: object = NormActLayer.norm_layer) -> None:
         super().__init__()
         bottleneck_out_channels = out_channels // 4
         self.conv_3d_layer_1 = Layer.conv_3d_layer(
@@ -131,7 +131,7 @@ class ASPPBlock(nn.Module):
 
     def __init__(self, in_channels: int, out_channels: int, stride: int = 16,
                  act: object = NormActLayer.act_layer,
-                 norm: object = NormActLayer.norm_layer) -> object:
+                 norm: object = NormActLayer.norm_layer) -> None:
         super().__init__()
 
         if stride == 8:
@@ -164,7 +164,7 @@ class SPPBlock(nn.Module):
 
     def __init__(self, in_channels: int, out_channels: int,
                  act: object = NormActLayer.act_layer,
-                 norm: object = NormActLayer.norm_layer) -> object:
+                 norm: object = NormActLayer.norm_layer) -> None:
         super().__init__()
         self.act = act
         self.norm = norm

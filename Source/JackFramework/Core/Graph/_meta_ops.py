@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-import JackFramework.SysBasic.define as sysdefine
+import JackFramework.SysBasic.define as sys_define
 from JackFramework.SysBasic.loghander import LogHandler as log
 from JackFramework.SysBasic.device_manager import DeviceManager
 from JackFramework.SysBasic.show_handler import ShowHandler
@@ -20,7 +20,7 @@ class MetaOps(UserModel):
     __metaclass__ = ABCMeta
     __OPT_LR_GROUP_ID = 0
 
-    def __init__(self, args: object, jf_model: object) -> object:
+    def __init__(self, args: object, jf_model: object) -> None:
         super().__init__(args, jf_model)
         self.__args = args
         self.__device_manager = DeviceManager(args)
@@ -67,7 +67,7 @@ class MetaOps(UserModel):
                 data[i] = data_item.to(self.__device)
         return data
 
-    def _variable2tensor(self, data: list) -> None:
+    def _variable2tensor(self, data: list) -> list:
         res = []
         for data_item in data:
             if self.__args.dist:
@@ -77,7 +77,7 @@ class MetaOps(UserModel):
                 res.append(data_item.item())
         return res
 
-    def _restore_model_opt(self, checkpoint: object) -> None:
+    def _restore_model_opt(self, checkpoint: dict) -> None:
         for i, _ in enumerate(self._model):
             if not self.user_load_model(checkpoint, i):
                 ModelSaver.load_model(self._model[i], checkpoint, i)
@@ -114,7 +114,7 @@ class MetaOps(UserModel):
 
     def save_model(self, epoch: int) -> None:
         assert len(self._model) == len(self._opt)
-        file_name = sysdefine.CHECK_POINT_NAME % epoch
+        file_name = sys_define.CHECK_POINT_NAME % epoch
         model_dict = self.user_save_model(epoch)
         if model_dict is None:
             model_dict = ModelSaver.construct_model_dict(epoch, self._model, self._opt)

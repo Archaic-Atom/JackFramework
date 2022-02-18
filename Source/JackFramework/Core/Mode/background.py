@@ -12,7 +12,7 @@ class BackGround(TestProc):
     __RELY_EEROR = 'jf error'
 
     def __init__(self, args: object, user_inference_func: object,
-                 is_training: bool = False) -> object:
+                 is_training: bool = False) -> None:
         super().__init__(args, user_inference_func, is_training)
         log.warning('background mode does not support distributed')
         assert not args.dist and not is_training and args.batchSize == 1
@@ -39,9 +39,10 @@ class BackGround(TestProc):
         except Exception:
             log.error('Any error of load_test_data funcution or split in dataloader!')
             res = False
+            batch_data = None
         return res, batch_data
 
-    def __try_exec_testing_proc(self, batch_data: tuple) -> tuple:
+    def __try_exec_testing_proc(self, batch_data: list) -> tuple:
         res, outputs_data, supplement = True, None, None
         try:
             outputs_data, supplement = self.__testing_data_proc(batch_data)

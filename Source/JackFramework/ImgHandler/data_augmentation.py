@@ -35,8 +35,8 @@ class DataAugmentation(object):
     @staticmethod
     def random_rotate(imgs: list, thro: float = 0.5) -> list:
         if np.random.random() <= thro:
-            rotote_k = np.random.randint(low=0, high=3)
-            imgs = list(map(lambda img: np.rot90(img, rotote_k), imgs))
+            rotate_k = np.random.randint(low=0, high=3)
+            imgs = list(map(lambda img: np.rot90(img, rotate_k), imgs))
         return imgs
 
     @staticmethod
@@ -48,13 +48,13 @@ class DataAugmentation(object):
         return imgs
 
     @staticmethod
-    def random_horizontalflip(imgs: list, thro: float = 0.5) -> list:
+    def random_horizontal_flip(imgs: list, thro: float = 0.5) -> list:
         if np.random.random() < thro:
             imgs = list(map(lambda img: img[:, ::-1, ...], imgs))
         return imgs
 
     @staticmethod
-    def random_verticalflip(imgs: list, thro: float = 0.5) -> list:
+    def random_vertical_flip(imgs: list, thro: float = 0.5) -> list:
         if np.random.random() < thro:
             imgs = list(map(lambda img: img[::-1, :, ...], imgs))
         return imgs

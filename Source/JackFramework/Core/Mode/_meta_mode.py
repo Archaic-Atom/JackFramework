@@ -10,7 +10,7 @@ class MetaMode(ShowHandler):
     __metaclass__ = ABCMeta
 
     def __init__(self, args: object, user_inference_func: object,
-                 is_training: bool = True) -> object:
+                 is_training: bool = True) -> None:
         super().__init__()
         self.__args = args
         self.__is_training = is_training

@@ -4,13 +4,13 @@ import torch
 
 class BaseAccuracy(object):
     """docstring for common accuracy"""
-    __BASEACCURACY_INSTANCE = None
+    __BASE_ACCURACY_INSTANCE = None
     ACC_EPSILON = 1e-9
 
     def __new__(cls, *args: str, **kwargs: str) -> object:
-        if cls.__BASEACCURACY_INSTANCE is None:
-            cls.__BASEACCURACY_INSTANCE = object.__new__(cls)
-        return cls.__BASEACCURACY_INSTANCE
+        if cls.__BASE_ACCURACY_INSTANCE is None:
+            cls.__BASE_ACCURACY_INSTANCE = object.__new__(cls)
+        return cls.__BASE_ACCURACY_INSTANCE
 
     def __init__(self) -> None:
         super().__init__()
@@ -25,13 +25,13 @@ class BaseAccuracy(object):
 
 class SMAccuracy(object):
     """docstring for accuracy of stereo matching task"""
-    __SMACCURACY_INSTANCE = None
+    __SM_ACCURACY_INSTANCE = None
     ACC_EPSILON = 1e-9
 
     def __new__(cls, *args: str, **kwargs: str) -> object:
-        if cls.__SMACCURACY_INSTANCE is None:
-            cls.__SMACCURACY_INSTANCE = object.__new__(cls)
-        return cls.__SMACCURACY_INSTANCE
+        if cls.__SM_ACCURACY_INSTANCE is None:
+            cls.__SM_ACCURACY_INSTANCE = object.__new__(cls)
+        return cls.__SM_ACCURACY_INSTANCE
 
     def __init__(self):
         super().__init__()
@@ -70,13 +70,13 @@ class SMAccuracy(object):
 
 class SegAccuracy(object):
     """docstring for accuracy of segmentation task"""
-    __SEGACCURACY_INSTANCE = None
+    __SEG_ACCURACY_INSTANCE = None
     ACC_EPSILON = 1e-9
 
     def __new__(cls, *args: str, **kwargs: str) -> object:
-        if cls.__SEGACCURACY_INSTANCE is None:
-            cls.__SEGACCURACY_INSTANCE = object.__new__(cls)
-        return cls.__SEGACCURACY_INSTANCE
+        if cls.__SEG_ACCURACY_INSTANCE is None:
+            cls.__SEG_ACCURACY_INSTANCE = object.__new__(cls)
+        return cls.__SEG_ACCURACY_INSTANCE
 
     def __init__(self) -> None:
         super().__init__()
@@ -159,19 +159,19 @@ class CDAccuracy(object):
     """
     docstring for accuracy of change detection task
 
-    If the key arg: accumulate is True, the functions will caculate
+    If the key arg: accumulate is True, the functions will compute
     all scores by accumulated confusion matrix. Otherwise, by the
     confusion matrix of current mini-batch data.
     """
-    __CDACCURACY_INSTANCE = None
+    __CD_ACCURACY_INSTANCE = None
     ACC_EPSILON = 1e-9
     __CONFUSION_MATRIX = 0
     __TEMP_CONFUSION_MATRIX = 0
 
     def __new__(cls, *args: str, **kwargs: str) -> object:
-        if cls.__CDACCURACY_INSTANCE is None:
-            cls.__CDACCURACY_INSTANCE = object.__new__(cls)
-        return cls.__CDACCURACY_INSTANCE
+        if cls.__CD_ACCURACY_INSTANCE is None:
+            cls.__CD_ACCURACY_INSTANCE = object.__new__(cls)
+        return cls.__CD_ACCURACY_INSTANCE
 
     def __init__(self):
         super().__init__()
@@ -191,7 +191,6 @@ class CDAccuracy(object):
     def generate_confusion_matrix(res: torch.tensor,
                                   gt: torch.tensor,
                                   num_classes: int) -> torch.tensor:
-
         CDAccuracy.__TEMP_CONFUSION_MATRIX = 0
         res = res.flatten()
         gt = gt.flatten()
@@ -283,7 +282,7 @@ def debug_main():
         iou, miou = CDAccuracy.iou_miou_score()
         print('iou:', iou)
         print('miou:', miou)
-        f1 = CDAccuracy.f_score(1)
+        f1 = CDAccuracy.f_score(True)
         print('f1:', f1)
         oa = CDAccuracy.oa_score()
         print('oa:', oa)
