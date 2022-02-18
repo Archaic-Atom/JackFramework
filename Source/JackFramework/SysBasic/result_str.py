@@ -14,7 +14,6 @@ class ResultStr(object):
                             training=True) -> str:
         loss_str = self.loss2str(loss, decimal_places=DEFAULT_MAX_DECIMAL_PLACES)
         acc_str = self.acc2str(acc, decimal_places=DEFAULT_MAX_DECIMAL_PLACES)
-        training_state = ""
         training_state = "[TrainProcess] " if training else "[ValProcess] "
         return training_state + "e: " + str(epoch) + ', ' +\
             loss_str + ', ' + acc_str + ' (%.3f s/epoch)' % duration

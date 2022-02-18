@@ -71,13 +71,10 @@ class ImgIO(object):
     @staticmethod
     def write_pfm(path: str, image: np.array, scale: int = 1) -> None:
         with open(path, mode='wb') as file:
-            color = None
-
             if image.dtype.name != 'float32':
                 raise Exception('Image dtype must be float32.')
 
             image = np.flipud(image)
-
             if len(image.shape) == 3 and image.shape[2] == 3:  # color image
                 color = True
             elif len(image.shape) == 2 or len(image.shape) == 3 and image.shape[2] == 1:  # greyscale

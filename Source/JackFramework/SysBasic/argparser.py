@@ -37,7 +37,7 @@ class ArgsParser(object):
         parser.add_argument('--auto_save_num', type=int, default=sys_define.AUTO_SAVE_NUM,
                             help='AUTO_SAVE_NUM')
         parser.add_argument('--dataloaderNum', type=int, default=sys_define.DATA_LOADER_NUM,
-                            help='the number of dataloders')
+                            help='the number of dataloaders')
         parser.add_argument('--pretrain', default=False, type=ArgsParser.__str2bool,
                             help='true or false')
         parser.add_argument('--ip', default=sys_define.IP,
@@ -45,7 +45,7 @@ class ArgsParser(object):
         parser.add_argument('--port', default=sys_define.PORT,
                             help='port')
         parser.add_argument('--dist', default=sys_define.DIST, type=ArgsParser.__str2bool,
-                            help='distrobution')
+                            help='use DDP or DP')
         return parser
 
     @staticmethod
@@ -59,7 +59,7 @@ class ArgsParser(object):
         parser.add_argument('--modelDir', default=sys_define.MODEL_PATH,
                             help="The model's path. e.g. ./model/")
         parser.add_argument('--resultImgDir', default=sys_define.RESULT_OUTPUT_PATH,
-                            help="The test result img's path. e.g. ./ResultImg/")
+                            help="The save path. e.g. ./ResultImg/")
         parser.add_argument('--log', default=sys_define.LOG_OUTPUT_PATH,
                             help="the log file")
         return parser
@@ -84,7 +84,7 @@ class ArgsParser(object):
         parser.add_argument('--imgHeight', default=sys_define.IMAGE_HEIGHT, type=int,
                             help="Image's width. e.g. 256, In the training process is Clipped size")
         parser.add_argument('--imgNum', default=sys_define.IMG_NUM, type=int,
-                            help="The number of taining images")
+                            help="The number of training images")
         parser.add_argument('--valImgNum', default=sys_define.VAL_IMG_NUM, type=int,
                             help="The number of val images")
         return parser
@@ -99,7 +99,6 @@ class ArgsParser(object):
 
     @staticmethod
     def __str2bool(arg: str) -> bool:
-        res = None
         if arg.lower() in ('yes', 'true', 't', 'y', '1'):
             res = True
         elif arg.lower() in ('no', 'false', 'f', 'n', '0'):

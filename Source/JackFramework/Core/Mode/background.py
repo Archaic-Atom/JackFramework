@@ -6,10 +6,10 @@ from .test_proc import TestProc
 
 
 class BackGround(TestProc):
-    __EXIT_COMAND = 'jf stop'
-    __RELY_MSG = 'the server has recived message: %s'
+    __EXIT_COMMAND = 'jf stop'
+    __RELY_MSG = 'the server has got message: %s'
     __RELY_FINISH = 'jf finish'
-    __RELY_EEROR = 'jf error'
+    __RELY_ERROR = 'jf error'
 
     def __init__(self, args: object, user_inference_func: object,
                  is_training: bool = False) -> None:
@@ -37,7 +37,7 @@ class BackGround(TestProc):
             _, data_manager = self._get_graph_and_data_manager
             batch_data = data_manager.user_load_test_data(msg)
         except Exception:
-            log.error('Any error of load_test_data funcution or split in dataloader!')
+            log.error('Any error of load_test_data function or split in dataloader!')
             res = False
             batch_data = None
         return res, batch_data
@@ -47,7 +47,7 @@ class BackGround(TestProc):
         try:
             outputs_data, supplement = self.__testing_data_proc(batch_data)
         except Exception:
-            log.error('Any error of inference funcution in model!')
+            log.error('Any error of inference function in model!')
             res = False
         return res, outputs_data, supplement
 
@@ -77,7 +77,7 @@ class BackGround(TestProc):
         return msg
 
     def __exit_cmd(self, msg: str) -> bool:
-        return msg == self.__EXIT_COMAND
+        return msg == self.__EXIT_COMMAND
 
     def __info_processing_loop(self, named_pipe: object) -> None:
         while True:
@@ -88,11 +88,11 @@ class BackGround(TestProc):
             if (res := self.__data_handler(msg)):
                 named_pipe.send(self.__RELY_FINISH)
             else:
-                named_pipe.send(self.__RELY_EEROR)
+                named_pipe.send(self.__RELY_ERROR)
 
     def exec(self, rank: object = None) -> None:
         assert rank is None and self.__named_pipe is None
-        self._init_datahandler_modelhandler(rank)
+        self._init_data_model_handler(rank)
         log.info('background mode starts')
         named_pipe = self.__init_setting()
         self.__info_processing_loop(named_pipe)

@@ -28,7 +28,7 @@ class ListHandler(object):
         return list_a
 
     @staticmethod
-    def double_list_div(list_a: list, num: float) -> None:
+    def double_list_div(list_a: list, num: float) -> list:
         res = []
         for item in list_a:
             tem_res = ListHandler.list_div(item, num)

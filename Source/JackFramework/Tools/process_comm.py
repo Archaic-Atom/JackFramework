@@ -68,14 +68,14 @@ class NamedPipe(object):
             self.__create_pipe_file(writer_path)
             self.__create_pipe_file(reader_path)
 
-    def __create_sender_pipe(self, writer_path: str = None) -> tuple:
+    def __create_sender_pipe(self, writer_path: str = None) -> object:
         pipe_writer = None
         if os.path.exists(writer_path):
             pipe_writer = os.open(writer_path, os.O_SYNC | os.O_CREAT | os.O_RDWR)
             log.info('%s creats a sender' % self.__mode)
         return pipe_writer
 
-    def __create_reciver_pipe(self, reader_path: str = None) -> tuple:
+    def __create_reciver_pipe(self, reader_path: str = None) -> object:
         pipe_reader = None
         if os.path.exists(reader_path):
             log.info('%s creats a reciver' % self.__mode)

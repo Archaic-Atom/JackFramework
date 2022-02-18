@@ -31,7 +31,7 @@ class DataHandlerManager(UserDataloader):
 
     def __init_training_dataloader(self, is_training: bool) -> tuple:
         training_dataset = self.user_get_train_dataset(is_training)
-        training_sampler, dataloader_shuffle = self.__get_sampler_shuffle(tranining_dataset,
+        training_sampler, dataloader_shuffle = self.__get_sampler_shuffle(training_dataset,
                                                                           is_training)
         training_dataloader = torch.utils.data.DataLoader(
             training_dataset, batch_size=self.__args.batchSize, shuffle=dataloader_shuffle,

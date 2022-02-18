@@ -31,7 +31,7 @@ class TrainProc(MetaMode):
         self._graph.cal_tower_loss_acc(total_iteration)
 
     def __train_proc(self, epoch: int, training_iteration: int,
-                     bar_info: str, is_training: bool = True) -> None:
+                     bar_info: str, is_training: bool = True) -> int:
         total_iteration, off_set, dataloader = self.__init_training_para(epoch, is_training)
         self.init_show_setting(training_iteration, bar_info)
 
@@ -94,7 +94,7 @@ class TrainProc(MetaMode):
         self._graph.restore_model()
 
     def exec(self, rank: object = None) -> None:
-        self._init_datahandler_modelhandler(rank)
+        self._init_data_model_handler(rank)
         log.info("Start the training process!")
         self.__preparation_proc()
         self.__training_loop()

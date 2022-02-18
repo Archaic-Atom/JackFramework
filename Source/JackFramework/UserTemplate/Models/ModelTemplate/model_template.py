@@ -5,7 +5,7 @@ from abc import ABCMeta, abstractmethod
 class ModelHandlerTemplate(object):
     __metaclass__ = ABCMeta
 
-    def __init__(self, args: object) -> object:
+    def __init__(self, args: object) -> None:
         super().__init__()
         self.__args = args
 

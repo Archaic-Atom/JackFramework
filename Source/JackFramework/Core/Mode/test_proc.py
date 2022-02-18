@@ -50,7 +50,7 @@ class TestProc(MetaMode):
         self._graph.restore_model()
 
     def exec(self, rank: object = None) -> None:
-        self._init_datahandler_modelhandler(rank)
+        self._init_data_model_handler(rank)
         log.info("Start the testing process!")
         self.__preparation_proc()
         self.__test_loop()
