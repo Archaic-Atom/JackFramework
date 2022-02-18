@@ -3,7 +3,7 @@ from JackFramework.UserTemplate import DataHandlerTemplate
 
 
 class UserDataloader(object):
-    def __init__(self, args: object, jf_datahandler: object) -> object:
+    def __init__(self, args: object, jf_datahandler: object) -> None:
         super().__init__()
         assert isinstance(jf_datahandler, DataHandlerTemplate)
         self.__args = args

@@ -5,7 +5,7 @@ from JackFramework.SysBasic.show_handler import ShowHandler
 
 
 class UserModel(ShowHandler):
-    def __init__(self, args: object, jf_model: object) -> object:
+    def __init__(self, args: object, jf_model: object) -> None:
         super().__init__()
         assert isinstance(jf_model, ModelHandlerTemplate)
         self.__jf_model = jf_model
@@ -52,12 +52,12 @@ class UserModel(ShowHandler):
     def user_lr_scheduler(self, sch_item: object, loss: list, sch_id: int) -> None:
         self.__jf_model.lr_scheduler(sch_item, float(loss[sch_id][0]), sch_id)
 
-    def user_init_model(self) -> object:
+    def user_init_model(self) -> None:
         log.info("Loading user's model!")
         self.__model = self.__jf_model.get_model()
         log.info("Successfully get user's model!")
 
-    def user_init_optimizer(self) -> object:
+    def user_init_optimizer(self) -> None:
         log.info("Loading user's optimizer!")
         self.__opt, self.__sch = self.__jf_model.optimizer(self.__model, self.__args.lr)
         log.info("Successfully get user's optimizer!")

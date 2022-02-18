@@ -7,7 +7,7 @@ class ShowManager(object):
     __DEFAULT_RANK_ID = 0
     __RANK = None
 
-    def __init__(self) -> object:
+    def __init__(self) -> None:
         super().__init__()
 
     @property

@@ -7,6 +7,7 @@ from .build_testing_graph import BuildTestingGraph
 from .data_handler_manager import DataHandlerManager
 
 
+# noinspection PyUnresolvedReferences
 def graph_selection(args: object, jf_model: object) -> object:
     graph = None
     for case in Switch(args.mode):

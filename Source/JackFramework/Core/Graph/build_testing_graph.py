@@ -4,7 +4,7 @@ from ._meta_ops import MetaOps
 
 
 class BuildTestingGraph(MetaOps):
-    def __init__(self, args: object, jf_model: object) -> object:
+    def __init__(self, args: object, jf_model: object) -> None:
         super().__init__(args, jf_model)
 
     def exec(self, input_data: list, label_data: list = None, is_training: bool = False) -> list:

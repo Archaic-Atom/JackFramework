@@ -10,7 +10,7 @@ class Switch(object):
         return StopIteration
 
     def match(self, *args: tuple) -> bool:
-        """Indicate whether or not to enter a case suite"""
+        """Indicate whether to enter a case suite"""
         if self.__fall or not args:
             return True
         elif self.__value in args:  # changed for v1.5, see below

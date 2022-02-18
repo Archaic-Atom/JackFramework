@@ -13,7 +13,7 @@ class Application(object):
     __APPLICATION = None
 
     def __init__(self, user_interface: object,
-                 application_name: str = "") -> object:
+                 application_name: str = "") -> None:
         super().__init__()
         self.__user_interface = user_interface
         self.__application_name = application_name

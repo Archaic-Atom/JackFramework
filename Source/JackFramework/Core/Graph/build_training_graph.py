@@ -9,7 +9,7 @@ class BuildTrainingGraph(MetaOps, ResultContainer):
     """docstring for ClassName"""
     OPT_LOSS_ID = 0
 
-    def __init__(self, args: object, jf_model: object) -> object:
+    def __init__(self, args: object, jf_model: object) -> None:
         MetaOps.__init__(self, args, jf_model)
         ResultContainer.__init__(self)
         self.__args = args
@@ -37,7 +37,7 @@ class BuildTrainingGraph(MetaOps, ResultContainer):
         if self.__args.dist:
             torch.cuda.synchronize()
 
-    def _train_model(self, input_data: list, label_data: list) -> list:
+    def _train_model(self, input_data: list, label_data: list) -> None:
         assert len(self._model) == len(self._opt)
         self.init_tower_loss_and_tower_acc()
         input_data, label_data = self.__pass_input_label2device(input_data, label_data)
@@ -49,7 +49,7 @@ class BuildTrainingGraph(MetaOps, ResultContainer):
             self.append_iteration_loss_acc(self._variable2tensor(loss), self._variable2tensor(acc))
             self.__synchronize_data()
 
-    def _val_model(self, input_data: list, label_data: list) -> list:
+    def _val_model(self, input_data: list, label_data: list) -> None:
         self.init_tower_loss_and_tower_acc()
         input_data, label_data = self.__pass_input_label2device(input_data, label_data)
         with torch.no_grad():

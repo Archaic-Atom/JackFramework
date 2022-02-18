@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
-# Activarion
+# Activation
 from JackFramework.Contrib.Activation.Mish.model import Mish

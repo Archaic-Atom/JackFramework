@@ -77,7 +77,7 @@ class TrainProc(MetaMode):
         if total_iteration != training_iteration:
             log.warning("The input images numbers is different the number of datasets!")
 
-    def __traning_post_proc(self) -> None:
+    def __training_post_proc(self) -> None:
         self._graph.cleanup()
         log.info("Finish training process!")
 
@@ -98,4 +98,4 @@ class TrainProc(MetaMode):
         log.info("Start the training process!")
         self.__preparation_proc()
         self.__training_loop()
-        self.__traning_post_proc()
+        self.__training_post_proc()
