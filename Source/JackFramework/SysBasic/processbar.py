@@ -32,17 +32,44 @@ class ShowProcess(object):
         return num_arrow, num_line, percent
 
     def __generate_info_done(self) -> str:
-        return ', ' + self.__info_done if self.__counter >= self.__max_steps else ''
+        return f', {self.__info_done}' if self.__counter >= self.__max_steps else ''
 
     def __generate_show_data(self, num_arrow: int, num_line: int, percent: float, show_info: str,
                              info_done: str, queue_size: str, rest_time: str) -> str:
-        return '[' + self.__info + '] [' + '>' * num_arrow \
-               + '-' * num_line + ']' \
-               + ' %d / %d, ' % (self.__counter, self.__max_steps) \
-               + '%.2f' % percent + '%' + ' ' \
-               + show_info + ' ' + queue_size \
-               + rest_time + info_done \
-               + '\r'
+        return (
+            (
+                (
+                    (
+                        (
+                            (
+                                (
+                                    (
+                                        (
+                                            (
+                                                f'[{self.__info}] ['
+                                                + '>' * num_arrow
+                                                + '-' * num_line
+                                            )
+                                            + ']'
+                                        )
+                                        + ' %d / %d, '
+                                        % (self.__counter, self.__max_steps)
+                                        + '%.2f' % percent
+                                    )
+                                    + '%'
+                                )
+                                + ' '
+                            )
+                            + show_info
+                        )
+                        + ' '
+                    )
+                    + queue_size
+                )
+                + rest_time
+            )
+            + info_done
+        ) + '\r'
 
     def show_process(self, start_counter: int = None, show_info: str = '',
                      rest_time: str = '', duration: str = '', queue_size: str = '') -> None:
