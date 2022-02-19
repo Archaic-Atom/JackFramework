@@ -23,7 +23,7 @@ class NamedPipe(object):
         self.__msg_queue = Queue.Queue(maxsize=queue_size)
         self.__exit = False
         self.__pipe_writer, self.__pipe_reader = self.__create_pipe(writer_path, reader_path)
-        thread.start_new_thread(self.__receive_thread, ((reader_path),))
+        thread.start_new_thread(self.__receive_thread, (reader_path,))
 
     def __new__(cls, *args: str, **kwargs: str) -> object:
         if cls.__SERVER_OBJECT is None:
@@ -75,7 +75,7 @@ class NamedPipe(object):
             log.info('%s creates a sender' % self.__mode)
         return pipe_writer
 
-    def __create_receiver_pipe(self, reader_path: str = None) -> object:
+    def __create_receiver_pipe(self, reader_path: str = None) -> int:
         pipe_reader = None
         if os.path.exists(reader_path):
             log.info('%s creates a receiver' % self.__mode)

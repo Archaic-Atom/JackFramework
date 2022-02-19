@@ -11,7 +11,7 @@ class ShowManager(object):
         super().__init__()
 
     @property
-    def rank(self) -> object:
+    def rank(self) -> int:
         return self.__RANK
 
     @property
@@ -19,11 +19,11 @@ class ShowManager(object):
         return self.__DEFAULT_RANK_ID
 
     @staticmethod
-    def get_rank() -> object:
+    def get_rank() -> int:
         return ShowManager.__RANK
 
     @staticmethod
-    def set_rank(rank: object) -> None:
+    def set_rank(rank: int) -> None:
         ShowManager.__RANK = rank
 
     @staticmethod
@@ -36,4 +36,5 @@ class ShowManager(object):
         def wrapped_func(*args, **kwargs):
             if cls.__RANK == cls.__DEFAULT_RANK_ID or cls.__RANK is None:
                 func(*args, **kwargs)
+
         return wrapped_func

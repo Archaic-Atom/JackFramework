@@ -55,7 +55,7 @@ class MetaMode(ShowHandler):
         return training_iteration, val_iteration
 
     # noinspection PyCallingNonCallable
-    def _init_data_model_handler(self, rank: object) -> None:
+    def _init_data_model_handler(self, rank: int) -> None:
         self.set_rank(rank)
         self.reinit_log_tensorboard_handler(self.__args)
         jf_model, jf_dataloader = self.__user_inference_func(self.__args)
@@ -91,6 +91,6 @@ class MetaMode(ShowHandler):
         self.__val_iteration = iteration
 
     @abstractmethod
-    def exec(self, rank: object = None) -> None:
+    def exec(self, rank: int = None) -> None:
         # do something in this mode
         pass

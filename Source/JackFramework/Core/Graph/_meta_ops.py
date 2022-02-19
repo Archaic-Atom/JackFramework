@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
+from typing import TypeVar
 
 import JackFramework.SysBasic.define as sys_define
 from JackFramework.SysBasic.loghander import LogHandler as log
@@ -15,12 +16,14 @@ from JackFramework.FileHandler.model_saver import ModelSaver
 
 from ._user_model import UserModel
 
+ModelHandlerTemplate = TypeVar('ModelHandlerTemplate')
+
 
 class MetaOps(UserModel):
     __metaclass__ = ABCMeta
     __OPT_LR_GROUP_ID = 0
 
-    def __init__(self, args: object, jf_model: object) -> None:
+    def __init__(self, args: object, jf_model: ModelHandlerTemplate) -> None:
         super().__init__(args, jf_model)
         self.__args = args
         self.__device_manager = DeviceManager(args)
