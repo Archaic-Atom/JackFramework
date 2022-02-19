@@ -36,40 +36,13 @@ class ShowProcess(object):
 
     def __generate_show_data(self, num_arrow: int, num_line: int, percent: float, show_info: str,
                              info_done: str, queue_size: str, rest_time: str) -> str:
-        return (
-            (
-                (
-                    (
-                        (
-                            (
-                                (
-                                    (
-                                        (
-                                            (
-                                                f'[{self.__info}] ['
-                                                + '>' * num_arrow
-                                                + '-' * num_line
-                                            )
-                                            + ']'
-                                        )
-                                        + ' %d / %d, '
-                                        % (self.__counter, self.__max_steps)
-                                        + '%.2f' % percent
-                                    )
-                                    + '%'
-                                )
-                                + ' '
-                            )
-                            + show_info
-                        )
-                        + ' '
-                    )
-                    + queue_size
-                )
-                + rest_time
-            )
-            + info_done
-        ) + '\r'
+        return f"[{self.__info}] [{'>' * num_arrow}{'-' * num_line}] " \
+               + f"{self.__counter} / {self.__max_steps}, {percent:.2f}%" \
+               + f"{show_info} {queue_size} {rest_time} {info_done} \r"
+
+        return f"[{self.__info}] [{'>' * num_arrow}{'-' * num_line}] \
+        {self.__counter} / {self.__max_steps} {percent:.2f}% {show_info} {queue_size} \
+        {rest_time} {info_done} \r"
 
     def show_process(self, start_counter: int = None, show_info: str = '',
                      rest_time: str = '', duration: str = '', queue_size: str = '') -> None:
@@ -80,7 +53,6 @@ class ShowProcess(object):
         info_done = self.__generate_info_done()
         queue_size = self.__generate_queue_size(queue_size)
         rest_time = self.__generate_rest_time(rest_time, duration)
-
         process_str = self.__generate_show_data(num_arrow, num_line, percent, show_info,
                                                 info_done, queue_size, rest_time)
         self.__print(process_str)
@@ -96,15 +68,14 @@ class ShowProcess(object):
     @staticmethod
     def __generate_queue_size(queue_size: Optional[int]) -> str:
         if queue_size != '':
-            queue_size = '(qs: %d), ' % queue_size
+            queue_size = f'(qs: {queue_size}), '
         return queue_size
 
     @staticmethod
     def __generate_rest_time(rest_time: Optional[float], duration: Optional[float]) -> str:
-        if rest_time != '':
-            rest_time = '(rt: %.3f s' % rest_time
-        rest_time += ', bs: %.3f s)' % duration if duration != '' else ')'
-        return rest_time
+        data_str = f'(rt: {rest_time:.3f} s' if rest_time != '' else '('
+        data_str += f', bs: {duration:.3f} s)' if duration != '' else ')'
+        return data_str
 
     @staticmethod
     def __print(process_str: str) -> None:
@@ -113,12 +84,12 @@ class ShowProcess(object):
 
 
 def debug_main():
-    max_steps = 50
+    max_steps = 100
     process_bar = ShowProcess(max_steps, 'OK')
 
     for i in range(max_steps):
         process_bar.show_process(i + 1)
-        time.sleep(0.01)
+        time.sleep(0.02)
     time.sleep(50)
 
 
