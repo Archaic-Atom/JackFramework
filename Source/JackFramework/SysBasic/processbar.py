@@ -67,13 +67,13 @@ class ShowProcess(object):
             self.close()
 
     @staticmethod
-    def __generate_queue_size(queue_size: Optional[int, str]) -> str:
+    def __generate_queue_size(queue_size: Optional[int]) -> str:
         if queue_size != '':
             queue_size = '(qs: %d), ' % queue_size
         return queue_size
 
     @staticmethod
-    def __generate_rest_time(rest_time: Optional[float, str], duration: Optional[float, str]) -> str:
+    def __generate_rest_time(rest_time: Optional[float], duration: Optional[float]) -> str:
         if rest_time != '':
             rest_time = '(rt: %.3f s' % rest_time
         rest_time += ', bs: %.3f s)' % duration if duration != '' else ')'

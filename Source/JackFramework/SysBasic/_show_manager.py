@@ -15,7 +15,7 @@ class ShowManager(object):
         return self.__RANK
 
     @property
-    def default_rank_id(self):
+    def default_rank_id(self) -> int:
         return self.__DEFAULT_RANK_ID
 
     @staticmethod

@@ -4,9 +4,6 @@ import torch.nn.functional as F
 from JackFramework.Tools.tools import Tools
 
 
-# from tools import Tools
-
-
 class Loss(object):
     """docstring for """
 

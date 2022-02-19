@@ -9,7 +9,7 @@ from .train_proc import TrainProc
 from .background import BackGround
 
 
-def mode_selection(args: object, user_inference_func: object, mode: str) -> Callable[[None], None]:
+def mode_selection(args: object, user_inference_func: object, mode: str) -> Callable:
     mode_func = None
     for case in Switch(mode):
         if case('train'):
