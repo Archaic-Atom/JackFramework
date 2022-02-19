@@ -82,15 +82,16 @@ class BackGround(TestProc):
     def __info_processing_loop(self, named_pipe: object) -> None:
         while True:
             msg = self.__msg_handler(named_pipe)
-            if (res := self.__exit_cmd(msg)):
+            if res := self.__exit_cmd(msg):
                 log.info('the result is %s, background mode is exiting!' % res)
                 break
-            if (res := self.__data_handler(msg)):
+            if res := self.__data_handler(msg):
+                log.info('the result is %s, the server is sending msg!' % res)
                 named_pipe.send(self.__RELY_FINISH)
             else:
                 named_pipe.send(self.__RELY_ERROR)
 
-    def exec(self, rank: object = None) -> None:
+    def exec(self, rank: int = None) -> None:
         assert rank is None and self.__named_pipe is None
         self._init_data_model_handler(rank)
         log.info('background mode starts')

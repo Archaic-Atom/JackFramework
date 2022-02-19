@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 import sys
 import time
+from typing import Optional
 
 
 class ShowProcess(object):
@@ -35,13 +36,13 @@ class ShowProcess(object):
 
     def __generate_show_data(self, num_arrow: int, num_line: int, percent: float, show_info: str,
                              info_done: str, queue_size: str, rest_time: str) -> str:
-        return '[' + self.__info + '] [' + '>' * num_arrow   \
-            + '-' * num_line + ']'                                  \
-            + ' %d / %d, ' % (self.__counter, self.__max_steps)     \
-            + '%.2f' % percent + '%' + ' '                          \
-            + show_info + ' ' + queue_size                          \
-            + rest_time + info_done                                 \
-            + '\r'
+        return '[' + self.__info + '] [' + '>' * num_arrow \
+               + '-' * num_line + ']' \
+               + ' %d / %d, ' % (self.__counter, self.__max_steps) \
+               + '%.2f' % percent + '%' + ' ' \
+               + show_info + ' ' + queue_size \
+               + rest_time + info_done \
+               + '\r'
 
     def show_process(self, start_counter: int = None, show_info: str = '',
                      rest_time: str = '', duration: str = '', queue_size: str = '') -> None:
@@ -66,13 +67,13 @@ class ShowProcess(object):
             self.close()
 
     @staticmethod
-    def __generate_queue_size(queue_size: int) -> str:
+    def __generate_queue_size(queue_size: Optional[int, str]) -> str:
         if queue_size != '':
             queue_size = '(qs: %d), ' % queue_size
         return queue_size
 
     @staticmethod
-    def __generate_rest_time(rest_time: int, duration: int) -> str:
+    def __generate_rest_time(rest_time: Optional[float, str], duration: Optional[float, str]) -> str:
         if rest_time != '':
             rest_time = '(rt: %.3f s' % rest_time
         rest_time += ', bs: %.3f s)' % duration if duration != '' else ')'

@@ -2,6 +2,8 @@
 import torch
 import torch.nn.functional as F
 from JackFramework.Tools.tools import Tools
+
+
 # from tools import Tools
 
 
@@ -30,6 +32,7 @@ class Loss(object):
     @staticmethod
     def focal_loss(res: torch.tensor, gt: torch.tensor, alpha: float = -1, gamma: float = 2,
                    reduction: str = 'mean', mode: str = 'bce') -> torch.tensor:
+        log_t = None
         if mode == 'ce':
             gt = gt.long()
             log_t = F.cross_entropy(res, gt.squeeze(1), reduction='none')
@@ -51,7 +54,7 @@ class Loss(object):
 
         return loss
 
-    @ staticmethod
+    @staticmethod
     def mutil_focal_loss(res: list, gt: torch.tensor, alpha: float = -1, gamma: float = 2,
                          reduction: str = 'mean', mode: str = 'bce',
                          lambdas: list = None) -> torch.tensor:
@@ -80,7 +83,7 @@ class Loss(object):
         gt_vector = gt.view(batch, -1)
         intersection = (res_vector * gt_vector).sum(1)
         return 1 - torch.mean((2 * intersection) / (res_vector.sum(1)
-                              + gt_vector.sum(1) + Loss.LOSS_EPSILON))
+                                                    + gt_vector.sum(1) + Loss.LOSS_EPSILON))
 
     @staticmethod
     def dice_loss(res: torch.tensor, gt: torch.tensor) -> torch.tensor:

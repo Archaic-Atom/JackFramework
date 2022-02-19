@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import torch.multiprocessing as mp
+from collections.abc import Callable
 
 from JackFramework.SysBasic.inithandler import InitProgram
 from JackFramework.SysBasic.argparser import ArgsParser
@@ -39,7 +40,7 @@ class Application(object):
 
     # noinspection PyCallingNonCallable
     @staticmethod
-    def _dist_app_start(mode_func: object, dist: bool, gpu_num: int) -> None:
+    def _dist_app_start(mode_func: Callable[[], None], dist: bool, gpu_num: int) -> None:
         if dist:
             mp.spawn(mode_func, nprocs=gpu_num, join=True)
         else:
