@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-import numpy as np
 import random
-
-EPSILON = 1e-9
+import numpy as np
 
 
 class DataAugmentation(object):
     """docstring for ClassName"""
+    EPSILON = 1e-9
 
     def __init__(self):
         super().__init__()
@@ -22,7 +21,7 @@ class DataAugmentation(object):
         img = img.astype(np.float32)
         var = np.var(img, axis=(0, 1), keepdims=True)
         mean = np.mean(img, axis=(0, 1), keepdims=True)
-        return (img - mean) / (np.sqrt(var) + EPSILON)
+        return (img - mean) / (np.sqrt(var) + DataAugmentation.EPSILON)
 
     @staticmethod
     def random_crop(imgs: list, w: int, h: int,
