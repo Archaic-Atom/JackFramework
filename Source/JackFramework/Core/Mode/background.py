@@ -73,7 +73,7 @@ class BackGround(TestProc):
     def __msg_handler(self, named_pipe: object) -> str:
         msg = named_pipe.receive()
         named_pipe.send(self.__RELY_MSG % msg)
-        log.info('jf gets message: %s' % msg)
+        log.info(f'jf gets message: {msg}')
         return msg
 
     def __exit_cmd(self, msg: str) -> bool:
@@ -83,10 +83,10 @@ class BackGround(TestProc):
         while True:
             msg = self.__msg_handler(named_pipe)
             if (res := self.__exit_cmd(msg)):
-                log.info('the result is %s, background mode is exiting!' % res)
+                log.info(f'the result is {res}, background mode is exiting!')
                 break
             if (res := self.__data_handler(msg)):
-                log.info('the result is %s, the server is sending msg!' % res)
+                log.info(f'the result is {res}, the server is sending msg!')
                 named_pipe.send(self.__RELY_FINISH)
             else:
                 named_pipe.send(self.__RELY_ERROR)
