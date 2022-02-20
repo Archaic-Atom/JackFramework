@@ -3,33 +3,22 @@ import torch
 import torch.nn.functional as F
 from JackFramework.Tools.tools import Tools
 
+try:
+    from ._meta_loss import MetaLoss
+except ImportError:
+    from _meta_loss import MetaLoss
 
-class Loss(object):
+
+class SegLoss(MetaLoss):
     """docstring for """
-
-    __LOSS_INSTANCE = None
-    LOSS_EPSILON = 1e-9
-
-    def __new__(cls, *args: str, **kwargs: str) -> object:
-        if cls.__LOSS_INSTANCE is None:
-            cls.__LOSS_INSTANCE = object.__new__(cls)
-        return cls.__LOSS_INSTANCE
 
     def __init__(self):
         super().__init__()
 
     @staticmethod
-    def smooth_l1(res: torch.tensor, gt: torch.tensor, mask_threshold_min: int,
-                  mask_threshold_max: int) -> torch.tensor:
-        mask = (gt > mask_threshold_min) & (gt < mask_threshold_max)
-        mask.detach_()
-        total_num = mask.int().sum() + Loss.LOSS_EPSILON
-        return F.smooth_l1_loss(res[mask], gt[mask], reduction='sum') / total_num
-
-    @staticmethod
     def focal_loss(res: torch.tensor, gt: torch.tensor, alpha: float = -1, gamma: float = 2,
                    reduction: str = 'mean', mode: str = 'bce') -> torch.tensor:
-        log_t = None
+        log_t = 0
         if mode == 'ce':
             gt = gt.long()
             log_t = F.cross_entropy(res, gt.squeeze(1), reduction='none')
@@ -64,7 +53,7 @@ class Loss(object):
             scale_factor = 1 / (2 ** i)
             new_h, new_w = int(h * scale_factor), int(w * scale_factor)
             scaled_target = F.interpolate(gt.float(), size=[new_h, new_w])
-            _loss = Loss.focal_loss(res[i], scaled_target, alpha, gamma, reduction, mode)
+            _loss = SegLoss.focal_loss(res[i], scaled_target, alpha, gamma, reduction, mode)
             loss += _loss * lambdas[i]
 
         return loss
@@ -80,7 +69,7 @@ class Loss(object):
         gt_vector = gt.view(batch, -1)
         intersection = (res_vector * gt_vector).sum(1)
         return 1 - torch.mean((2 * intersection) / (res_vector.sum(1)
-                                                    + gt_vector.sum(1) + Loss.LOSS_EPSILON))
+                                                    + gt_vector.sum(1) + SegLoss.LOSS_EPSILON))
 
     @staticmethod
     def dice_loss(res: torch.tensor, gt: torch.tensor) -> torch.tensor:
@@ -88,11 +77,11 @@ class Loss(object):
         if num_classes >= 2:
             res = F.softmax(res, dim=1)
             gt_one_hot = Tools.get_one_hot(gt, num_classes)
-            loss = sum(Loss.__dice_loss_func(res[:, c], gt_one_hot[:, c], batch)
+            loss = sum(SegLoss.__dice_loss_func(res[:, c], gt_one_hot[:, c], batch)
                        for c in range(num_classes))
             loss /= num_classes
         else:
-            loss = Loss.__dice_loss_func(res, gt, batch)
+            loss = SegLoss.__dice_loss_func(res, gt, batch)
         return loss
 
 
@@ -101,26 +90,26 @@ def debug_main():
     pred2 = torch.rand(size=[10, 1, 10, 10])
     gt = torch.randint(low=0, high=2, size=[10, 1, 10, 10]).float()
 
-    loss1 = Loss.focal_loss(pred1, gt, 0.75, 2, mode='bce')
+    loss1 = SegLoss.focal_loss(pred1, gt, 0.75, 2, mode='bce')
     print(loss1)
 
-    loss2 = Loss.mutil_focal_loss([pred1], gt, 0.75, 2, mode='bce')
+    loss2 = SegLoss.mutil_focal_loss([pred1], gt, 0.75, 2, mode='bce')
     print(loss2)
 
     pred = torch.cat((1 - pred1, pred1), dim=1)
-    loss3 = Loss.focal_loss(pred, gt.long(), alpha=0.75, mode='ce')
+    loss3 = SegLoss.focal_loss(pred, gt.long(), alpha=0.75, mode='ce')
     print(loss3)
 
-    loss3 = Loss.mutil_focal_loss([pred], gt, 0.75, 2, mode='ce')
+    loss3 = SegLoss.mutil_focal_loss([pred], gt, 0.75, 2, mode='ce')
     print(loss3)
 
     pred = F.pairwise_distance(pred1, pred2, keepdim=True)
-    loss4 = Loss.contrastive_loss(pred, gt, 2)
+    loss4 = SegLoss.contrastive_loss(pred, gt, 2)
     print(loss4)
 
     pred3 = torch.rand(size=[10, 4, 10, 10])
     gt3 = torch.randint(low=0, high=2, size=[10, 1, 10, 10]).float()
-    loss5 = Loss.dice_loss(pred3, gt3)
+    loss5 = SegLoss.dice_loss(pred3, gt3)
     print(loss5)
 
 

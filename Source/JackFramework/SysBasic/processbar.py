@@ -37,12 +37,8 @@ class ShowProcess(object):
     def __generate_show_data(self, num_arrow: int, num_line: int, percent: float, show_info: str,
                              info_done: str, queue_size: str, rest_time: str) -> str:
         return f"[{self.__info}] [{'>' * num_arrow}{'-' * num_line}] " \
-               + f"{self.__counter} / {self.__max_steps}, {percent:.2f}%" \
+            + f"{self.__counter} / {self.__max_steps}, {percent:.2f}%" \
                + f"{show_info} {queue_size} {rest_time} {info_done} \r"
-
-        return f"[{self.__info}] [{'>' * num_arrow}{'-' * num_line}] \
-        {self.__counter} / {self.__max_steps} {percent:.2f}% {show_info} {queue_size} \
-        {rest_time} {info_done} \r"
 
     def show_process(self, start_counter: int = None, show_info: str = '',
                      rest_time: str = '', duration: str = '', queue_size: str = '') -> None:
@@ -67,9 +63,7 @@ class ShowProcess(object):
 
     @staticmethod
     def __generate_queue_size(queue_size: Optional[int]) -> str:
-        if queue_size != '':
-            queue_size = f'(qs: {queue_size}), '
-        return queue_size
+        return queue_size if queue_size == '' else f'(qs: {queue_size}), '
 
     @staticmethod
     def __generate_rest_time(rest_time: Optional[float], duration: Optional[float]) -> str:
@@ -90,7 +84,7 @@ def debug_main():
     for i in range(max_steps):
         process_bar.show_process(i + 1)
         time.sleep(0.02)
-    time.sleep(50)
+    time.sleep(1)
 
 
 if __name__ == '__main__':
