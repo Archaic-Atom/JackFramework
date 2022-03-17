@@ -9,13 +9,13 @@ from JackFramework.SysBasic.loghander import LogHandler as log
 class DeviceManager(object):
     """docstring for DeviceManager"""
     DEFAULT_OUTPUT_DEVICE = 'cuda:0'
+    DEFAULT_CPU = 'cpu'
     __DEVICE_MANAGER = None
 
     def __init__(self, args: object):
         super().__init__()
         self.__args = args
-
-        self.__device = self.__init_gpu_device() if not args.dist else None
+        self.__device = self.__init_device() if not args.dist else None
 
     def __new__(cls, *args: str, **kwargs: str) -> object:
         if cls.__DEVICE_MANAGER is None:
@@ -27,29 +27,28 @@ class DeviceManager(object):
         return self.__device
 
     @staticmethod
-    def __init_gpu_device() -> object:
+    def __init_cudnn(is_gpu: bool) -> None:
+        if is_gpu:
+            torch.backends.cudnn.deterministic = False
+            torch.backends.cudnn.benchmark = True
+
+    def __init_device(self) -> object:
         log.info("Start initializing device!")
-
-        torch.backends.cudnn.deterministic = False
-        torch.backends.cudnn.benchmark = True
-        device = torch.device(DeviceManager.DEFAULT_OUTPUT_DEVICE)
-
+        args = self.__args
+        self.__init_cudnn(args.gpu > 0)
+        gpu_device = torch.device(
+            DeviceManager.DEFAULT_OUTPUT_DEVICE if args.gpu > 0 else DeviceManager.DEFAULT_CPU)
         log.info("Finish initializing device!")
-        return device
+        return gpu_device
 
     def init_distributed_gpu_device(self, rank: int) -> None:
         log.info("Start initializing distributed device!")
-        assert rank is not None
-
+        assert rank is not None and self.__args.gpu > 0
         os.environ['MASTER_ADDR'] = self.__args.ip
         os.environ['MASTER_PORT'] = self.__args.port
-
-        torch.backends.cudnn.deterministic = False
-        torch.backends.cudnn.benchmark = True
-
+        self.__init_cudnn(True)
         dist.init_process_group("nccl", rank=rank, world_size=self.__args.gpu)
         torch.cuda.set_device(rank)
-        return None
 
     def cleanup(self):
         if self.__args.dist:
@@ -57,6 +56,10 @@ class DeviceManager(object):
 
     @staticmethod
     def check_cuda(args):
+        if args.gpu == 0:
+            log.info('We will use cpu!')
+            return True
+
         if not torch.cuda.is_available():
             log.error("Torch is reporting that CUDA isn't available")
             return False
