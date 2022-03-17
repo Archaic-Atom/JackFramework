@@ -15,7 +15,7 @@ class DeviceManager(object):
     def __init__(self, args: object):
         super().__init__()
         self.__args = args
-        self.__device = self.__init_device() if not args.dist else None
+        self.__device = None if args.dist else self.__init_device()
 
     def __new__(cls, *args: str, **kwargs: str) -> object:
         if cls.__DEVICE_MANAGER is None:
@@ -63,7 +63,7 @@ class DeviceManager(object):
         if not torch.cuda.is_available():
             log.error("Torch is reporting that CUDA isn't available")
             return False
-        log.info("We detect the gpu device: " + torch.cuda.get_device_name(0))
+        log.info(f"We detect the gpu device: {torch.cuda.get_device_name(0)}")
         log.info("We detect the number of gpu device: " + str(torch.cuda.device_count()))
         args, res_bool = DeviceManager.check_cuda_count(args)
         return res_bool
@@ -101,11 +101,11 @@ class DeviceManager(object):
             try_index += off_set
             res_bool = True
             if DeviceManager.check_port_in_use(port):
-                log.warning("Port: " + str(port) + " is using")
+                log.warning(f"Port: {str(port)} is using")
                 port = str(int(port) + off_set)
                 res_bool = False
             if res_bool:
-                log.info("We will use the port: " + str(port))
+                log.info(f"We will use the port: {str(port)}")
                 find_res_bool = True
                 break
             if try_index >= max_failed_num:
