@@ -45,7 +45,7 @@ class BackGround(TestProc):
     def __try_exec_testing_proc(self, batch_data: list) -> tuple:
         res, outputs_data, supplement = True, None, None
         try:
-            outputs_data, supplement = self.__testing_data_proc(batch_data)
+            outputs_data, supplement = self._testing_data_proc(batch_data)
         except Exception:
             log.error('Any error of inference function in model!')
             res = False
