@@ -19,7 +19,7 @@ class TestProc(MetaMode):
         self._graph.user_pretreatment(epoch)
         return total_iteration, off_set, dataloader
 
-    def __testing_data_proc(self, batch_data: list) -> tuple:
+    def _testing_data_proc(self, batch_data: list) -> tuple:
         graph, data_manager = self._get_graph_and_data_manager
         input_data, supplement = data_manager.user_split_data(batch_data, False)
         outputs_data = graph.exec(input_data, None)
