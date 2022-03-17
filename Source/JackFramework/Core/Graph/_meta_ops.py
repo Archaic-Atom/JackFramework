@@ -89,18 +89,14 @@ class MetaOps(UserModel):
 
     @ShowHandler.show_method
     def show_lr_scheduler_info(self, idx: int) -> None:
-        log.info(
-            (
-                f'Model_{idx} Current lr: '
-                + str(self._opt[idx].param_groups[self.__OPT_LR_GROUP_ID]['lr'])
-            )
-        )
+        log.info((f'Model_{idx} Current lr: ' +
+                  str(self._opt[idx].param_groups[self.__OPT_LR_GROUP_ID]['lr'])))
 
     @ShowHandler.show_method
     def count_parameter_num(self) -> None:
         for i, model_item in enumerate(self._model):
             num_params = sum(param.numel() for param in model_item.parameters())
-            log.info(f'Model {str(i)}' + ': The total parameter - %d' % num_params)
+            log.info(f'Model {str(i)}' + f': The total parameter - {num_params}')
 
     def adjust_lr_scheduler(self, loss: list) -> None:
         for i, sch_item in enumerate(self._sch):
