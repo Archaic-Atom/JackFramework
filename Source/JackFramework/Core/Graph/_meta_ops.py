@@ -113,7 +113,7 @@ class MetaOps(UserModel):
             checkpoint = ModelSaver.load_checkpoint(checkpoint_path, self.rank)
             self._restore_model_opt(checkpoint)
         else:
-            log.warning("no checkpoint found at '{}'".format(checkpoint_path))
+            log.warning(f"no checkpoint found at '{checkpoint_path}'")
 
     def save_model(self, epoch: int) -> None:
         assert len(self._model) == len(self._opt)
