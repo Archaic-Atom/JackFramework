@@ -41,7 +41,7 @@ class TestProc(MetaMode):
         log.info("Start testing iteration!")
         for iteration, batch_data in enumerate(dataloader):
             total_iteration = iteration + off_set
-            outputs_data, supplement = self.__testing_data_proc(batch_data)
+            outputs_data, supplement = self._testing_data_proc(batch_data)
             self._save_result(iteration, outputs_data, supplement)
             self._show_testing_proc(total_iteration)
         self._graph.user_post_process(0)
