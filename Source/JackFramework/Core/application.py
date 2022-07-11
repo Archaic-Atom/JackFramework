@@ -30,7 +30,7 @@ class Application(object):
     def start(self) -> None:
         args = ArgsParser().parse_args(self.__application_name,
                                        self.__user_interface.user_parser)
-        if not InitProgram(args).init_program():
+        if not InitProgram(args).init_pro():
             return
 
         mode_func = mode_selection(args, self.__user_interface.inference, args.mode)
