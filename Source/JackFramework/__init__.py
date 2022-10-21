@@ -21,7 +21,7 @@ from JackFramework.Evaluation import Loss as loss
 from JackFramework.Evaluation import Accuracy as acc
 
 # nn
-import JackFramework.NN as nn
+from JackFramework import NN as nn
 from JackFramework.NN import block
 from JackFramework.NN.layer import Layer as layer
 from JackFramework.NN.layer import NormActLayer as norm_act_layer
