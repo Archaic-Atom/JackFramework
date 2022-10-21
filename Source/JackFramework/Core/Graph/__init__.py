@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from JackFramework.SysBasic.switch import Switch
-from JackFramework.SysBasic.loghander import LogHandler as log
+from JackFramework.SysBasic.log_handler import LogHandler as log
 
 from .build_training_graph import BuildTrainingGraph
 from .build_testing_graph import BuildTestingGraph

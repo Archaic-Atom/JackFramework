@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 import torch.nn as nn
-from .ops import Ops
+
+try:
+    from .ops import Ops
+except ImportError:
+    from ops import Ops
 
 
 class NormActLayer(object):

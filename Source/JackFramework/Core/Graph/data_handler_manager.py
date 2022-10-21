@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import torch
-from JackFramework.SysBasic.loghander import LogHandler as log
+from JackFramework.SysBasic.log_handler import LogHandler as log
 from ._user_dataloader import UserDataloader
 
 

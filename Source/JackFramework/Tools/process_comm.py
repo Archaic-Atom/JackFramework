@@ -5,7 +5,7 @@ import queue as Queue
 import _thread as thread
 
 import JackFramework.SysBasic.define as sys_def
-from JackFramework.SysBasic.loghander import LogHandler as log
+from JackFramework.SysBasic.log_handler import LogHandler as log
 
 
 class NamedPipe(object):
@@ -72,14 +72,14 @@ class NamedPipe(object):
         pipe_writer = None
         if os.path.exists(writer_path):
             pipe_writer = os.open(writer_path, os.O_SYNC | os.O_CREAT | os.O_RDWR)
-            log.info('%s creates a sender' % self.__mode)
+            log.info(f'{self.__mode} creates a sender')
         return pipe_writer
 
     def __create_receiver_pipe(self, reader_path: str = None) -> int:
         pipe_reader = None
         if os.path.exists(reader_path):
-            log.info('%s creates a receiver' % self.__mode)
-            log.info('%s is waiting a message' % self.__mode)
+            log.info(f'{self.__mode} creates a receiver')
+            log.info(f'{self.__mode} is waiting a message')
             pipe_reader = os.open(reader_path, os.O_RDONLY)
 
         return pipe_reader
@@ -87,7 +87,7 @@ class NamedPipe(object):
     def __create_pipe(self, writer_path: str = None, reader_path: str = None) -> tuple:
         writer_path, reader_path = self.__get_path(writer_path, reader_path)
         self.__create_file(writer_path, reader_path)
-        log.info("The pipe's path: %s, %s , %s" % (self.__mode, writer_path, reader_path))
+        log.info(f"The pipe's path: {self.__mode}, {writer_path} , {reader_path}")
 
         pipe_writer = self.__create_sender_pipe(writer_path)
         pipe_reader = self.__create_receiver_pipe(reader_path) if self.__mode == 'server' else None
@@ -104,7 +104,7 @@ class NamedPipe(object):
         log.info('The receive thread starts!')
         while True:
             if self.__exit:
-                log.info('The receive thread in %d has exited!' % self.__mode)
+                log.info(f'The receive thread in {self.__mode} has exited!')
                 return
 
             if self.__pipe_reader is None:

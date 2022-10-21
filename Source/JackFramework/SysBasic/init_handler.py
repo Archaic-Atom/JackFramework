@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 
-from JackFramework.SysBasic.loghander import LogHandler as log
+from JackFramework.SysBasic.log_handler import LogHandler as log
 from JackFramework.FileHandler.file_handler import FileHandler
 
 from .device_manager import DeviceManager

@@ -9,7 +9,6 @@ class LogHandler(object):
     LOG_FILE = 'output.log'  # log file's path
     # define some struct
     LOG_FORMAT = '[%(levelname)s] %(asctime)s %(filename)s[line:%(lineno)d]: %(message)s'
-    # LOG_FORMAT = '%(asctime)s: %(message)s'
     LOG_DATE_FORMAT = '[%a] %Y-%m-%d %H:%M:%S'
 
     COLOR_SEQ_HEAD = "\033[1;%dm"
@@ -31,8 +30,8 @@ class LogHandler(object):
         if renew and os.path.exists(path):
             os.remove(path)
         logging.basicConfig(level=logging.INFO, format=self.__info_format,
-                            datefmt = self.__data_format, filename = path, filemode = 'a',
-                            force=True)
+                            datefmt = self.__data_format, filename = path,
+                            filemode = 'a', force=True)
 
     def _disable_output_to_termimal(self) -> None:
         logger = logging.getLogger()

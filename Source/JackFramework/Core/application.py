@@ -2,9 +2,9 @@
 from collections.abc import Callable
 import torch.multiprocessing as mp
 
-from JackFramework.SysBasic.inithandler import InitProgram
-from JackFramework.SysBasic.argparser import ArgsParser
-from JackFramework.SysBasic.loghander import LogHandler as log
+from JackFramework.SysBasic.init_handler import InitProgram
+from JackFramework.SysBasic.args_parser import ArgsParser
+from JackFramework.SysBasic.log_handler import LogHandler as log
 
 from .Mode import mode_selection
 
@@ -13,8 +13,7 @@ class Application(object):
     """docstring for Application"""
     __APPLICATION = None
 
-    def __init__(self, user_interface: object,
-                 application_name: str = "") -> None:
+    def __init__(self, user_interface: object, application_name: str = "") -> None:
         super().__init__()
         self.__user_interface = user_interface
         self.__application_name = application_name

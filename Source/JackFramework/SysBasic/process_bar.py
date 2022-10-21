@@ -75,17 +75,3 @@ class ShowProcess(object):
     def __print(process_str: str) -> None:
         sys.stdout.write(process_str)
         sys.stdout.flush()
-
-
-def debug_main():
-    max_steps = 100
-    process_bar = ShowProcess(max_steps, 'OK')
-
-    for i in range(max_steps):
-        process_bar.show_process(i + 1)
-        time.sleep(0.02)
-    time.sleep(1)
-
-
-if __name__ == '__main__':
-    debug_main()

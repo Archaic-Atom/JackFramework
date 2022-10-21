@@ -3,7 +3,7 @@
 from JackFramework.SysBasic import define as sys_define
 
 # custom lib
-from JackFramework.SysBasic.loghander import LogHandler as log
+from JackFramework.SysBasic.log_handler import LogHandler as log
 from JackFramework.SysBasic.switch import Switch
 from JackFramework.FileHandler.file_handler import FileHandler
 

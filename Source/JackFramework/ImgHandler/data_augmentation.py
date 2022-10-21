@@ -87,28 +87,3 @@ class DataAugmentation(object):
         if np.random.random() < thro:
             imgs = list(map(lambda img: img[:, ::-1, ...].swapaxes(1, 0)[:, ::-1, ...], imgs))
         return imgs
-
-
-def debug_main():
-    from PIL import Image
-    img = Image.open('TestExample/DataAugSample.jpg')
-    img = np.array(img)
-    img = np.expand_dims(img, axis=3)
-    imgs = [img]
-    # img_crop = DataAugmentation.random_crop(imgs, 947, 432, 400, 400)
-    # img_rotate = DataAugmentation.random_rotate(imgs, thro=1)
-    # img_flip = DataAugmentation.random_flip(imgs, 1)
-    img1 = DataAugmentation.random_vertical_flip(imgs, 1)
-    # img_crop = Image.fromarray(img_crop[0])
-    # img_rotate = Image.fromarray(img_rotate[0])
-    # img_flip = Image.fromarray(img_flip[0])
-    img1 = Image.fromarray(img1[0][:, :, :, 0])
-
-    # img_crop = img_crop.save('TestExample/DataAug_crop.png')
-    # img_rotate = img_rotate.save('TestExample/DataAug_rotate.png')
-    # img_flip = img_flip.save('TestExample/DataAug_flip.png')
-    img1.save('TestExample/DataAug_vflip.png')
-
-
-if __name__ == "__main__":
-    debug_main()

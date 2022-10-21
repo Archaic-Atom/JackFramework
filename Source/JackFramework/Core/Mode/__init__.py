@@ -2,7 +2,7 @@
 from collections.abc import Callable
 
 from JackFramework.SysBasic.switch import Switch
-from JackFramework.SysBasic.loghander import LogHandler as log
+from JackFramework.SysBasic.log_handler import LogHandler as log
 
 from .test_proc import TestProc
 from .train_proc import TrainProc
