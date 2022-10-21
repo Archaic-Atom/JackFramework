@@ -11,11 +11,11 @@ import torch.nn.functional as F  # (uncomment if needed,but you likely already h
 
 
 class Mish(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     @staticmethod
-    def forward(x):
+    def forward(x: torch.tensor) -> torch.tensor:
         # inlining this saves 1 second per epoch (V100 GPU) vs
         # having a temp x and then returning x(!)
         return x * (torch.tanh(F.softplus(x)))
