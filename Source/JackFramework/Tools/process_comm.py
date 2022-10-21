@@ -39,7 +39,7 @@ class NamedPipe(object):
     def __del__(self) -> None:
         self.__exit = True
         time.sleep(self.__EXIT_WAIT_TIME)
-        log.info('The stop command of receive thread in %s has been sent!' % self.__mode)
+        log.info(f'The stop command of receive thread in {self.__mode} has been sent!')
         self.__close_pipe()
 
     def __close_pipe(self) -> None:
