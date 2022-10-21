@@ -35,7 +35,7 @@ class FileHandler(object):
 
     @staticmethod
     def write_file(fd_file: object, data_str: str) -> None:
-        data_str = str(data_str)
+        data_str = data_str
         fd_file.write(data_str + "\n")
         fd_file.flush()
 
@@ -70,11 +70,9 @@ class FileHandler(object):
         off_set = FileHandler.__get_line_offset(fd_file_b, line_num)
         fd_file_b.seek(off_set, 0)
 
-        next_line = fd_file_a.readline()
-        while next_line:
+        while next_line := fd_file_a.readline():
             next_line = next_line.rstrip("\n")
             FileHandler.write_file(fd_file_b, next_line)
-            next_line = fd_file_a.readline()
 
     @staticmethod
     def __get_line_offset(fd_file: object, line_num: int):
