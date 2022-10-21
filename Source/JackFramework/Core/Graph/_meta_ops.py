@@ -9,7 +9,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from typing import TypeVar
 
 import JackFramework.SysBasic.define as sys_define
-from JackFramework.SysBasic.loghander import LogHandler as log
+from JackFramework.SysBasic.log_handler import LogHandler as log
 from JackFramework.SysBasic.device_manager import DeviceManager
 from JackFramework.SysBasic.show_handler import ShowHandler
 from JackFramework.FileHandler.model_saver import ModelSaver

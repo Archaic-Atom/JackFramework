@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import torch
-from ._meta_accuracy import MetaAccuracy
+try:
+    from ._meta_accuracy import MetaAccuracy
+except ImportError:
+    from _meta_accuracy import MetaAccuracy
 
 
 class SMAccuracy(MetaAccuracy):

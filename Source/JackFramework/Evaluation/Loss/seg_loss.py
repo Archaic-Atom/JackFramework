@@ -83,35 +83,3 @@ class SegLoss(MetaLoss):
         else:
             loss = SegLoss.__dice_loss_func(res, gt, batch)
         return loss
-
-
-def debug_main():
-    pred1 = torch.rand(size=[10, 1, 10, 10])
-    pred2 = torch.rand(size=[10, 1, 10, 10])
-    gt = torch.randint(low=0, high=2, size=[10, 1, 10, 10]).float()
-
-    loss1 = SegLoss.focal_loss(pred1, gt, 0.75, 2, mode='bce')
-    print(loss1)
-
-    loss2 = SegLoss.mutil_focal_loss([pred1], gt, 0.75, 2, mode='bce')
-    print(loss2)
-
-    pred = torch.cat((1 - pred1, pred1), dim=1)
-    loss3 = SegLoss.focal_loss(pred, gt.long(), alpha=0.75, mode='ce')
-    print(loss3)
-
-    loss3 = SegLoss.mutil_focal_loss([pred], gt, 0.75, 2, mode='ce')
-    print(loss3)
-
-    pred = F.pairwise_distance(pred1, pred2, keepdim=True)
-    loss4 = SegLoss.contrastive_loss(pred, gt, 2)
-    print(loss4)
-
-    pred3 = torch.rand(size=[10, 4, 10, 10])
-    gt3 = torch.randint(low=0, high=2, size=[10, 1, 10, 10]).float()
-    loss5 = SegLoss.dice_loss(pred3, gt3)
-    print(loss5)
-
-
-if __name__ == '__main__':
-    debug_main()

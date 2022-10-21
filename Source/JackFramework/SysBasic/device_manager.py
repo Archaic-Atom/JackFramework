@@ -3,7 +3,7 @@ import os
 import socket
 import torch
 import torch.distributed as dist
-from JackFramework.SysBasic.loghander import LogHandler as log
+from JackFramework.SysBasic.log_handler import LogHandler as log
 
 
 class DeviceManager(object):
@@ -64,7 +64,7 @@ class DeviceManager(object):
             log.error("Torch is reporting that CUDA isn't available")
             return False
         log.info(f"We detect the gpu device: {torch.cuda.get_device_name(0)}")
-        log.info("We detect the number of gpu device: " + str(torch.cuda.device_count()))
+        log.info(f"We detect the number of gpu device: {torch.cuda.device_count()}")
         args, res_bool = DeviceManager.check_cuda_count(args)
         return res_bool
 
@@ -72,8 +72,8 @@ class DeviceManager(object):
     def check_cuda_count(args) -> object:
         res_bool = True
         if torch.cuda.device_count() < args.gpu:
-            log.warning("The setting of GPUs is more than actually owned GPUs: %d vs %d"
-                        % (args.gpu, torch.cuda.device_count()))
+            log.warning("The setting of GPUs is more than actually owned GPUs: " +
+                        f"{args.gpu} vs {torch.cuda.device_count()}")
             log.info("We will use all actually owned GPUs.")
             args.gpu = torch.cuda.device_count()
 

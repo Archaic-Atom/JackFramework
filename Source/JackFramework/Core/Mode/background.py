@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from JackFramework.SysBasic.loghander import LogHandler as log
+from JackFramework.SysBasic.log_handler import LogHandler as log
 from JackFramework.Tools.process_comm import NamedPipe
 
 from .test_proc import TestProc

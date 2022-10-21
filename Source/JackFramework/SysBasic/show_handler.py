@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import time
 
-from JackFramework.SysBasic.loghander import LogHandler as log
+from JackFramework.SysBasic.log_handler import LogHandler as log
 from JackFramework.FileHandler.tensorboard_handler import TensorboardHandler
 
-from .processbar import ShowProcess
+from .process_bar import ShowProcess
 from ._show_manager import ShowManager
 
 
