@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 import sys
-import time
 from typing import Optional
 
 
