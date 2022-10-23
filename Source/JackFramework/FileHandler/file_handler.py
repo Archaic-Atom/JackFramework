@@ -69,7 +69,7 @@ class FileHandler(object):
         off_set = FileHandler.__get_line_offset(fd_file_b, line_num)
         fd_file_b.seek(off_set, 0)
 
-        while next_line:= fd_file_a.readline():
+        while (next_line := fd_file_a.readline()):
             next_line = next_line.rstrip("\n")
             FileHandler.write_file(fd_file_b, next_line)
 
