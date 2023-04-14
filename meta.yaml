@@ -1,0 +1,41 @@
+  package:
+    name: jackframework
+    version: 0.1.1
+
+  source:
+    path: ./Source/
+
+  build:
+    number: 0
+
+  requirements:
+    build:
+      - python >=3.8
+      - setuptools
+    run:
+      - python >=3.8
+      - pytorch
+      - torchaudio
+      - torchvision 
+      - pytorch-cuda
+      - numpy >=1.19.2 
+      - tifffile >=2020.12.8
+      - pandas >=1.1.5
+      - pillow >=8.0.1
+      - opencv
+      - tensorboard >=2.10.0
+
+  test:
+    imports:
+      - JackFramework
+
+    commands:
+      - python -c "import JackFramework as jf; print(jf.version())"
+
+  about:
+    home: https://github.com/Archaic-Atom/JackFramework
+    license: MIT
+    summary: This is a training framework based on PyTorch, which is used to rapidly build the model, without caring about the training process (such as DDP or DP, Tensorboard, et al.). 
+    description: This is a training framework based on PyTorch, which is used to rapidly build the model, without caring about the training process (such as DDP or DP, Tensorboard, et al.). The demo can be found in FrameworkTemplate (https://github.com/Archaic-Atom/Template-jf). if you have any questions, please send an e-mail to raoxi36@foxmail.com
+    doc_url: https://www.wolai.com/archaic-atom/rqKJVi7M1x44mPT8CdM1TL
+    dev_url: https://github.com/Archaic-Atom/JackFramework
