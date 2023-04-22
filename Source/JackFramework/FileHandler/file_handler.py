@@ -35,7 +35,7 @@ class FileHandler(object):
 
     @staticmethod
     def write_file(fd_file: object, data_str: str) -> None:
-        fd_file.write(f"{data_str} \n")
+        fd_file.write(f"{data_str}\n")
         fd_file.flush()
 
     @staticmethod
