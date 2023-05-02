@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import random
 import numpy as np
+import cv2
 
 
 class DataAugmentation(object):
@@ -86,4 +87,11 @@ class DataAugmentation(object):
     def random_transverse(imgs: list, thro: float = 0.5) -> list:
         if np.random.random() < thro:
             imgs = list(map(lambda img: img[:, ::-1, ...].swapaxes(1, 0)[:, ::-1, ...], imgs))
+        return imgs
+
+    @staticmethod
+    def random_scale(imgs: list, min_scale: float = 0.8, max_scale: float = 1.2) -> list:
+        times = random.uniform(min_scale, max_scale)
+        imgs = list(map(lambda img: cv2.resize(
+            img, dsize=None, fx=times, fy=times, interpolation=cv2.INTER_LINEAR), imgs))
         return imgs
