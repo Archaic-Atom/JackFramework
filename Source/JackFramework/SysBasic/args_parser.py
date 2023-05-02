@@ -32,8 +32,7 @@ class ArgsParser(object):
 
     @staticmethod
     def __program_setting(parser: object) -> object:
-        parser.add_argument('--mode', default='train',
-                            help='train or test')
+        parser.add_argument('--mode', default='train', help='train or test')
         parser.add_argument('--gpu', type=int, default=sys_define.GPU_NUM,
                             help='state the num of gpu: 0, 1, 2 or 3 ...')
         parser.add_argument('--auto_save_num', type=int, default=sys_define.AUTO_SAVE_NUM,
@@ -42,12 +41,11 @@ class ArgsParser(object):
                             help='the number of dataloader')
         parser.add_argument('--pretrain', default=False, type=ArgsParser.__str2bool,
                             help='true or false')
-        parser.add_argument('--ip', default=sys_define.IP,
-                            help='ip')
-        parser.add_argument('--port', default=sys_define.PORT,
-                            help='port')
+        parser.add_argument('--ip', default=sys_define.IP, help='ip')
+        parser.add_argument('--port', default=sys_define.PORT, help='port')
         parser.add_argument('--dist', default=sys_define.DIST, type=ArgsParser.__str2bool,
                             help='use DDP or DP')
+        parser.add_argument('--debug', default=False, help='debug mode')
         return parser
 
     @staticmethod

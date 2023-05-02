@@ -42,7 +42,8 @@ class MetaOps(UserModel):
         assert self._model is not None
         for i, model_item in enumerate(self._model):
             model_item = model_item.to(self.rank)
-            self._model[i] = DDP(model_item, device_ids=[self.rank], find_unused_parameters=True)
+            self._model[i] = DDP(model_item, device_ids=[self.rank],
+                                 find_unused_parameters=self.__args.debug)
 
     def _init_dp_model(self) -> None:
         assert self._model is not None
