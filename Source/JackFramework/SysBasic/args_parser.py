@@ -12,7 +12,8 @@ class ArgsParser(object):
 
     def parse_args(self, info: str, user_define_func: object = None) -> object:
         parser = argparse.ArgumentParser(
-            description="The deep learning framework (based on pytorch) - " + info)
+            description=f"The deep learning framework (based on pytorch) - {info}"
+        )
         parser = self.__program_setting(parser)
         parser = self.__path_setting(parser)
         parser = self.__training_setting(parser)
@@ -99,9 +100,9 @@ class ArgsParser(object):
 
     @staticmethod
     def __str2bool(arg: str) -> bool:
-        if arg.lower() in ('yes', 'true', 't', 'y', '1'):
+        if arg.lower() in {'yes', 'true', 't', 'y', '1'}:
             res = True
-        elif arg.lower() in ('no', 'false', 'f', 'n', '0'):
+        elif arg.lower() in {'no', 'false', 'f', 'n', '0'}:
             res = False
         else:
             raise argparse.ArgumentTypeError('Boolean value expected.')
