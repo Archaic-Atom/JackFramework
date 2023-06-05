@@ -40,7 +40,8 @@ class Tools(object):
 
     @staticmethod
     def convert2list(data_object: any) -> list:
-        if isinstance(data_object, collectionsAbc.Iterable):
+        if isinstance(data_object, collectionsAbc.Iterable)\
+                and not isinstance(data_object, torch.Tensor):
             return list(data_object)
         return [data_object]
 
