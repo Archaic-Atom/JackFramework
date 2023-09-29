@@ -15,8 +15,8 @@ class ResultStr(object):
         loss_str = self.loss2str(loss, decimal_places=DEFAULT_MAX_DECIMAL_PLACES)
         acc_str = self.acc2str(acc, decimal_places=DEFAULT_MAX_DECIMAL_PLACES)
         training_state = "[TrainProcess] " if training else "[ValProcess] "
-        return training_state + "e: " + str(epoch) + ', ' +\
-            loss_str + ', ' + acc_str + ' (%.3f s/epoch)' % duration
+        return (f"{training_state}e: {epoch}, {loss_str}, {acc_str}"
+                + ' (%.3f s/epoch)' % duration)
 
     def testing_result_str(self, acc: list, info_str: str = None):
         acc_str = self.acc2str(acc, info_str, decimal_places=DEFAULT_MAX_DECIMAL_PLACES)
@@ -26,10 +26,10 @@ class ResultStr(object):
     def training_intermediate_result(self, epoch: int, loss: list, acc: list) -> str:
         loss_str = self.loss2str(loss, decimal_places=3)
         acc_str = self.acc2str(acc, decimal_places=3)
-        return 'e: ' + str(epoch) + ', ' + loss_str + ', ' + acc_str
+        return f'e: {epoch}, {loss_str}, {acc_str}'
 
     def training_list_intermediate_result(self, epoch: int, loss: list, acc: list) -> str:
-        data_str = 'e: ' + str(epoch)
+        data_str = f'e: {epoch}'
         for i in range(len(loss)):
             loss_str = self.loss2str(loss[i], decimal_places=3)
             acc_str = self.acc2str(acc[i], decimal_places=3)
@@ -54,7 +54,7 @@ class ResultStr(object):
         res = ""
         char_interval = ", "
         for i in range(len(info_str)):
-            res = res + info_str[i] + (": %." + str(decimal_places) + "f") % data[i] + char_interval
+            res = res + info_str[i] + f": %.{decimal_places}f" % data[i] + char_interval
         char_offset = len(char_interval)
         return res[:len(res) - char_offset]
 
