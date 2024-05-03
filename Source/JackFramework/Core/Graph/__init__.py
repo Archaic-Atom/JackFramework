@@ -7,31 +7,21 @@ from .build_testing_graph import BuildTestingGraph
 from .data_handler_manager import DataHandlerManager
 
 
-# noinspection PyUnresolvedReferences
+def _get_graph_dict() -> dict:
+    return {
+        'train': BuildTrainingGraph,
+        'test': BuildTestingGraph,
+        'background': BuildTestingGraph,
+        'online': None,
+        'reinforcement_learning': None,
+    }
+
+
 def graph_selection(args: object, jf_model: object) -> object:
-    graph = None
-    for case in Switch(args.mode):
-        if case('train'):
-            log.info("Enter training graph")
-            graph = BuildTrainingGraph(args, jf_model)
-            break
-        if case('test'):
-            log.info("Enter testing graph")
-            graph = BuildTestingGraph(args, jf_model)
-            break
-        if case('background'):
-            log.info("Enter background graph")
-            graph = BuildTestingGraph(args, jf_model)
-            break
-        if case('online'):
-            log.info("Enter online graph")
-            break
-        if case('reinforcement_learning'):
-            log.info("Enter reinforcement learning graph")
-            break
-        if case(''):
-            log.error("The mode's name is error!!!")
-    return graph
+    graph_dict = _get_graph_dict()
+    assert args.mode in graph_dict
+    log.info(f'Enter {args.mode} mode')
+    return graph_dict[args.mode](args, jf_model)
 
 
 def dataloader_selection(args: object, jf_dataloader: object) -> object:

@@ -6,7 +6,7 @@ from ._meta_mode import MetaMode
 
 class TestProc(MetaMode):
     def __init__(self, args: object, user_inference_func: object,
-                 is_training: bool = True) -> None:
+                 is_training: bool = False) -> None:
         super().__init__(args, user_inference_func, is_training)
         self.__args = args
 
