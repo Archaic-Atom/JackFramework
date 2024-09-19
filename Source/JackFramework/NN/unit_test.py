@@ -16,7 +16,7 @@ class SysBasicUnitTestFramework(object):
         super().__init__()
 
     @staticmethod
-    def _show_reslut(func: object, x: torch.tensor) -> None:
+    def _show_reslut(func: object, x: torch.Tensor) -> None:
         out = func(x)
         print(out.shape)
 

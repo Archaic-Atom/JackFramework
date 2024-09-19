@@ -19,7 +19,7 @@ class BaseAccuracy(MetaAccuracy):
         super().__init__()
 
     @staticmethod
-    def rmse_score(res: torch.tensor, gt: torch.tensor) -> torch.tensor:
+    def rmse_score(res: torch.Tensor, gt: torch.Tensor) -> torch.Tensor:
         res = res.view(res.size(0), -1)
         gt = gt.view(gt.size(0), -1)
         rmse = torch.sqrt(torch.sum((res - gt) ** 2, dim=1) / res.size(1))

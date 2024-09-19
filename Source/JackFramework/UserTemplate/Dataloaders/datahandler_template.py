@@ -27,14 +27,12 @@ class DataHandlerTemplate(object):
 
     @abstractmethod
     def show_train_result(self, epoch: int, loss:
-                          list, acc: list,
-                          duration: float) -> None:
+                          list, acc: list, duration: float) -> None:
         pass
 
     @abstractmethod
     def show_val_result(self, epoch: int, loss:
-                        list, acc: list,
-                        duration: float) -> None:
+                        list, acc: list, duration: float) -> None:
         pass
 
     @abstractmethod
@@ -52,5 +50,6 @@ class DataHandlerTemplate(object):
     def load_test_data(self, cmd: str) -> tuple:
         pass
 
-    def save_test_data(self, output_data: list, supplement: list, cmd: str, model_id: int) -> None:
+    def save_test_data(self, output_data: list, supplement: list,
+                       cmd: str, model_id: int) -> None:
         pass

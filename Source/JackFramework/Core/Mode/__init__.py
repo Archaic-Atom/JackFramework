@@ -7,6 +7,7 @@ from JackFramework.SysBasic.log_handler import LogHandler as log
 from .test_proc import TestProc
 from .train_proc import TrainProc
 from .background import BackGround
+from .web_proc import WebProc
 
 
 def _get_mode_dict() -> dict:
@@ -16,6 +17,7 @@ def _get_mode_dict() -> dict:
         'background': BackGround,
         'online': None,
         'reinforcement_learning': None,
+        'web': WebProc,
     }
 
 

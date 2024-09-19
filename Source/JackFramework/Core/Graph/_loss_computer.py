@@ -55,12 +55,12 @@ class ResultContainer(object):
     def init_tower_loss_and_tower_acc(self):
         self._tower_loss_iteration, self._tower_acc_iteration = [], []
 
-    def append_iteration_loss(self, data: torch.tensor) -> None:
+    def append_iteration_loss(self, data: torch.Tensor) -> None:
         self._tower_loss_iteration.append(data)
 
-    def append_iteration_acc(self, data: torch.tensor) -> None:
+    def append_iteration_acc(self, data: torch.Tensor) -> None:
         self._tower_acc_iteration.append(data)
 
-    def append_iteration_loss_acc(self, loss_data: torch.tensor, acc_data: torch.tensor) -> None:
+    def append_iteration_loss_acc(self, loss_data: torch.Tensor, acc_data: torch.Tensor) -> None:
         self.append_iteration_loss(loss_data)
         self.append_iteration_acc(acc_data)

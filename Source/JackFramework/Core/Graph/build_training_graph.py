@@ -23,8 +23,8 @@ class BuildTrainingGraph(MetaOps, ResultContainer):
             acc = self.user_accuracy(output_data, label_data, model_id)
         return output_data, loss, acc
 
-    def __pass_input_label2device(self, input_data: torch.tensor,
-                                  label_data: torch.tensor) -> tuple:
+    def __pass_input_label2device(self, input_data: torch.Tensor,
+                                  label_data: torch.Tensor) -> tuple:
         input_data = self._pass_data2device(input_data)
         label_data = self._pass_data2device(label_data)
         return input_data, label_data
