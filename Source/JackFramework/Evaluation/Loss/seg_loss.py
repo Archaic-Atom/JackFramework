@@ -16,8 +16,8 @@ class SegLoss(MetaLoss):
         super().__init__()
 
     @staticmethod
-    def focal_loss(res: torch.tensor, gt: torch.tensor, alpha: float = -1, gamma: float = 2,
-                   reduction: str = 'mean', mode: str = 'bce') -> torch.tensor:
+    def focal_loss(res: torch.Tensor, gt: torch.Tensor, alpha: float = -1, gamma: float = 2,
+                   reduction: str = 'mean', mode: str = 'bce') -> torch.Tensor:
         log_t = 0
         if mode == 'ce':
             gt = gt.long()
@@ -41,9 +41,9 @@ class SegLoss(MetaLoss):
         return loss
 
     @staticmethod
-    def mutil_focal_loss(res: list, gt: torch.tensor, alpha: float = -1, gamma: float = 2,
+    def mutil_focal_loss(res: list, gt: torch.Tensor, alpha: float = -1, gamma: float = 2,
                          reduction: str = 'mean', mode: str = 'bce',
-                         lambdas: list = None) -> torch.tensor:
+                         lambdas: list = None) -> torch.Tensor:
         loss, length = 0, len(res)
         _, _, h, w = gt.shape
         if lambdas is None:
@@ -59,12 +59,12 @@ class SegLoss(MetaLoss):
         return loss
 
     @staticmethod
-    def contrastive_loss(res: torch.tensor, gt: torch.tensor, margin: float) -> torch.tensor:
+    def contrastive_loss(res: torch.Tensor, gt: torch.Tensor, margin: float) -> torch.Tensor:
         return torch.mean((1 - gt) * torch.pow(res, 2) +
                           gt * torch.pow(torch.clamp(margin - res, min=0), 2))
 
     @staticmethod
-    def __dice_loss_func(res: torch.tensor, gt: torch.tensor, batch: int) -> torch.tensor:
+    def __dice_loss_func(res: torch.Tensor, gt: torch.Tensor, batch: int) -> torch.Tensor:
         res_vector = res.view(batch, -1)
         gt_vector = gt.view(batch, -1)
         intersection = (res_vector * gt_vector).sum(1)
@@ -72,7 +72,7 @@ class SegLoss(MetaLoss):
                                                     + gt_vector.sum(1) + SegLoss.LOSS_EPSILON))
 
     @staticmethod
-    def dice_loss(res: torch.tensor, gt: torch.tensor) -> torch.tensor:
+    def dice_loss(res: torch.Tensor, gt: torch.Tensor) -> torch.Tensor:
         batch, num_classes, _, _ = res.shape
         if num_classes >= 2:
             res = F.softmax(res, dim=1)

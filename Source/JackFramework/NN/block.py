@@ -25,7 +25,7 @@ class Res2DBlock(nn.Module):
         self.act_layer = act()
 
     # noinspection PyCallingNonCallable
-    def forward(self, x: torch.tensor) -> torch.tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         identity = x
         x = self.conv_2d_layer_1(x)
         x = self.conv_2d_layer_2(x)
@@ -58,7 +58,7 @@ class Bottleneck2DBlock(nn.Module):
         self.act_layer = act()
 
     # noinspection PyCallingNonCallable
-    def forward(self, x: torch.tensor) -> torch.tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         identity = x
         x = self.conv_2d_layer_1(x)
         x = self.conv_2d_layer_2(x)
@@ -89,7 +89,7 @@ class Res3DBlock(nn.Module):
         self.act_layer = act()
 
     # noinspection PyCallingNonCallable
-    def forward(self, x: torch.tensor) -> torch.tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         identity = x
         x = self.conv_3d_layer_1(x)
         x = self.conv_3d_layer_2(x)
@@ -123,7 +123,7 @@ class Bottleneck3DBlock(nn.Module):
         self.act_layer = act()
 
     # noinspection PyCallingNonCallable
-    def forward(self, x: torch.tensor) -> torch.tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         identity = x
         x = self.conv_3d_layer_1(x)
         x = self.conv_3d_layer_2(x)
@@ -162,7 +162,7 @@ class ASPPBlock(nn.Module):
                                            dilation=dilation[2], norm=norm, act=act)
 
     # noinspection PyCallingNonCallable
-    def forward(self, x: torch.tensor) -> torch.tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         branch_1 = self.block_1(x)
         branch_2 = self.block_2(x)
         branch_3 = self.block_3(x)
@@ -193,7 +193,7 @@ class SPPBlock(nn.Module):
         ]
         return nn.Sequential(*layer)
 
-    def forward(self, x: torch.tensor) -> torch.tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         branch_1 = self.branch_1(x)
         branch_1 = F.upsample(branch_1, (x.size()[2], x.size()[3]), mode='bilinear')
 

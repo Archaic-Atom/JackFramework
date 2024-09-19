@@ -30,8 +30,8 @@ class CDAccuracy(MetaAccuracy):
         CDAccuracy.__CONFUSION_MATRIX = None
 
     @staticmethod
-    def generate_confusion_matrix(res: torch.tensor, gt: torch.tensor,
-                                  num_classes: int) -> torch.tensor:
+    def generate_confusion_matrix(res: torch.Tensor, gt: torch.Tensor,
+                                  num_classes: int) -> torch.Tensor:
         res = res.flatten()
         gt = gt.flatten()
         mask = (gt >= 0) & (gt < num_classes)
@@ -42,25 +42,25 @@ class CDAccuracy(MetaAccuracy):
         CDAccuracy.__CONFUSION_MATRIX = CDAccuracy.__TEMP_CONFUSION_MATRIX.cpu()
 
     @staticmethod
-    def oa_score(accumulate: bool = False) -> torch.tensor:
+    def oa_score(accumulate: bool = False) -> torch.Tensor:
         cm = CDAccuracy.get_cm(accumulate)
         tp = torch.diag(cm)
         return tp.sum() / (cm.sum() + CDAccuracy.ACC_EPSILON)
 
     @staticmethod
-    def precision_score(accumulate: bool = False) -> torch.tensor:
+    def precision_score(accumulate: bool = False) -> torch.Tensor:
         cm = CDAccuracy.get_cm(accumulate)
         tp = torch.diag(cm)
         return tp / (cm.sum(dim=0) + CDAccuracy.ACC_EPSILON)
 
     @staticmethod
-    def recall_score(accumulate: bool = False) -> torch.tensor:
+    def recall_score(accumulate: bool = False) -> torch.Tensor:
         cm = CDAccuracy.get_cm(accumulate)
         tp = torch.diag(cm)
         return tp / (cm.sum(dim=1) + CDAccuracy.ACC_EPSILON)
 
     @staticmethod
-    def iou_miou_score(accumulate: bool = False) -> torch.tensor:
+    def iou_miou_score(accumulate: bool = False) -> torch.Tensor:
         cm = CDAccuracy.get_cm(accumulate)
         tp = torch.diag(cm)
         each_class_counts = cm.sum(dim=1) + cm.sum(dim=0) - tp
@@ -69,7 +69,7 @@ class CDAccuracy(MetaAccuracy):
         return iou, miou
 
     @staticmethod
-    def f_score(accumulate: bool = False, beta: int = 1) -> torch.tensor:
+    def f_score(accumulate: bool = False, beta: int = 1) -> torch.Tensor:
         cm = CDAccuracy.get_cm(accumulate)
         tp = torch.diag(cm)
         precision = tp / (cm.sum(dim=0) + CDAccuracy.ACC_EPSILON)

@@ -1,0 +1,2 @@
+recursive-include JackFramework/Web/templates *
+recursive-include JackFramework/Web/static *

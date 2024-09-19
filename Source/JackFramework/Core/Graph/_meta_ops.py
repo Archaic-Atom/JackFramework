@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import os
 from abc import ABCMeta, abstractmethod
+from typing import TypeVar
 
 import torch
-import torch.nn as nn
+from torch import nn
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
-from typing import TypeVar
 
 import JackFramework.SysBasic.define as sys_define
 from JackFramework.SysBasic.log_handler import LogHandler as log
@@ -133,7 +133,7 @@ class MetaOps(UserModel):
                 self._model[i].eval()
 
     @staticmethod
-    def _reduce_tensor(data: torch.tensor) -> torch.tensor:
+    def _reduce_tensor(data: torch.Tensor) -> torch.Tensor:
         dist.all_reduce(data, op=dist.ReduceOp.SUM)
         return data
 

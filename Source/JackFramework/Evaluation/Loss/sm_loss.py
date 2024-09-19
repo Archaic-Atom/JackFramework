@@ -15,8 +15,8 @@ class SMLoss(MetaLoss):
         super().__init__()
 
     @staticmethod
-    def smooth_l1(res: torch.tensor, gt: torch.tensor, mask_threshold_min: int,
-                  mask_threshold_max: int) -> torch.tensor:
+    def smooth_l1(res: torch.Tensor, gt: torch.Tensor, mask_threshold_min: int,
+                  mask_threshold_max: int) -> torch.Tensor:
         mask = (gt > mask_threshold_min) & (gt < mask_threshold_max)
         mask.detach_()
         total_num = mask.int().sum() + SMLoss.LOSS_EPSILON

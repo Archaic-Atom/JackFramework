@@ -15,7 +15,7 @@ class ImgHandler(object):
         return imgs
 
     @staticmethod
-    def ssim(x: torch.tensor, y: torch.tensor) -> torch.tensor:
+    def ssim(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         c1 = 0.01 ** 2
         c2 = 0.03 ** 2
 

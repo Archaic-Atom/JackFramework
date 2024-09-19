@@ -13,9 +13,9 @@ class SMAccuracy(MetaAccuracy):
         super().__init__()
 
     @staticmethod
-    def d_1(res: torch.tensor, gt: torch.tensor, start_threshold: int = 2,
+    def d_1(res: torch.Tensor, gt: torch.Tensor, start_threshold: int = 2,
             threshold_num: int = 4, related_error: float = 0.05,
-            invalid_value: int = 0, max_disp: int = 192) -> torch.tensor:
+            invalid_value: int = 0, max_disp: int = 192) -> torch.Tensor:
         mask = (gt != invalid_value) & (gt < max_disp)
         mask.detach_()
         acc_res = []
@@ -33,12 +33,12 @@ class SMAccuracy(MetaAccuracy):
         return acc_res, mae
 
     @staticmethod
-    def r2_score(res: torch.tensor, gt: torch.tensor) -> torch.tensor:
+    def r2_score(res: torch.Tensor, gt: torch.Tensor) -> torch.Tensor:
         gt_mean = torch.mean(gt)
         ss_tot = torch.sum((gt - gt_mean) ** 2) + SMAccuracy.ACC_EPSILON
         ss_res = torch.sum((gt - res) ** 2)
         return ss_res / ss_tot
 
     @staticmethod
-    def rmspe_score(res: torch.tensor, gt: torch.tensor) -> torch.tensor:
+    def rmspe_score(res: torch.Tensor, gt: torch.Tensor) -> torch.Tensor:
         return torch.sqrt(torch.mean((res - gt) ** 2 / gt))

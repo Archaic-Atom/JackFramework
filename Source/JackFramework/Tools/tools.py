@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import torch
 import collections
+import torch
 
 try:
     collectionsAbc = collections.abc
@@ -20,7 +20,7 @@ class Tools(object):
         super().__init__()
 
     @staticmethod
-    def __one_hot_func(label: torch.tensor, num_classes: int) -> torch.tensor:
+    def __one_hot_func(label: torch.Tensor, num_classes: int) -> torch.Tensor:
         size = list(label.size())
         label = label.view(-1)
         ones = torch.sparse.torch.eye(num_classes)
@@ -30,7 +30,7 @@ class Tools(object):
         return ones.permute(2, 0, 1)
 
     @staticmethod
-    def get_one_hot(label: torch.tensor, num_classes: int) -> torch.tensor:
+    def get_one_hot(label: torch.Tensor, num_classes: int) -> torch.Tensor:
         off_set = 1
         batch, _, h, w = label.shape
         label_one_hot = torch.zeros([batch, num_classes, h, w], device=label.device)

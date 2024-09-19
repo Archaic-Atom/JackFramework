@@ -12,8 +12,9 @@ def get_all_pkg(lib_name: str) -> list:
 def install_lib(lib_name: str, all_pkg: list,
                 version: str, description: str,
                 author: str, lic: str) -> None:
-    setup(name=lib_name, packages=all_pkg, version=version,
-          description=description, author=author, license=lic,
+    setup(name=lib_name, packages=all_pkg, include_package_data=True,
+          version=version, description=description, author=author,
+          license=lic,
           )
 
 

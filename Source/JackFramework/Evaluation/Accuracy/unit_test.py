@@ -19,13 +19,13 @@ class AccuracyUnitTestFramework(object):
         super().__init__()
 
     @staticmethod
-    def _test_base_accuracy(pred: torch.tensor, gt: torch.tensor) -> None:
+    def _test_base_accuracy(pred: torch.Tensor, gt: torch.Tensor) -> None:
         print('------------------base accuracy------------------')
         rmse = BaseAccuracy.rmse_score(pred, gt)
         print('rmse:', rmse)
 
     @staticmethod
-    def _test_cd_accuracy(pred: torch.tensor, gt: torch.tensor) -> None:
+    def _test_cd_accuracy(pred: torch.Tensor, gt: torch.Tensor) -> None:
         CDAccuracy.generate_confusion_matrix(pred[:1], gt[:1], 2)
         print('---change detection accuracy(no accumulation)----')
         precision = CDAccuracy.precision_score()
@@ -61,7 +61,7 @@ class AccuracyUnitTestFramework(object):
         print(CDAccuracy.get_cm(True))
 
     @staticmethod
-    def _test_seg_accuracy(pred: torch.tensor, gt: torch.tensor) -> None:
+    def _test_seg_accuracy(pred: torch.Tensor, gt: torch.Tensor) -> None:
         print('------------------segmentation accuracy------------------')
         pa = SegAccuracy.pa_score(pred, gt, 2)
         print('pa:', pa)
@@ -82,7 +82,7 @@ class AccuracyUnitTestFramework(object):
         print('recall:', recall)
 
     @staticmethod
-    def read_img(path: str, idx: int) -> torch.tensor:
+    def read_img(path: str, idx: int) -> torch.Tensor:
         trans = tfs.ToTensor()
         img = trans(Image.open(path))
         pred = img[:, 2:-2, 2:258].unsqueeze(0).cuda(idx + 4)

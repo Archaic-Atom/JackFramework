@@ -14,6 +14,7 @@ def _get_graph_dict() -> dict:
         'background': BuildTestingGraph,
         'online': None,
         'reinforcement_learning': None,
+        'web': BuildTestingGraph
     }
 
 

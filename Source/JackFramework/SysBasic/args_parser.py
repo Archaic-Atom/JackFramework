@@ -47,6 +47,7 @@ class ArgsParser(object):
         parser.add_argument('--dist', default=sys_define.DIST, type=ArgsParser.__str2bool,
                             help='use DDP or DP')
         parser.add_argument('--debug', default=False, help='debug mode')
+        parser.add_argument('--web_cmd', type=str, default='main.py runserver 0.0.0.0:8000', help='django cmd')
         return parser
 
     @staticmethod
