@@ -36,7 +36,7 @@ class ShowProcess(object):
     def __generate_show_data(self, num_arrow: int, num_line: int, percent: float, show_info: str,
                              info_done: str, queue_size: str, rest_time: str) -> str:
         return f"[{self.__info}] [{'>' * num_arrow}{'-' * num_line}] " \
-            + f"{self.__counter} / {self.__max_steps}, {percent:.2f}%" \
+            + f"{self.__counter} / {self.__max_steps}, {percent:.2f}% " \
                + f"{show_info} {queue_size} {rest_time} {info_done} \r"
 
     def show_process(self, start_counter: int = None, show_info: str = '',
