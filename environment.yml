@@ -131,6 +131,7 @@ dependencies:
     - ipykernel==5.4.2
     - ipython==7.19.0
     - ipython-genutils==0.2.0
+    - django==5.1
     # - jackframework==0.1.1
     - jedi==0.18.0
     - jupyter-client==6.1.11
