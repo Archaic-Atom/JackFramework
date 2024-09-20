@@ -1,5 +1,4 @@
 [![build test](https://github.com/Archaic-Atom/JackFramework/actions/workflows/build%20test.yml/badge.svg?event=push)](https://github.com/Archaic-Atom/JackFramework/actions/workflows/build%20test.yml)
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/1996scarlet/Dense-Head-Pose-Estimation.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Archaic-Atom/JackFramework/context:python)
 ![Python 3.8](https://img.shields.io/badge/python-3.8-green.svg?style=plastic)
 ![Pytorch 1.7](https://img.shields.io/badge/PyTorch%20-%23EE4C2C.svg?style=plastic)
 ![cuDnn 7.3.6](https://img.shields.io/badge/cudnn-7.3.6-green.svg?style=plastic)
@@ -38,7 +37,7 @@ This framework is only used in GPUs.
 **1) Build env**
 ```
 $ conda env create -f environment.yml
-$ conda activate JackFramework-torch1.7.1
+$ conda activate JackFramework-torch2.3.1
 ```
 **2) Install the JackFramework lib**
 ```
@@ -56,32 +55,33 @@ you can find the template project in: https://github.com/Archaic-Atom/FameworkTe
 you can find the demo project in: https://github.com/Archaic-Atom/Demo-jf
 
 **Related Arguments for training or testing process**
-|   Args        |   Type  |      Description                 | Default         |
-|:-------------:|:-------:|:--------------------------------:|:---------------:|
-| mode          |  [str]  |         train or test            |  train          |
-| gpu           |  [int]  |        the number of gpus        |    2            |
-| auto_save_num |  [int]  | the number of interval save      |    1            |
-| dataloaderNum |  [int]  |  the number of dataloader        |    8            |
-| pretrain      |  [bool] |    is a new training process     |  False          |
-| ip            |  [str]  | used for distributed training    | 127.0.0.1       |
-| port          |  [str]  | used for distributed training    | 8086            |
-| dist          |  [bool] | distributed training (DDP)       | True            |
-| trainListPath |  [str]  | the list for training or testing | ./Datasets/*.csv|
-| valListPath   |  [str]  | the list for validate process    | ./Datasets/*.csv|
-| outputDir     |  [str]  | the folder for log file          | ./Result/       |
-| modelDir      |  [str]  | the folder for saving model      | ./Checkpoint/   |
-| resultImgDir  |  [str]  | the folder for output            | ./ResultImg/    |
-| log           |  [str]  | the folder for tensorboard       | ./log/          |
-| sampleNum     |  [int]  | the number of sample for data    | 1               |
-| batchSize     |  [int]  | batch size                       | 4               |
-| lr            |  [float]| learning rate                    | 0.001           |
-| maxEpochs     |  [int]  | training epoch                   | 30              |
-| imgWidth      |  [int]  | the cutting width                | 512             |
-| imgHeight     |  [int]  | the cutting height               | 256             |
-| imgNum        |  [int]  | the number of images for training| 35354           |
-| valImgNum     |  [int]  | the number of images for val     | 200             |
-| modelName     |  [str]  | the model's name                 | NLCA-Net        |
-| dataset       |  [str]  | the dataset's name               | SceneFlow       |
+|   Args        |   Type  |      Description                 | Default                          |
+|:-------------:|:-------:|:--------------------------------:|:--------------------------------:|
+| mode          |  [str]  |         train or test            |  train                           |
+| gpu           |  [int]  |        the number of gpus        |    2                             |
+| auto_save_num |  [int]  | the number of interval save      |    1                             |
+| dataloaderNum |  [int]  |  the number of dataloader        |    8                             |
+| pretrain      |  [bool] |    is a new training process     |  False                           |
+| ip            |  [str]  | used for distributed training    | 127.0.0.1                        |
+| port          |  [str]  | used for distributed training    | 8086                             |
+| dist          |  [bool] | distributed training (DDP)       | True                             |
+| trainListPath |  [str]  | the list for training or testing | ./Datasets/*.csv                 |
+| valListPath   |  [str]  | the list for validate process    | ./Datasets/*.csv                 |
+| outputDir     |  [str]  | the folder for log file          | ./Result/                        |
+| modelDir      |  [str]  | the folder for saving model      | ./Checkpoint/                    |
+| resultImgDir  |  [str]  | the folder for output            | ./ResultImg/                     |
+| log           |  [str]  | the folder for tensorboard       | ./log/                           |
+| sampleNum     |  [int]  | the number of sample for data    | 1                                |
+| batchSize     |  [int]  | batch size                       | 4                                |
+| lr            |  [float]| learning rate                    | 0.001                            |
+| maxEpochs     |  [int]  | training epoch                   | 30                               |
+| imgWidth      |  [int]  | the cutting width                | 512                              |
+| imgHeight     |  [int]  | the cutting height               | 256                              |
+| imgNum        |  [int]  | the number of images for training| 35354                            |
+| valImgNum     |  [int]  | the number of images for val     | 200                              |
+| modelName     |  [str]  | the model's name                 | NLCA-Net                         |
+| dataset       |  [str]  | the dataset's name               | SceneFlow                        |
+| web_cmd       |  [str]  | cmd for django                   | 'main.py runserver 0.0.0.0:8000' |
 
 
 **5) Clean the project (if you want to clean generating files)**
@@ -102,6 +102,7 @@ $ ./clean.sh
 |   |   ├── SysBasic/
 |   |   ├── UserTemplate/
 |   |   ├── FileHandler/ 
+|   |   ├── Web/ 
 │   |   └── ...
 │   ├── setup.py
 │   └── ...

@@ -222,7 +222,7 @@ dependencies:
       - argparse==1.4.0
       - automat==22.10.0
       - buildtools==1.0.6
-      - causal-conv1d==1.2.2.post1
+#     - causal-conv1d==1.2.2.post1
       - constantly==23.10.4
       - dinov2==0.0.1
       - docopt==0.6.2
