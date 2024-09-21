@@ -24,6 +24,7 @@
       - pillow >=8.0.1
       - opencv
       - tensorboard >=2.10.0
+      - django
 
   test:
     imports:
