@@ -21,10 +21,8 @@ class Views(object):
 
     @staticmethod
     def get_abs_path(root_folder: str, file_list: list) -> str:
-        res = []
-        for file_name in file_list:
-            res.append(os.path.join(root_folder, os.path.basename(file_name)))
-        return res
+        return [os.path.join(
+            root_folder, os.path.basename(file_name)) for file_name in file_list]
 
     @staticmethod
     def create_folder() -> tuple:
@@ -40,12 +38,9 @@ class Views(object):
     @staticmethod
     def receive_files(files: django.http.HttpRequest,
                       uploads_folder: str) -> list:
-        files_path = []
-        for f in files:
-            fs = FileSystemStorage(uploads_folder)
-            files_path.append(os.path.join(
-                settings.MEDIA_URL, Views.UPLOADS_FOLDER, fs.save(f.name, f)))
-        return files_path
+        fs = FileSystemStorage(uploads_folder)
+        return [os.path.join(
+            settings.MEDIA_URL, Views.UPLOADS_FOLDER, fs.save(f.name, f)) for f in files]
 
     @staticmethod
     def web_proc(files_path: list, uploads_folder: str, result_folder: str) -> list:
@@ -57,23 +52,23 @@ class Views(object):
 
     @staticmethod
     def generate_results_path(res_files: list) -> list:
-        res_files_path = []
-        for item in res_files:
-            res_files_path.append(
-                os.path.join(settings.MEDIA_URL, Views.RESULT_FOLDER, item))
-        return res_files_path
+        return [os.path.join(
+            settings.MEDIA_URL, Views.RESULT_FOLDER, item) for item in res_files]
 
     @staticmethod
     def run(request: django.http.HttpRequest) -> django.shortcuts:
         files_path, res_files_path = None, None
         if request.method == 'POST':
-            files = request.FILES.getlist('images')
-            result_folder, uploads_folder = Views.create_folder()
-            files_path = Views.receive_files(files, uploads_folder)
-            res_files = Views.web_proc(files_path, uploads_folder, result_folder)
+            try:
+                files = request.FILES.getlist('images')
+                result_folder, uploads_folder = Views.create_folder()
+                files_path = Views.receive_files(files, uploads_folder)
+                res_files = Views.web_proc(files_path, uploads_folder, result_folder)
 
-            if res_files is not False:
-                res_files_path = Views.generate_results_path(res_files)
+                if res_files is not False:
+                    res_files_path = Views.generate_results_path(res_files)
+            except Exception as e:
+                log.error(f"An error occurred during processing: {str(e)}")
 
         return render(request, 'webapp/index.html',
                       {'images': files_path, 'res_images': res_files_path})
