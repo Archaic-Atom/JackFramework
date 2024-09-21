@@ -36,7 +36,5 @@ class UserDataloader(object):
         return self.__jf_data_handler.load_test_data(cmd)
 
     def user_save_test_data(self, output_data: list, supplement: list, cmd: str) -> None:
-        res = []
-        for idx, output_item in enumerate(output_data):
-            res.append(self.__jf_data_handler.save_test_data(output_item, supplement, cmd, idx))
-        return res
+        return [self.__jf_data_handler.save_test_data(
+                output_item, supplement, cmd, idx) for idx, output_item in enumerate(output_data)]

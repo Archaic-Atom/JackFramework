@@ -29,13 +29,19 @@ class WebServer(object):
         sys.path.append(str(Path(__file__).resolve().parent))
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jackframework_webserver.settings')
 
-    def start_web(self) -> None:
-        args = self.__args
-        django.setup()
+    def _run_web_server(self) -> None:
         call_command('makemigrations')
         call_command('migrate')
-        log.info(f'the web cmd: {args.web_cmd}')
-        execute_from_command_line(args.web_cmd.split(' '))
+        log.info(f'the web cmd: {self.__args.web_cmd}')
+        execute_from_command_line(self.__args.web_cmd.split(' '))
+
+    def start_web(self) -> None:
+        try:
+            django.setup()
+        except Exception as e:
+            log.error(f"Failed to start web server: {e}")
+            raise
+        self._run_web_server()
 
     def exec(self) -> None:
         self.set_env()
