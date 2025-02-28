@@ -86,6 +86,8 @@ class ArgsParser(object):
                             help="Image's width. e.g. 512, In the training process is Clipped size")
         parser.add_argument('--imgHeight', default=sys_define.IMAGE_HEIGHT, type=int,
                             help="Image's width. e.g. 256, In the training process is Clipped size")
+        parser.add_argument('--size_magnification', default=sys_define.SIZE_MAGNIFICATION, type=int,
+                            help="size magnification. e.g. 14, 32.")
         parser.add_argument('--imgNum', default=sys_define.IMG_NUM, type=int,
                             help="The number of training images")
         parser.add_argument('--valImgNum', default=sys_define.VAL_IMG_NUM, type=int,
