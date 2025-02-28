@@ -38,6 +38,7 @@ PIPE_READ_PATH = '/tmp/jf_pipe.out'
 # We ues this data to pad the image in testing process.
 IMAGE_HEIGHT = 256
 IMAGE_WIDTH = 256
+SIZE_MAGNIFICATION = 14
 # the sample number
 SAMPLE_NUM = 128
 # the number of test
