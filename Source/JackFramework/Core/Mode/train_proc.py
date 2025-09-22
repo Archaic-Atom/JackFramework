@@ -81,13 +81,16 @@ class TrainProc(MetaMode):
         self._graph.cleanup()
         log.info("Finish training process!")
 
-    def __training_loop(self) -> None:
+    def __training_loop(self, rank: int = None) -> None:
         log.info("Start iteration!")
         for epoch in range(self.__args.maxEpochs):
             self.__executor_training_proc(epoch)
             self.__executor_val_proc(epoch)
             if self.__args.dist:
-                dist.barrier()
+                try:
+                    dist.barrier(device_ids=[rank])
+                except TypeError:
+                    dist.barrier()
             self._save_model(epoch)
 
     def __preparation_proc(self) -> None:
