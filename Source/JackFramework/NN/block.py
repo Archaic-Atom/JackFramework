@@ -19,7 +19,7 @@ class Res2DBlock(nn.Module):
         super().__init__()
         self.conv_2d_layer_1 = Layer.conv_2d_layer(in_channels, out_channels, kernel_size,
                                                    stride, padding, dilation, norm=norm, act=act)
-        self.conv_2d_layer_2 = Layer.conv_2d_layer(in_channels, out_channels, kernel_size,
+        self.conv_2d_layer_2 = Layer.conv_2d_layer(out_channels, out_channels, kernel_size,
                                                    padding=padding, dilation=dilation, norm=norm)
         self.downsample = downsample
         self.act_layer = act()
@@ -31,7 +31,8 @@ class Res2DBlock(nn.Module):
         x = self.conv_2d_layer_2(x)
 
         if self.downsample is not None:
-            identity = self.downsample(x)
+            # Align the shortcut with the main path when stride or channels change.
+            identity = self.downsample(identity)
 
         x += identity
         x = self.act_layer(x)
@@ -65,7 +66,8 @@ class Bottleneck2DBlock(nn.Module):
         x = self.conv_2d_layer_3(x)
 
         if self.downsample is not None:
-            identity = self.downsample(x)
+            # Keep residual tensor compatible with the bottleneck output.
+            identity = self.downsample(identity)
 
         x += identity
         x = self.act_layer(x)
@@ -84,7 +86,7 @@ class Res3DBlock(nn.Module):
             in_channels, out_channels, kernel_size, stride, padding,
             norm=norm, act=act)
         self.conv_3d_layer_2 = Layer.conv_3d_layer(
-            in_channels, out_channels, kernel_size, norm=norm)
+            out_channels, out_channels, kernel_size, norm=norm)
         self.downsample = downsample
         self.act_layer = act()
 
@@ -95,7 +97,8 @@ class Res3DBlock(nn.Module):
         x = self.conv_3d_layer_2(x)
 
         if self.downsample is not None:
-            identity = self.downsample(x)
+            # Downsample only the residual branch to preserve reference features.
+            identity = self.downsample(identity)
 
         x += identity
         x = self.act_layer(x)
@@ -130,7 +133,8 @@ class Bottleneck3DBlock(nn.Module):
         x = self.conv_3d_layer_3(x)
 
         if self.downsample is not None:
-            identity = self.downsample(x)
+            # Keep residual tensor compatible with the bottleneck output.
+            identity = self.downsample(identity)
 
         x += identity
         x = self.act_layer(x)
@@ -152,23 +156,20 @@ class ASPPBlock(nn.Module):
         else:
             raise NotImplementedError
 
-        self.block_1 = Layer.conv_2d_layer(in_channels, out_channels, 1, padding=0,
-                                           dilation=1, norm=norm, act=act)
-        self.block_2 = Layer.conv_2d_layer(in_channels, out_channels, 3, padding=dilation[0],
-                                           dilation=dilation[0], norm=norm, act=act)
-        self.block_3 = Layer.conv_2d_layer(in_channels, out_channels, 3, padding=dilation[1],
-                                           dilation=dilation[1], norm=norm, act=act)
-        self.block_4 = Layer.conv_2d_layer(in_channels, out_channels, 3, padding=dilation[2],
-                                           dilation=dilation[2], norm=norm, act=act)
+        # Build atrous branches dynamically to avoid copy-paste maintenance errors.
+        self.blocks = nn.ModuleList()
+        self.blocks.append(Layer.conv_2d_layer(in_channels, out_channels, 1, padding=0,
+                                               dilation=1, norm=norm, act=act))
+        for rate in dilation:
+            self.blocks.append(Layer.conv_2d_layer(
+                in_channels, out_channels, 3, padding=rate,
+                dilation=rate, norm=norm, act=act))
 
     # noinspection PyCallingNonCallable
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        branch_1 = self.block_1(x)
-        branch_2 = self.block_2(x)
-        branch_3 = self.block_3(x)
-        branch_4 = self.block_4(x)
-        x = torch.cat((branch_1, branch_2, branch_3, branch_4), dim=1)
-        return x
+        # Aggregate multi-scale context features from each atrous branch.
+        branches = [block(x) for block in self.blocks]
+        return torch.cat(branches, dim=1)
 
 
 class SPPBlock(nn.Module):
@@ -180,12 +181,14 @@ class SPPBlock(nn.Module):
         super().__init__()
         self.act = act
         self.norm = norm
-        self.branch_1 = self.__make_block(in_channels, out_channels, 64)
-        self.branch_2 = self.__make_block(in_channels, out_channels, 32)
-        self.branch_3 = self.__make_block(in_channels, out_channels, 16)
-        self.branch_4 = self.__make_block(in_channels, out_channels, 8)
+        self.pool_sizes = (64, 32, 16, 8)
+        # Pre-build pooling branches so forward can simply iterate over them.
+        self.branches = nn.ModuleList(
+            self.__make_block(in_channels, out_channels, pool_size)
+            for pool_size in self.pool_sizes
+        )
 
-    def __make_block(self, in_channels: int, out_channels: int, ave_pool_size: int):
+    def __make_block(self, in_channels: int, out_channels: int, ave_pool_size: int) -> nn.Sequential:
         layer = [
             nn.AvgPool2d((ave_pool_size, ave_pool_size), stride=(ave_pool_size, ave_pool_size),),
             Layer.conv_2d_layer(in_channels, out_channels, kernel_size=1,
@@ -194,17 +197,11 @@ class SPPBlock(nn.Module):
         return nn.Sequential(*layer)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        branch_1 = self.branch_1(x)
-        branch_1 = F.upsample(branch_1, (x.size()[2], x.size()[3]), mode='bilinear')
+        target_size = x.size()[2:]
+        branches = []
+        for branch in self.branches:
+            pooled = branch(x)
+            # Upsample pooled features back to the original spatial resolution.
+            branches.append(F.interpolate(pooled, size=target_size, mode='bilinear', align_corners=False))
 
-        branch_2 = self.branch_2(x)
-        branch_2 = F.upsample(branch_2, (x.size()[2], x.size()[3]), mode='bilinear')
-
-        branch_3 = self.branch_3(x)
-        branch_3 = F.upsample(branch_3, (x.size()[2], x.size()[3]), mode='bilinear')
-
-        branch_4 = self.branch_4(x)
-        branch_4 = F.upsample(branch_4, (x.size()[2], x.size()[3]), mode='bilinear')
-
-        x = torch.cat((branch_1, branch_2, branch_3, branch_4), dim=1)
-        return x
+        return torch.cat(branches, dim=1)

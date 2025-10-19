@@ -15,10 +15,13 @@ class BackGround(InterfaceMode):
                  is_training: bool = False) -> None:
         super().__init__(args, user_inference_func, is_training)
         log.warning('background mode does not support distributed')
-        assert not args.dist and not is_training and args.batchSize == 1
+        if args.dist or is_training or args.batchSize != 1:
+            raise ValueError('background mode requires non-distributed inference with batchSize == 1.')
         self.__named_pipe = None
 
     def __init_setting(self) -> object:
+        if self._graph is None:
+            raise RuntimeError('Graph not initialised before starting background mode.')
         graph = self._graph
         graph.restore_model()
         graph.set_model_mode(False)
@@ -48,7 +51,10 @@ class BackGround(InterfaceMode):
                 named_pipe.send(self.__RELY_ERROR)
 
     def exec(self, rank: int = None) -> None:
-        assert rank is None and self.__named_pipe is None
+        if rank is not None:
+            raise ValueError('background mode runs on a single process and does not accept rank.')
+        if self.__named_pipe is not None:
+            raise RuntimeError('background mode has already been initialised.')
         self._init_data_model_handler(rank)
         log.info('background mode starts')
         named_pipe = self.__init_setting()

@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
+"""Base accuracy helpers providing common configuration."""
+
 from abc import ABCMeta
 
 
-class MetaAccuracy(object):
-    __metaclass__ = ABCMeta
-    __META_ACCURACY_INSTANCE = None
+class MetaAccuracy(object, metaclass=ABCMeta):
     ACC_EPSILON = 1e-9
 
-    def __new__(cls) -> object:
-        if cls.__META_ACCURACY_INSTANCE is None:
-            cls.__META_ACCURACY_INSTANCE = object.__new__(cls)
-        return cls.__META_ACCURACY_INSTANCE
-
     @property
-    def epsilon(self):
+    def epsilon(self) -> float:
         return self.ACC_EPSILON

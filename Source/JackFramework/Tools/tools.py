@@ -1,14 +1,20 @@
 # -*- coding: utf-8 -*-
-import collections
+"""Common utility helpers used across JackFramework."""
+
+from typing import Any, List
+
 import torch
+import torch.nn.functional as F
 
 try:
-    collectionsAbc = collections.abc
-except AttributeError:
-    collectionsAbc = collections
+    from collections.abc import Iterable as IterableType
+except ImportError:  # pragma: no cover - compatibility with older Python versions
+    from collections import Iterable as IterableType  # type: ignore
 
 
 class Tools(object):
+    """Singleton collection of lightweight utility helpers."""
+
     __TOOLS_INSTANCE = None
 
     def __new__(cls, *args: str, **kwargs: str) -> object:
@@ -20,33 +26,36 @@ class Tools(object):
         super().__init__()
 
     @staticmethod
-    def __one_hot_func(label: torch.Tensor, num_classes: int) -> torch.Tensor:
-        size = list(label.size())
-        label = label.view(-1)
-        ones = torch.sparse.torch.eye(num_classes)
-        ones = ones.index_select(0, label.long())
-        size.append(num_classes)
-        ones = ones.view(*size)
-        return ones.permute(2, 0, 1)
-
-    @staticmethod
     def get_one_hot(label: torch.Tensor, num_classes: int) -> torch.Tensor:
-        off_set = 1
-        batch, _, h, w = label.shape
-        label_one_hot = torch.zeros([batch, num_classes, h, w], device=label.device)
-        for b in range(batch):
-            label_one_hot[b:b + off_set] = Tools.__one_hot_func(label[b, 0], num_classes)
-        return label_one_hot
+        """Convert integer segmentation labels to a dense one-hot tensor."""
+
+        if label.dim() not in {3, 4}:
+            raise ValueError('Label tensor must be 3D or 4D for one-hot conversion.')
+
+        if label.dim() == 4:
+            if label.size(1) != 1:
+                raise ValueError('Expected label tensor with a single channel.')
+            label = label.squeeze(1)
+
+        label_long = label.long()
+        one_hot = F.one_hot(label_long, num_classes=num_classes)  # shape: [B, H, W, C]
+        one_hot = one_hot.permute(0, 3, 1, 2).contiguous()
+        return one_hot.to(dtype=torch.float32, device=label.device)
 
     @staticmethod
-    def convert2list(data_object: any) -> list:
-        if isinstance(data_object, collectionsAbc.Iterable)\
-                and not isinstance(data_object, torch.Tensor):
+    def convert2list(data_object: Any) -> List[Any]:
+        """Ensure an object is represented as a list without touching tensors."""
+
+        if isinstance(data_object, torch.Tensor):
+            return [data_object]
+
+        if isinstance(data_object, IterableType) and not isinstance(data_object, (str, bytes)):
             return list(data_object)
+
         return [data_object]
 
 
-def debug_main():
+def debug_main() -> None:
     tools = Tools()
     # class object
     res = tools

@@ -5,7 +5,8 @@ from JackFramework.UserTemplate import DataHandlerTemplate
 class UserDataloader(object):
     def __init__(self, args: object, jf_data_handler: object) -> None:
         super().__init__()
-        assert isinstance(jf_data_handler, DataHandlerTemplate)
+        if not isinstance(jf_data_handler, DataHandlerTemplate):
+            raise TypeError('jf_data_handler must implement DataHandlerTemplate.')
         self.__args = args
         self.__jf_data_handler = jf_data_handler
 

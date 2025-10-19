@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import torch
+from typing import Optional, Tuple
 
 try:
     from ._meta_accuracy import MetaAccuracy
@@ -8,71 +9,71 @@ except ImportError:
 
 
 class CDAccuracy(MetaAccuracy):
-    """
-    docstring for accuracy of change detection task
+    """Change detection metrics using cached confusion matrices."""
 
-    If the key arg: accumulate is True, the functions will compute
-    all scores by accumulated confusion matrix. Otherwise, by the
-    confusion matrix of current mini-batch data.
-    """
-    __CONFUSION_MATRIX = None
-    __TEMP_CONFUSION_MATRIX = None
+    _CONFUSION_MATRIX: Optional[torch.Tensor] = None
+    _LAST_CONFUSION_MATRIX: Optional[torch.Tensor] = None
 
-    def __init__(self):
-        super().__init__()
+    @classmethod
+    def reset_cm(cls) -> None:
+        cls._CONFUSION_MATRIX = None
+        cls._LAST_CONFUSION_MATRIX = None
 
-    @staticmethod
-    def get_cm(accumulate: bool = False):
-        return CDAccuracy.__CONFUSION_MATRIX if accumulate else CDAccuracy.__TEMP_CONFUSION_MATRIX
-
-    @staticmethod
-    def reset_cm():
-        CDAccuracy.__CONFUSION_MATRIX = None
-
-    @staticmethod
-    def generate_confusion_matrix(res: torch.Tensor, gt: torch.Tensor,
-                                  num_classes: int) -> torch.Tensor:
-        res = res.flatten()
-        gt = gt.flatten()
+    @classmethod
+    def generate_confusion_matrix(cls, res: torch.Tensor, gt: torch.Tensor,
+                                  num_classes: int, accumulate: bool = True) -> torch.Tensor:
+        res = res.flatten().to(torch.int64)
+        gt = gt.flatten().to(torch.int64)
         mask = (gt >= 0) & (gt < num_classes)
-        CDAccuracy.__TEMP_CONFUSION_MATRIX = torch.bincount(
-            num_classes * gt[mask].int() + res[mask].int(),
-            minlength=num_classes ** 2).reshape(num_classes, num_classes)
-        print(CDAccuracy.__TEMP_CONFUSION_MATRIX)
-        CDAccuracy.__CONFUSION_MATRIX = CDAccuracy.__TEMP_CONFUSION_MATRIX.cpu()
+        cm = torch.bincount(
+            num_classes * gt[mask] + res[mask],
+            minlength=num_classes ** 2,
+        ).reshape(num_classes, num_classes)
+        cls._LAST_CONFUSION_MATRIX = cm
+        if accumulate:
+            cls._CONFUSION_MATRIX = cm if cls._CONFUSION_MATRIX is None else cls._CONFUSION_MATRIX + cm
+        return cm
 
-    @staticmethod
-    def oa_score(accumulate: bool = False) -> torch.Tensor:
-        cm = CDAccuracy.get_cm(accumulate)
+    @classmethod
+    def _select_cm(cls, accumulate: bool) -> torch.Tensor:
+        cm = cls._CONFUSION_MATRIX if accumulate else cls._LAST_CONFUSION_MATRIX
+        if cm is None:
+            raise RuntimeError('Confusion matrix not generated yet. Call `generate_confusion_matrix` first.')
+        return cm.to(torch.float32)
+
+    @classmethod
+    def oa_score(cls, accumulate: bool = False) -> torch.Tensor:
+        cm = cls._select_cm(accumulate)
         tp = torch.diag(cm)
-        return tp.sum() / (cm.sum() + CDAccuracy.ACC_EPSILON)
+        return tp.sum() / (cm.sum() + cls.epsilon)
 
-    @staticmethod
-    def precision_score(accumulate: bool = False) -> torch.Tensor:
-        cm = CDAccuracy.get_cm(accumulate)
+    @classmethod
+    def precision_score(cls, accumulate: bool = False) -> torch.Tensor:
+        cm = cls._select_cm(accumulate)
         tp = torch.diag(cm)
-        return tp / (cm.sum(dim=0) + CDAccuracy.ACC_EPSILON)
+        return tp / (cm.sum(dim=0) + cls.epsilon)
 
-    @staticmethod
-    def recall_score(accumulate: bool = False) -> torch.Tensor:
-        cm = CDAccuracy.get_cm(accumulate)
+    @classmethod
+    def recall_score(cls, accumulate: bool = False) -> torch.Tensor:
+        cm = cls._select_cm(accumulate)
         tp = torch.diag(cm)
-        return tp / (cm.sum(dim=1) + CDAccuracy.ACC_EPSILON)
+        return tp / (cm.sum(dim=1) + cls.epsilon)
 
-    @staticmethod
-    def iou_miou_score(accumulate: bool = False) -> torch.Tensor:
-        cm = CDAccuracy.get_cm(accumulate)
+    @classmethod
+    def iou_miou_score(cls, accumulate: bool = False) -> Tuple[torch.Tensor, torch.Tensor]:
+        cm = cls._select_cm(accumulate)
         tp = torch.diag(cm)
         each_class_counts = cm.sum(dim=1) + cm.sum(dim=0) - tp
-        iou = tp / (each_class_counts + CDAccuracy.ACC_EPSILON)
+        iou = tp / (each_class_counts + cls.epsilon)
         miou = torch.mean(iou)
         return iou, miou
 
-    @staticmethod
-    def f_score(accumulate: bool = False, beta: int = 1) -> torch.Tensor:
-        cm = CDAccuracy.get_cm(accumulate)
+    @classmethod
+    def f_score(cls, accumulate: bool = False, beta: int = 1) -> torch.Tensor:
+        cm = cls._select_cm(accumulate)
         tp = torch.diag(cm)
-        precision = tp / (cm.sum(dim=0) + CDAccuracy.ACC_EPSILON)
-        recall = tp / (cm.sum(dim=1) + CDAccuracy.ACC_EPSILON)
-        return ((1 + beta ** 2) * precision * recall /
-                (precision * beta ** 2 + recall + CDAccuracy.ACC_EPSILON))
+        precision = tp / (cm.sum(dim=0) + cls.epsilon)
+        recall = tp / (cm.sum(dim=1) + cls.epsilon)
+        beta_sq = beta ** 2
+        return ((1 + beta_sq) * precision * recall /
+                (precision * beta_sq + recall + cls.epsilon))

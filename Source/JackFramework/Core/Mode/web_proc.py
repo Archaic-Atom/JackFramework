@@ -25,13 +25,16 @@ class WebProc(InterfaceMode):
         return WebProc.__WEB_HANDLER
 
     def __init_setting(self) -> object:
+        if self._graph is None:
+            raise RuntimeError('Graph not initialised before starting web mode.')
         graph = self._graph
         graph.restore_model()
         graph.set_model_mode(False)
         graph.user_pretreatment(None)
 
     def exec(self, rank: int = None) -> None:
-        assert rank is None
+        if rank is not None:
+            raise ValueError('web mode runs on a single process and does not accept rank.')
         self._init_data_model_handler(rank)
         log.info('web mode starts')
         self.__init_setting()

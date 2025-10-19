@@ -1,129 +1,113 @@
 [![build test](https://github.com/Archaic-Atom/JackFramework/actions/workflows/build%20test.yml/badge.svg?event=push)](https://github.com/Archaic-Atom/JackFramework/actions/workflows/build%20test.yml)
-![Python 3.8](https://img.shields.io/badge/python-3.8-green.svg?style=plastic)
-![Pytorch 1.7](https://img.shields.io/badge/PyTorch%20-%23EE4C2C.svg?style=plastic)
-![cuDnn 7.3.6](https://img.shields.io/badge/cudnn-7.3.6-green.svg?style=plastic)
+![Python 3.10](https://img.shields.io/badge/python-3.10-green.svg?style=plastic)
+![PyTorch 2.4](https://img.shields.io/badge/PyTorch-2.4-orange.svg?style=plastic)
+![cuDNN 9.1](https://img.shields.io/badge/cuDNN-9.1-blue.svg?style=plastic)
 ![License MIT](https://img.shields.io/badge/license-MIT-green.svg?style=plastic)
 
->This is a training framework based on PyTorch, which is used to rapidly build the model, without caring about the training process (such as DDP or DP, Tensorboard, et al.). The demo for use can be found in FrameworkTemplate (https://github.com/Archaic-Atom/Template-jf). if you have any questions, please send an e-mail to raoxi36@foxmail.com
->
-Document：https://www.wolai.com/archaic-atom/rqKJVi7M1x44mPT8CdM1TL
+> JackFramework is a lightweight training orchestration layer on top of PyTorch. It standardises data/model wiring, distributed execution, logging and persistence so you can focus on modelling. A runnable template project lives at https://github.com/Archaic-Atom/Template-jf. Questions? raoxi36@foxmail.com
 
-Demo Project: https://github.com/Archaic-Atom/Demo-jf
+## Highlights
+- PyTorch 2.x ready with both DataParallel and DistributedDataParallel paths.
+- Clean separation between user code and framework glue through `ModelHandlerTemplate`, `DataHandlerTemplate`, and `NetWorkInferenceTemplate`.
+- Multiple execution modes (`train`, `test`, `background`, `web`) controlled by a unified application entrypoint.
+- Rich observability: colourised logging, TensorBoard scalars, progress bars, resumable checkpoints.
+- Safer runtime: explicit argument validation, defensive error handling, and clearer failure modes after the latest refactor.
 
---- 
-#### 1. Software Environment
-**1) OS Environment**
-```
-$ os >= linux 16.04
-$ cudaToolKit >= 10.1
-$ cudnn >= 7.3.6
-```
+## Requirements
+| Component | Recommended |
+|-----------|-------------|
+| OS        | Linux 16.04+ with CUDA-capable GPUs |
+| Python    | 3.10 (matches `environment.yml`) |
+| PyTorch   | 2.4.1 with CUDA 11.8 / cuDNN 9.1 |
+| Optional  | TensorBoard for visualisation, Django for the web mode |
 
-**2) Python Environment**
-```
-$ python == 3.8.5
-$ pythorch >= 1.15.0
-$ numpy == 1.14.5
-$ opencv == 3.4.0
-$ PIL == 5.1.0
-```
+For an exact reproducible environment use the provided Conda spec (`environment.yml`).
 
----
-#### 2. Hardware Environment
-This framework is only used in GPUs.
+## Installation
+```bash
+# create and activate the suggested environment
+conda env create -f environment.yml
+conda activate JackFramework-torch2.3.1
 
----
-#### 3. How to use our framework:
-**1) Build env**
-```
-$ conda env create -f environment.yml
-$ conda activate JackFramework-torch2.3.1
-```
-**2) Install the JackFramework lib**
-```
-$ ./install.sh
-```
-**3) Check the version (optional)**
-```
-$ python -c "import JackFramework as jf; print(jf.version())"
+# install JackFramework into the active environment
+./install.sh
+
+# sanity check
+python -c "import JackFramework as jf; print(jf.version())"
 ```
 
-**4) the template for using the JackFramework**
+To remove generated artifacts (logs, checkpoints, build outputs) run `./clean.sh`.
 
-you can find the template project in: https://github.com/Archaic-Atom/FameworkTemplate
+## Usage Overview
+1. **Implement the user interface** by subclassing `NetWorkInferenceTemplate`. Return your `ModelHandlerTemplate` and `DataHandlerTemplate` implementations from `inference`, and extend the CLI parser if you need custom flags.
+2. **Instantiate the framework** with your interface and kick off a mode:
+    ```python
+    from JackFramework import Application
+    from your_project.interface import UserInterface
 
-you can find the demo project in: https://github.com/Archaic-Atom/Demo-jf
+    if __name__ == '__main__':
+        Application(UserInterface(), application_name='StereoDepth').start()
+    ```
+3. **Provide dataset/model handlers** by extending the templates in `JackFramework/UserTemplate`. These supply model construction, optimisation, loss/metric computation, data loading, and result persistence hooks.
 
-**Related Arguments for training or testing process**
-|   Args        |   Type  |      Description                 | Default                          |
-|:-------------:|:-------:|:--------------------------------:|:--------------------------------:|
-| mode          |  [str]  |         train or test            |  train                           |
-| gpu           |  [int]  |        the number of gpus        |    2                             |
-| auto_save_num |  [int]  | the number of interval save      |    1                             |
-| dataloaderNum |  [int]  |  the number of dataloader        |    8                             |
-| pretrain      |  [bool] |    is a new training process     |  False                           |
-| ip            |  [str]  | used for distributed training    | 127.0.0.1                        |
-| port          |  [str]  | used for distributed training    | 8086                             |
-| dist          |  [bool] | distributed training (DDP)       | True                             |
-| trainListPath |  [str]  | the list for training or testing | ./Datasets/*.csv                 |
-| valListPath   |  [str]  | the list for validate process    | ./Datasets/*.csv                 |
-| outputDir     |  [str]  | the folder for log file          | ./Result/                        |
-| modelDir      |  [str]  | the folder for saving model      | ./Checkpoint/                    |
-| resultImgDir  |  [str]  | the folder for output            | ./ResultImg/                     |
-| log           |  [str]  | the folder for tensorboard       | ./log/                           |
-| sampleNum     |  [int]  | the number of sample for data    | 1                                |
-| batchSize     |  [int]  | batch size                       | 4                                |
-| lr            |  [float]| learning rate                    | 0.001                            |
-| maxEpochs     |  [int]  | training epoch                   | 30                               |
-| imgWidth      |  [int]  | the cutting width                | 512                              |
-| imgHeight     |  [int]  | the cutting height               | 256                              |
-| imgNum        |  [int]  | the number of images for training| 35354                            |
-| valImgNum     |  [int]  | the number of images for val     | 200                              |
-| modelName     |  [str]  | the model's name                 | NLCA-Net                         |
-| dataset       |  [str]  | the dataset's name               | SceneFlow                        |
-| web_cmd       |  [str]  | cmd for django                   | 'main.py runserver 0.0.0.0:8000' |
+### Supported Modes
+| Mode | Description |
+| ---- | ----------- |
+| `train` | Runs the training + optional validation loop, supports DP/DDP, TensorBoard, auto checkpointing. |
+| `test` | Restores the latest checkpoint and performs evaluation / result dumping. |
+| `background` | Pipe-driven inference server (single GPU, batch size 1) backed by named pipes. |
+| `web` | Boots the bundled Django server (see `args.web_cmd`) for browser-based demos. |
 
+Switch modes via `--mode <train|test|background|web>` when invoking your entry script.
 
-**5) Clean the project (if you want to clean generating files)**
-```
-$ ./clean.sh
-```
----
-#### 3. File Structure
+### Frequently Used CLI Flags
+| Flag | Default | Notes |
+|------|---------|-------|
+| `--gpu` | 2 | Number of GPUs. Set to `0` for CPU. |
+| `--dist` | `True` | Enable DistributedDataParallel. Falls back to DP/CPU when GPUs < requested. |
+| `--batchSize` | 64 | Per-device batch size. |
+| `--maxEpochs` | 100 | Training epochs. |
+| `--auto_save_num` | 1 | Checkpoint frequency (epochs). Set `0` to disable. |
+| `--trainListPath` / `--valListPath` | CSV stubs | Dataset manifest locations. |
+| `--outputDir`, `--modelDir`, `--resultImgDir`, `--log` | ./Result/ etc. | Output folders are created automatically. |
+| `--debug` | `False` | Extra logging hints (e.g., unused parameters during DDP). |
+
+Run `python your_entry.py --help` to see the full list (plus any custom flags you add in `user_parser`).
+
+## Project Layout
 ```
 .
-├── Source # source code
-│   ├── JackFramework/
-|   |   ├── Contrib/
-|   |   ├── DatasetReader/
-|   |   ├── Evalution/
-|   |   ├── NN/
-|   |   ├── Proc/
-|   |   ├── SysBasic/
-|   |   ├── UserTemplate/
-|   |   ├── FileHandler/ 
-|   |   ├── Web/ 
-│   |   └── ...
+├── Source
+│   ├── JackFramework
+│   │   ├── Core            # Application modes, graph builders, schedulers
+│   │   ├── Evaluation      # Loss/metric helpers
+│   │   ├── FileHandler     # I/O utilities (checkpoints, TensorBoard, pipes)
+│   │   ├── ImgHandler      # Augmentation and image I/O helpers
+│   │   ├── NN              # Building blocks, layers, ops
+│   │   ├── SysBasic        # Args parsing, logging, devices, progress bars
+│   │   ├── Tools           # Misc tooling (named pipes, shell helpers)
+│   │   └── UserTemplate    # Templates for custom models + dataloaders
 │   ├── setup.py
 │   └── ...
+├── environment.yml
+├── install.sh / clean.sh / build.sh
 ├── LICENSE
 └── README.md
 ```
 
----
-#### To do
-#### 2021-07-10
-1. rewirte the readme;
-2. code refacotoring for contrib;
-3. refactor the code;
+## Templates & Examples
+- **Framework Template**: https://github.com/Archaic-Atom/Template-jf (recommended starting point for new projects).
+- **Demo Project**: https://github.com/Archaic-Atom/Demo-jf (shows an end-to-end training pipeline).
 
----
-#### Update log
-##### 2021-07-01
-1. Add action for gitHub;
-2. Add some information for JackFramework;
-3. Write the ReadMe.
+## Troubleshooting & Tips
+- JackFramework now performs explicit input validation (assertions were removed). If something fails fast, revisit your arguments and template implementations.
+- Distributed launches rely on `--ip`, `--port`, and `--gpu`. When port collisions are detected we auto-probe free ports and log the choice.
+- TensorBoard logs write to `--log`. Launch with `tensorboard --logdir <log_dir>`.
+- Named-pipe based modes (`background`) require a POSIX environment.
 
-##### 2021-05-28
-1. Write ReadMe;
-2. Add setup.py;
+## Changelog
+- **2024-09-15** (current): runtime validation hardened, device/mode guards improved, README refreshed for the PyTorch 2.4 stack, version synced to `0.1.1`.
+- **2021-07-01**: initial public README, GitHub Actions, installer scripts.
+- **2021-05-28**: project bootstrap, packaging script.
+
+JackFramework is released under the MIT License.

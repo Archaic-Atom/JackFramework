@@ -1,63 +1,62 @@
 # -*- coding: utf-8 -*-
+"""Formatting helpers for human-readable training logs."""
+
+from typing import List, Sequence
+
 DEFAULT_MAX_DECIMAL_PLACES = 6
 DEFAULT_MIN_DECIMAL_PLACES = 2
 
 
 class ResultStr(object):
-    """docstring for ResultStr"""
+    """Generate pre-formatted log strings for losses and metrics."""
 
-    def __init__(self, arg=None):
+    def __init__(self, arg=None) -> None:
         super().__init__()
         self.__arg = arg
 
-    def training_result_str(self, epoch: int, loss: list, acc: list, duration: float,
-                            training=True) -> str:
+    def training_result_str(self, epoch: int, loss: Sequence[float], acc: Sequence[float],
+                            duration: float, training: bool = True) -> str:
         loss_str = self.loss2str(loss, decimal_places=DEFAULT_MAX_DECIMAL_PLACES)
         acc_str = self.acc2str(acc, decimal_places=DEFAULT_MAX_DECIMAL_PLACES)
-        training_state = "[TrainProcess] " if training else "[ValProcess] "
-        return (f"{training_state}e: {epoch}, {loss_str}, {acc_str}"
-                + ' (%.3f s/epoch)' % duration)
+        training_state = '[TrainProcess] ' if training else '[ValProcess] '
+        return f"{training_state}e: {epoch}, {loss_str}, {acc_str} ({duration:.3f} s/epoch)"
 
-    def testing_result_str(self, acc: list, info_str: str = None):
+    def testing_result_str(self, acc: Sequence[float], info_str: Sequence[str] = None) -> str:
         acc_str = self.acc2str(acc, info_str, decimal_places=DEFAULT_MAX_DECIMAL_PLACES)
-        testing_state = "[TestProcess] "
-        return testing_state + acc_str
+        return f'[TestProcess] {acc_str}'
 
-    def training_intermediate_result(self, epoch: int, loss: list, acc: list) -> str:
+    def training_intermediate_result(self, epoch: int, loss: Sequence[float],
+                                     acc: Sequence[float]) -> str:
         loss_str = self.loss2str(loss, decimal_places=3)
         acc_str = self.acc2str(acc, decimal_places=3)
         return f'e: {epoch}, {loss_str}, {acc_str}'
 
-    def training_list_intermediate_result(self, epoch: int, loss: list, acc: list) -> str:
-        data_str = f'e: {epoch}'
-        for i in range(len(loss)):
-            loss_str = self.loss2str(loss[i], decimal_places=3)
-            acc_str = self.acc2str(acc[i], decimal_places=3)
-            data_str = data_str + ', model %d' % i + ', ' + loss_str + ', ' + acc_str
-        return data_str
+    def training_list_intermediate_result(self, epoch: int, loss: Sequence[Sequence[float]],
+                                          acc: Sequence[Sequence[float]]) -> str:
+        parts: List[str] = [f'e: {epoch}']
+        for idx, (loss_item, acc_item) in enumerate(zip(loss, acc)):
+            loss_str = self.loss2str(loss_item, decimal_places=3)
+            acc_str = self.acc2str(acc_item, decimal_places=3)
+            parts.append(f'model {idx}, {loss_str}, {acc_str}')
+        return ', '.join(parts)
 
-    def loss2str(self, loss: list, info_str: str = None,
+    def loss2str(self, loss: Sequence[float], info_str: Sequence[str] = None,
                  decimal_places: int = DEFAULT_MIN_DECIMAL_PLACES) -> str:
-        if info_str is None:
-            info_str = self.__gen_info_str("l", len(loss))
-        return self.__data2str(loss, info_str, decimal_places)
+        labels = info_str or self.__gen_info_str('l', len(loss))
+        return self.__data2str(loss, labels, decimal_places)
 
-    def acc2str(self, acc: list, info_str: str = None,
+    def acc2str(self, acc: Sequence[float], info_str: Sequence[str] = None,
                 decimal_places: int = DEFAULT_MIN_DECIMAL_PLACES) -> str:
-        if info_str is None:
-            info_str = self.__gen_info_str("a", len(acc))
-        return self.__data2str(acc, info_str, decimal_places)
+        labels = info_str or self.__gen_info_str('a', len(acc))
+        return self.__data2str(acc, labels, decimal_places)
 
     @staticmethod
-    def __data2str(data: list, info_str: list, decimal_places: int) -> str:
-        assert len(data) == len(info_str)
-        res = ""
-        char_interval = ", "
-        for i in range(len(info_str)):
-            res = res + info_str[i] + f": %.{decimal_places}f" % data[i] + char_interval
-        char_offset = len(char_interval)
-        return res[:len(res) - char_offset]
+    def __data2str(data: Sequence[float], labels: Sequence[str], decimal_places: int) -> str:
+        if len(data) != len(labels):
+            raise ValueError('Data and label lengths must match for formatting.')
+        formatted = [f"{label}: {value:.{decimal_places}f}" for label, value in zip(labels, data)]
+        return ', '.join(formatted)
 
     @staticmethod
-    def __gen_info_str(info_str: str, num: int) -> list:
-        return [info_str + str(i) for i in range(num)]
+    def __gen_info_str(prefix: str, num: int) -> List[str]:
+        return [f'{prefix}{i}' for i in range(num)]

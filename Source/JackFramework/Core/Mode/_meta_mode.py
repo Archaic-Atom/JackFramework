@@ -1,96 +1,98 @@
 # -*- coding: utf-8 -*-
+"""Base implementation shared across different execution modes."""
+
 import math
 from abc import ABCMeta, abstractmethod
+from typing import Any, Tuple
 
+from JackFramework.Core.Graph import dataloader_selection, graph_selection
 from JackFramework.SysBasic.show_handler import ShowHandler
-from JackFramework.Core.Graph import graph_selection, dataloader_selection
 
 
-class MetaMode(ShowHandler):
-    __metaclass__ = ABCMeta
-
-    def __init__(self, args: object, user_inference_func: object,
+class MetaMode(ShowHandler, metaclass=ABCMeta):
+    def __init__(self, args: object, user_inference_func: Any,
                  is_training: bool = True) -> None:
         super().__init__()
-        self.__args = args
-        self.__is_training = is_training
-        self.__user_inference_func = user_inference_func
-        self.__graph, self.__data_manager = None, None
-        self.__training_iteration, self.__val_iteration = self.__calculate_batch_size()
+        self._args = args
+        self._is_training = is_training
+        self._user_inference_func = user_inference_func
+        self._graph = None
+        self._data_manager = None
+        self._training_iteration, self._val_iteration = self.__estimate_iteration_counts()
 
+    # ------------------------------------------------------------------
     @property
-    def _graph(self) -> object:
-        return self.__graph
+    def args(self) -> object:
+        return self._args
 
-    @property
-    def _data_manager(self) -> object:
-        return self.__data_manager
+    def __estimate_iteration_counts(self) -> Tuple[int, int]:
+        batch_size = max(self._args.batchSize, 1)
+        world_size = max(self._args.gpu, 1) if getattr(self._args, 'dist', False) else 1
+        samples_per_step = batch_size * world_size
 
-    @property
-    def _is_training(self) -> object:
-        return self.__is_training
+        def _calc(images: int) -> int:
+            if images <= 0:
+                return 0
+            return math.ceil(images * self._args.sampleNum / samples_per_step)
 
-    @property
-    def _training_iteration(self) -> int:
-        return self.__training_iteration
+        return _calc(self._args.imgNum), _calc(self._args.valImgNum)
 
-    @property
-    def _val_iteration(self) -> int:
-        return self.__val_iteration
-
-    @property
-    def _get_graph_and_data_manager(self):
-        return self.__graph, self.__data_manager
-
-    def __calculate_batch_size(self):
-        args = self.__args
-        if args.dist:
-            training_iteration = math.ceil(
-                args.imgNum * args.sampleNum / (args.batchSize * args.gpu))
-            val_iteration = math.ceil(
-                args.valImgNum * args.sampleNum / (args.batchSize * args.gpu))
-        else:
-            training_iteration = math.ceil(args.imgNum * args.sampleNum / args.batchSize)
-            val_iteration = math.ceil(args.valImgNum * args.sampleNum / args.batchSize)
-        return training_iteration, val_iteration
-
-    # noinspection PyCallingNonCallable
-    def _init_data_model_handler(self, rank: int) -> None:
+    # ------------------------------------------------------------------
+    def _init_data_model_handler(self, rank: int = None) -> None:
         self.set_rank(rank)
-        self.reinit_log_tensorboard_handler(self.__args)
-        jf_model, jf_dataloader = self.__user_inference_func(self.__args)
-        assert jf_model is not None and jf_dataloader is not None
-        self.__graph = graph_selection(self.__args, jf_model)
-        self.__data_manager = dataloader_selection(self.__args, jf_dataloader)
+        self.reinit_log_tensorboard_handler(self._args)
+        jf_result = self._user_inference_func(self._args)
+        if not isinstance(jf_result, (tuple, list)) or len(jf_result) != 2:
+            raise ValueError('User interface must return a (model_handler, data_handler) tuple.')
+        jf_model, jf_dataloader = jf_result
+        if jf_model is None or jf_dataloader is None:
+            raise ValueError('Model or dataloader handler returned by user interface is None.')
 
+        self._graph = graph_selection(self._args, jf_model)
+        self._data_manager = dataloader_selection(self._args, jf_dataloader)
+
+    # ------------------------------------------------------------------
     def _get_img_id(self, iteration: int) -> int:
         if self.rank is None:
             return iteration
-        return self.rank + iteration * (self.__args.batchSize * self.__args.gpu)
+        per_rank = self._args.batchSize * max(self._args.gpu, 1)
+        return self.rank + iteration * per_rank
 
-    def _save_result(self, iteration: int, outputs_data: list, supplement: list):
+    def _save_result(self, iteration: int, outputs_data: list, supplement: list) -> None:
+        if self._data_manager is None:
+            raise RuntimeError('Data manager has not been initialised.')
         img_id = self._get_img_id(iteration)
         self._data_manager.user_save_result(outputs_data, supplement, img_id)
 
+    # ------------------------------------------------------------------
     @ShowHandler.show_method
     def _save_model(self, epoch: int) -> None:
-        off_set = 1
-        if (epoch + off_set) % self.__args.auto_save_num == 0:
+        if self._graph is None:
+            return
+        if self._args.auto_save_num <= 0:
+            return
+        if (epoch + 1) % self._args.auto_save_num == 0:
             self._graph.save_model(epoch)
 
     @ShowHandler.show_method
     def _write_epoch_log(self, epoch: int) -> None:
+        if self._data_manager is None or self._graph is None:
+            return
         self._data_manager.user_show_training_info(
-            epoch, self._graph.ave_tower_loss, self._graph.ave_tower_acc,
-            self.duration(), self._is_training)
+            epoch,
+            self._graph.ave_tower_loss,
+            self._graph.ave_tower_acc,
+            self.duration(),
+            self._is_training,
+        )
 
+    # ------------------------------------------------------------------
     def set_training_iteration(self, iteration: int) -> None:
-        self.__training_iteration = iteration
+        self._training_iteration = iteration
 
     def set_val_iteration(self, iteration: int) -> None:
-        self.__val_iteration = iteration
+        self._val_iteration = iteration
 
     @abstractmethod
     def exec(self, rank: int = None) -> None:
-        # do something in this mode
-        pass
+        """Execute the mode for the given distributed rank."""

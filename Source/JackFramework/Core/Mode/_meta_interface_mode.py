@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 from collections.abc import Callable
+from typing import Any
 
 from JackFramework.SysBasic.log_handler import LogHandler as log
 
 from .test_proc import TestProc
 
 
-def error_handler(func: Callable) -> tuple:
-    def wrapper(*args, **kwargs):
+def error_handler(func: Callable) -> Callable:
+    def wrapper(*args: Any, **kwargs: Any):
         try:
             return func(*args, **kwargs)
-        except Exception as e:
-            log.error(f"Error in {func.__name__}: {str(e)}")
+        except Exception as exc:  # pragma: no cover - defensive logging
+            log.error(f"Error in {func.__name__}: {exc}")
             return False
+
     return wrapper
 
 
@@ -24,9 +26,9 @@ class InterfaceMode(TestProc):
         super().__init__(args, user_inference_func, is_training)
         log.info('Create InterfaceMode')
 
-    def __save_result(self, outputs_data: list, supplement: list, msg: str) -> None:
+    def __save_result(self, outputs_data: list, supplement: list, msg: str):
         res = self._data_manager.user_save_test_data(outputs_data, supplement, msg)
-        log.info('jf server has saved the results')
+        log.info('The server has saved the inference results.')
         return res
 
     @error_handler
@@ -47,7 +49,7 @@ class InterfaceMode(TestProc):
             return False
 
         res = self.__try_exec_testing_proc(batch_data)
-        if batch_data is False:
+        if res is False:
             return False
 
         return self.__try_save_result(msg, res[self.ID_OUTPUTS_DATA], res[self.ID_SUPPLEMENT])
