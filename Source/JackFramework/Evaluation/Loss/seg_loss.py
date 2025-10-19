@@ -10,7 +10,7 @@ except ImportError:
 
 
 class SegLoss(MetaLoss):
-    """docstring for """
+    """Loss helpers for segmentation tasks."""
 
     def __init__(self):
         super().__init__()
@@ -18,13 +18,17 @@ class SegLoss(MetaLoss):
     @staticmethod
     def focal_loss(res: torch.Tensor, gt: torch.Tensor, alpha: float = -1, gamma: float = 2,
                    reduction: str = 'mean', mode: str = 'bce') -> torch.Tensor:
-        log_t = 0
+        if res.shape[0] != gt.shape[0]:
+            raise ValueError('Prediction and ground truth batch sizes must match for focal loss.')
+
         if mode == 'ce':
             gt = gt.long()
             log_t = F.cross_entropy(res, gt.squeeze(1), reduction='none')
         elif mode == 'bce':
             gt = gt.float()
             log_t = F.binary_cross_entropy_with_logits(res, gt, reduction="none")
+        else:
+            raise ValueError(f'Unsupported focal loss mode `{mode}`.')
 
         p_t = torch.exp(-log_t)
         loss = (1 - p_t) ** gamma * log_t
@@ -37,6 +41,8 @@ class SegLoss(MetaLoss):
             loss = loss.mean()
         elif reduction == 'sum':
             loss = loss.sum()
+        elif reduction != 'none':
+            raise ValueError(f'Unsupported reduction `{reduction}` for focal loss.')
 
         return loss
 
@@ -44,19 +50,24 @@ class SegLoss(MetaLoss):
     def mutil_focal_loss(res: list, gt: torch.Tensor, alpha: float = -1, gamma: float = 2,
                          reduction: str = 'mean', mode: str = 'bce',
                          lambdas: list = None) -> torch.Tensor:
-        loss, length = 0, len(res)
+        length = len(res)
+        if length == 0:
+            raise ValueError('Prediction list for multi-scale focal loss must be non-empty.')
         _, _, h, w = gt.shape
         if lambdas is None:
-            lambdas = [1] * length
+            lambdas = [1.0] * length
+        if len(lambdas) != length:
+            raise ValueError('Length of `lambdas` must match number of prediction scales.')
 
+        total_loss = 0
         for i in range(length):
             scale_factor = 1 / (2 ** i)
             new_h, new_w = int(h * scale_factor), int(w * scale_factor)
             scaled_target = F.interpolate(gt.float(), size=[new_h, new_w])
             _loss = SegLoss.focal_loss(res[i], scaled_target, alpha, gamma, reduction, mode)
-            loss += _loss * lambdas[i]
+            total_loss += _loss * lambdas[i]
 
-        return loss
+        return total_loss
 
     @staticmethod
     def contrastive_loss(res: torch.Tensor, gt: torch.Tensor, margin: float) -> torch.Tensor:

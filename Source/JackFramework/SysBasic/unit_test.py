@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Quick smoke tests for progress utilities."""
+
 import time
 
 try:
@@ -9,18 +11,20 @@ except ImportError:
 
 class SysBasicUnitTestFramework(object):
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     @staticmethod
     def _test_process_bar() -> None:
-        max_steps = 100
-        process_bar = ShowProcess(max_steps, 'OK')
+        max_steps = 50
+        process_bar = ShowProcess(max_steps, 'Demo', info_done='Finished', bar_width=40)
 
-        for i in range(max_steps):
-            process_bar.show_process(i + 1)
-            time.sleep(0.02)
-        time.sleep(1)
+        for step in range(1, max_steps + 1):
+            remaining = max_steps - step
+            process_bar.show_process(step, show_info='training', rest_time=remaining * 0.05,
+                                     duration=0.05, queue_size=remaining % 8)
+            time.sleep(0.05)
+        process_bar.close()
 
     def test(self) -> None:
         self._test_process_bar()

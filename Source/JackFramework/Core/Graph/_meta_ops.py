@@ -39,7 +39,10 @@ class MetaOps(UserModel):
         self.count_parameter_num()
 
     def _init_ddp_model(self) -> None:
-        assert self._model is not None
+        if self._model is None:
+            raise RuntimeError('Model must be initialised before wrapping with DDP.')
+        if self.rank is None:
+            raise ValueError('Distributed training requires a valid rank assignment.')
         for i, model_item in enumerate(self._model):
             model_item = model_item.to(self.rank)
             self._model[i] = DDP(model_item, device_ids=[self.rank])
@@ -48,7 +51,8 @@ class MetaOps(UserModel):
             # pytorch 2.4 can not use find_unused_parameters.
 
     def _init_dp_model(self) -> None:
-        assert self._model is not None
+        if self._model is None:
+            raise RuntimeError('Model must be initialised before wrapping with DataParallel.')
         for i, model_item in enumerate(self._model):
             self._model[i] = nn.DataParallel(model_item)
 
@@ -66,10 +70,15 @@ class MetaOps(UserModel):
     def _pass_data2device(self, data: list) -> list:
         if self.__args.dist:
             for i, data_item in enumerate(data):
+                if data_item is None:
+                    continue
                 data[i] = data_item.cuda(non_blocking=True)
         else:
-            assert self.__device is not None
+            if self.__device is None:
+                raise RuntimeError('Device manager did not provide a valid device.')
             for i, data_item in enumerate(data):
+                if data_item is None:
+                    continue
                 data[i] = data_item.to(self.__device)
         return data
 
@@ -112,14 +121,15 @@ class MetaOps(UserModel):
 
     def restore_model(self) -> None:
         checkpoint_path = ModelSaver.get_check_point_path(self.__args.modelDir)
-        if checkpoint_path is not None and os.path.isfile(checkpoint_path):
+        if checkpoint_path and os.path.isfile(checkpoint_path):
             checkpoint = ModelSaver.load_checkpoint(checkpoint_path, self.rank)
             self._restore_model_opt(checkpoint)
         else:
-            log.warning(f"no checkpoint found at '{checkpoint_path}'")
+            log.warning('No checkpoint found; starting from scratch.')
 
     def save_model(self, epoch: int) -> None:
-        assert len(self._model) == len(self._opt)
+        if len(self._model) != len(self._opt):
+            raise ValueError('Model and optimizer collections must have the same length.')
         file_name = sys_define.CHECK_POINT_NAME % epoch
         model_dict = self.user_save_model(epoch)
         if model_dict is None:
@@ -127,7 +137,8 @@ class MetaOps(UserModel):
         ModelSaver.save(self.__args.modelDir, file_name, model_dict)
 
     def set_model_mode(self, is_training: bool = True) -> None:
-        assert self._model is not None
+        if self._model is None:
+            raise RuntimeError('Model has not been initialised.')
         for i, _ in enumerate(self._model):
             if is_training:
                 self._model[i].train()

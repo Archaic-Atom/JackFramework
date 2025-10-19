@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
+"""Base loss helpers providing shared epsilon configuration."""
+
 from abc import ABCMeta
 
 
-class MetaLoss(object):
-    __metaclass__ = ABCMeta
-    __META_LOSS_INSTANCE = None
+class MetaLoss(object, metaclass=ABCMeta):
     LOSS_EPSILON = 1e-9
 
-    def __new__(cls) -> object:
-        if cls.__META_LOSS_INSTANCE is None:
-            cls.__META_LOSS_INSTANCE = object.__new__(cls)
-        return cls.__META_LOSS_INSTANCE
-
     @property
-    def epsilon(self):
+    def epsilon(self) -> float:
         return self.LOSS_EPSILON

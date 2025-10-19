@@ -1,28 +1,32 @@
 # -*- coding: UTF-8 -*-
-from JackFramework.SysBasic.switch import Switch
+"""Graph selection utilities used by the different modes."""
+
+from typing import Dict, Type
+
 from JackFramework.SysBasic.log_handler import LogHandler as log
 
-from .build_training_graph import BuildTrainingGraph
 from .build_testing_graph import BuildTestingGraph
+from .build_training_graph import BuildTrainingGraph
 from .data_handler_manager import DataHandlerManager
 
 
-def _get_graph_dict() -> dict:
-    return {
-        'train': BuildTrainingGraph,
-        'test': BuildTestingGraph,
-        'background': BuildTestingGraph,
-        'online': None,
-        'reinforcement_learning': None,
-        'web': BuildTestingGraph
-    }
+GRAPH_REGISTRY: Dict[str, Type] = {
+    'train': BuildTrainingGraph,
+    'test': BuildTestingGraph,
+    'background': BuildTestingGraph,
+    'web': BuildTestingGraph,
+}
 
 
 def graph_selection(args: object, jf_model: object) -> object:
-    graph_dict = _get_graph_dict()
-    assert args.mode in graph_dict
-    log.info(f'Enter {args.mode} mode')
-    return graph_dict[args.mode](args, jf_model)
+    try:
+        graph_cls = GRAPH_REGISTRY[args.mode]
+    except KeyError as exc:
+        available = ', '.join(sorted(GRAPH_REGISTRY))
+        raise ValueError(f'Unsupported graph mode `{args.mode}`. Available: {available}.') from exc
+
+    log.info(f'Constructing graph for `{args.mode}` mode')
+    return graph_cls(args, jf_model)
 
 
 def dataloader_selection(args: object, jf_dataloader: object) -> object:

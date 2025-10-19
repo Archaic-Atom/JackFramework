@@ -1,37 +1,41 @@
 # -*- coding: utf-8 -*-
-class ListHandler(object):
-    """docstring for ListHandler"""
+"""Utility helpers for common list-based tensor aggregations."""
 
-    def __init__(self):
+from typing import Iterable, List, Sequence
+
+
+class ListHandler(object):
+    def __init__(self) -> None:
         super().__init__()
 
     @staticmethod
-    def list_add(list_a: list, list_b: list) -> list:
-        assert len(list_a) == len(list_b)
-        return [item + list_b[i] for i, item in enumerate(list_a)]
+    def list_add(list_a: Sequence[float], list_b: Sequence[float]) -> List[float]:
+        if len(list_a) != len(list_b):
+            raise ValueError('List lengths must match when adding.')
+        return [a + b for a, b in zip(list_a, list_b)]
 
     @staticmethod
-    def list_div(list_a: list, num: float) -> list:
-        return [item / num for _, item in enumerate(list_a)]
+    def list_div(list_a: Sequence[float], num: float) -> List[float]:
+        if num == 0:
+            raise ZeroDivisionError('Cannot divide list values by zero.')
+        return [item / num for item in list_a]
 
     @staticmethod
-    def list_mean(list_a: list) -> list:
-        return [item for _, item in enumerate(list_a)]
+    def list_mean(list_a: Sequence[float]) -> List[float]:
+        return list(list_a)
 
     @staticmethod
-    def double_list_add(list_a: list, list_b: list = None) -> list:
-        assert isinstance(list_a, list) and isinstance(list_a[0], list)
+    def double_list_add(list_a: Sequence[Sequence[float]],
+                        list_b: Sequence[Sequence[float]] = None) -> List[List[float]]:
+        if not list_a:
+            return []
         if list_b is None:
-            return list_a
-        for i, item in enumerate(list_a):
-            list_a[i] = ListHandler.list_add(item, list_b[i])
-        return list_a
+            return [ListHandler.list_mean(inner) for inner in list_a]
+        if len(list_a) != len(list_b):
+            raise ValueError('Outer list lengths must match when adding nested lists.')
+        return [ListHandler.list_add(inner_a, inner_b)
+                for inner_a, inner_b in zip(list_a, list_b)]
 
     @staticmethod
-    def double_list_div(list_a: list, num: float) -> list:
-        res = []
-        for item in list_a:
-            tem_res = ListHandler.list_div(item, num)
-            res.append(tem_res)
-
-        return res
+    def double_list_div(list_a: Sequence[Sequence[float]], num: float) -> List[List[float]]:
+        return [ListHandler.list_div(inner, num) for inner in list_a]

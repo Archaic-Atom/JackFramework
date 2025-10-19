@@ -72,11 +72,12 @@ class DataHandlerManager(UserDataloader):
         return self.training_dataloader if is_training else self.val_dataloader
 
     def set_epoch(self, epoch: int, is_training: bool) -> None:
-        if self.__args.dist:
-            if is_training:
-                self.__training_sampler.set_epoch(epoch)
-            else:
-                self.__val_sampler.set_epoch(epoch)
+        if not self.__args.dist:
+            return
+        if is_training and self.__training_sampler is not None:
+            self.__training_sampler.set_epoch(epoch)
+        if not is_training and self.__val_sampler is not None:
+            self.__val_sampler.set_epoch(epoch)
 
     @staticmethod
     def __collate_fn(dataset: object) -> object:

@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
+"""Command-line argument handling for JackFramework programs."""
+
 import argparse
+from typing import Callable, Optional
+
 import JackFramework.SysBasic.define as sys_define
 
 
-# Parse the train model's para
 class ArgsParser(object):
-    """docstring for ArgsParser"""
+    """Aggregate framework defaults with optional user-provided arguments."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
-    def parse_args(self, info: str, user_define_func: object = None) -> object:
+    def parse_args(self, info: str, user_define_func: Optional[Callable[[argparse.ArgumentParser],
+                                                                          argparse.ArgumentParser]] = None) -> argparse.Namespace:
         parser = argparse.ArgumentParser(
             description=f"The deep learning framework (based on pytorch) - {info}"
         )
@@ -22,92 +26,92 @@ class ArgsParser(object):
         parser = self.__load_user_define(parser, user_define_func)
         return parser.parse_args()
 
-    # noinspection PyCallingNonCallable
     @staticmethod
-    def __load_user_define(parser: object, user_define_func: object) -> object:
+    def __load_user_define(parser: argparse.ArgumentParser,
+                           user_define_func: Optional[Callable[[argparse.ArgumentParser],
+                                                               argparse.ArgumentParser]]) -> argparse.ArgumentParser:
         if user_define_func is not None:
             user_parser = user_define_func(parser)
-            if isinstance(user_parser, type(parser)):
+            if isinstance(user_parser, argparse.ArgumentParser):
                 parser = user_parser
         return parser
 
     @staticmethod
-    def __program_setting(parser: object) -> object:
+    def __program_setting(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         parser.add_argument('--mode', default='train', help='train or test')
         parser.add_argument('--gpu', type=int, default=sys_define.GPU_NUM,
-                            help='state the num of gpu: 0, 1, 2 or 3 ...')
+                            help='number of GPUs to use: 0, 1, 2 ...')
         parser.add_argument('--auto_save_num', type=int, default=sys_define.AUTO_SAVE_NUM,
-                            help='AUTO_SAVE_NUM')
+                            help='number of checkpoints to keep automatically')
         parser.add_argument('--dataloaderNum', type=int, default=sys_define.DATA_LOADER_NUM,
-                            help='the number of dataloader')
+                            help='the number of DataLoader workers')
         parser.add_argument('--pretrain', default=False, type=ArgsParser.__str2bool,
-                            help='true or false')
-        parser.add_argument('--ip', default=sys_define.IP, help='ip')
-        parser.add_argument('--port', default=sys_define.PORT, help='port')
+                            help='load pretrained checkpoint if true')
+        parser.add_argument('--ip', default=sys_define.IP, help='master address for distributed mode')
+        parser.add_argument('--port', default=sys_define.PORT, help='master port for distributed mode')
         parser.add_argument('--dist', default=sys_define.DIST, type=ArgsParser.__str2bool,
-                            help='use DDP or DP')
-        parser.add_argument('--debug', type=bool, default=False, help='debug mode')
-        parser.add_argument('--web_cmd', type=str, default='main.py runserver 0.0.0.0:8000',
-                            help='django cmd')
+                            help='enable distributed training')
+        parser.add_argument('--debug', default=False, type=ArgsParser.__str2bool,
+                            help='enable debug mode for verbose logging')
+        parser.add_argument('--web_cmd', default='main.py runserver 0.0.0.0:8000',
+                            help='Django management command to launch web UI')
         return parser
 
     @staticmethod
-    def __path_setting(parser: object) -> object:
+    def __path_setting(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         parser.add_argument('--trainListPath', default=sys_define.TRAIN_LIST_PATH,
                             help='training list path or testing list path')
         parser.add_argument('--valListPath', default=sys_define.VAL_LIST_PATH,
-                            help='val list path')
+                            help='validation list path')
         parser.add_argument('--outputDir', default=sys_define.DATA_OUTPUT_PATH,
-                            help="The output's path. e.g. './result/'")
+                            help="output directory, e.g. './result/'")
         parser.add_argument('--modelDir', default=sys_define.MODEL_PATH,
-                            help="The model's path. e.g. ./model/")
+                            help="model directory, e.g. './model/'")
         parser.add_argument('--resultImgDir', default=sys_define.RESULT_OUTPUT_PATH,
-                            help="The save path. e.g. ./ResultImg/")
+                            help="result image directory, e.g. './ResultImg/'")
         parser.add_argument('--log', default=sys_define.LOG_OUTPUT_PATH,
-                            help="the log file")
+                            help='log directory')
         return parser
 
     @staticmethod
-    def __training_setting(parser: object) -> object:
+    def __training_setting(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         parser.add_argument('--sampleNum', type=int, default=sys_define.SAMPLE_NUM,
-                            help='the number of sample')
+                            help='the number of samples')
         parser.add_argument('--batchSize', type=int, default=sys_define.BATCH_SIZE,
-                            help='Batch Size')
+                            help='batch size per iteration')
         parser.add_argument('--lr', type=float, default=sys_define.LEARNING_RATE,
-                            help="Learning rate. e.g. 0.01, 0.001, 0.0001")
+                            help='learning rate, e.g. 0.01, 0.001, 0.0001')
         parser.add_argument('--maxEpochs', type=int, default=sys_define.MAX_EPOCHS,
-                            help="Max step. e.g. 500")
-
+                            help='maximum training epochs')
         return parser
 
     @staticmethod
-    def __img_setting(parser: object) -> object:
-        parser.add_argument('--imgWidth', default=sys_define.IMAGE_WIDTH, type=int,
-                            help="Image's width. e.g. 512, In the training process is Clipped size")
-        parser.add_argument('--imgHeight', default=sys_define.IMAGE_HEIGHT, type=int,
-                            help="Image's width. e.g. 256, In the training process is Clipped size")
-        parser.add_argument('--size_magnification', default=sys_define.SIZE_MAGNIFICATION, type=int,
-                            help="size magnification. e.g. 14, 32.")
-        parser.add_argument('--imgNum', default=sys_define.IMG_NUM, type=int,
-                            help="The number of training images")
-        parser.add_argument('--valImgNum', default=sys_define.VAL_IMG_NUM, type=int,
-                            help="The number of val images")
+    def __img_setting(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+        parser.add_argument('--imgWidth', type=int, default=sys_define.IMAGE_WIDTH,
+                            help='image width used during training')
+        parser.add_argument('--imgHeight', type=int, default=sys_define.IMAGE_HEIGHT,
+                            help='image height used during training')
+        parser.add_argument('--size_magnification', type=int, default=sys_define.SIZE_MAGNIFICATION,
+                            help='feature map magnification factor')
+        parser.add_argument('--imgNum', type=int, default=sys_define.IMG_NUM,
+                            help='number of training images')
+        parser.add_argument('--valImgNum', type=int, default=sys_define.VAL_IMG_NUM,
+                            help='number of validation images')
         return parser
 
     @staticmethod
-    def __user_setting(parser: object) -> object:
+    def __user_setting(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         parser.add_argument('--modelName', default=sys_define.MODEL_NAME,
                             help='model name')
         parser.add_argument('--dataset', default=sys_define.DATASET_NAME,
-                            help="the dataset's name")
+                            help='dataset name')
         return parser
 
     @staticmethod
     def __str2bool(arg: str) -> bool:
-        if arg.lower() in {'yes', 'true', 't', 'y', '1'}:
-            res = True
-        elif arg.lower() in {'no', 'false', 'f', 'n', '0'}:
-            res = False
-        else:
-            raise argparse.ArgumentTypeError('Boolean value expected.')
-        return res
+        lowered = arg.lower()
+        if lowered in {'yes', 'true', 't', 'y', '1'}:
+            return True
+        if lowered in {'no', 'false', 'f', 'n', '0'}:
+            return False
+        raise argparse.ArgumentTypeError('Boolean value expected.')

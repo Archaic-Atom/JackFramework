@@ -7,7 +7,8 @@ from JackFramework.SysBasic.show_handler import ShowHandler
 class UserModel(ShowHandler):
     def __init__(self, args: object, jf_model: ModelHandlerTemplate) -> None:
         super().__init__()
-        assert isinstance(jf_model, ModelHandlerTemplate)
+        if not isinstance(jf_model, ModelHandlerTemplate):
+            raise TypeError('jf_model must implement ModelHandlerTemplate.')
         self.__jf_model = jf_model
         self.__args = args
         self.__model, self.__opt, self.__sch = None, None, None

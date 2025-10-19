@@ -1,130 +1,192 @@
 # -*- coding: utf-8 -*-
-import os
+"""Checkpoint persistence utilities."""
+
+import importlib.util
+from pathlib import Path
+from typing import Dict, Iterable, List, Optional
+
 import torch
 
-import JackFramework.SysBasic.define as sys_def
-from JackFramework.SysBasic.log_handler import LogHandler as log
+
+def _load_module_from_path(name: str, path: Path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f'Unable to load module `{name}` from `{path}`.')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)  # type: ignore[attr-defined]
+    return module
+
+
+try:  # Prefer package-relative imports when available.
+    from ..SysBasic import define as sys_def  # type: ignore
+    from ..SysBasic.log_handler import LogHandler as log  # type: ignore
+except ImportError:  # pragma: no cover - fallback when used outside package
+    base_path = Path(__file__).resolve().parents[1]
+    sys_def = _load_module_from_path('sys_define', base_path / 'SysBasic' / 'define.py')
+    log_module = _load_module_from_path('log_handler', base_path / 'SysBasic' / 'log_handler.py')
+    log = log_module.LogHandler
+
 from .file_handler import FileHandler
 
 
 class ModelSaver(object):
-    """docstring for ModelSaver"""
-    ROW_ONE = 1
-    FIST_SAVE_TIME = True
+    """Manage serialisation of model/optimizer states and checkpoint metadata."""
 
-    def __init__(self):
+    ROW_ONE = 1
+    FIRST_SAVE_TIME = True
+    FIST_SAVE_TIME = True  # Backward compatibility for legacy references.
+
+    def __init__(self) -> None:
         super().__init__()
 
-    @staticmethod
-    def __get_model_name(file_path: str) -> str:
-        str_line = FileHandler.get_line(file_path, ModelSaver.ROW_ONE)
-        return str_line[len(sys_def.LAST_MODEL_NAME):]
+    # ------------------------------------------------------------------
+    @classmethod
+    def _set_first_save_flag(cls, value: bool) -> None:
+        cls.FIRST_SAVE_TIME = value
+        cls.FIST_SAVE_TIME = value
 
     @staticmethod
-    def __check_list(file_dir: str, fd_checkpoint_list: object) -> object:
-        str_line = FileHandler.get_line_fd(fd_checkpoint_list, 0)
-        if str_line[: len(sys_def.LAST_MODEL_NAME)] != sys_def.LAST_MODEL_NAME:
-            log.warning("The checklist file is wrong! We will rewrite this file")
-            FileHandler.close_file(fd_checkpoint_list)
-            os.remove(file_dir + sys_def.CHECK_POINT_LIST_NAME)
-            fd_checkpoint_list = None
-        return fd_checkpoint_list
+    def __normalize_dir(path: str) -> Path:
+        target = Path(path).expanduser()
+        if target.is_file():
+            raise ValueError(f'Expected directory path, received file: {target}')
+        target.mkdir(parents=True, exist_ok=True)
+        return target
 
     @staticmethod
-    def __write_check_point_list_title(file_dir: str) -> object:
-        if ModelSaver.FIST_SAVE_TIME:
-            FileHandler.remove_file(file_dir + sys_def.CHECK_POINT_LIST_NAME)
-            ModelSaver.FIST_SAVE_TIME = False
+    def __checkpoint_list_path(root_dir: Path) -> Path:
+        return root_dir / sys_def.CHECK_POINT_LIST_NAME
+
+    # ------------------------------------------------------------------
+    @staticmethod
+    def __get_model_name(file_path: Path) -> str:
+        header = FileHandler.get_line(str(file_path), ModelSaver.ROW_ONE)
+        if not header.startswith(sys_def.LAST_MODEL_NAME):
+            raise ValueError('Malformed checkpoint list header.')
+        return header[len(sys_def.LAST_MODEL_NAME):]
+
+    @classmethod
+    def __consume_first_save(cls, list_path: Path) -> None:
+        if cls.FIRST_SAVE_TIME:
+            FileHandler.remove_file(str(list_path))
+            cls._set_first_save_flag(False)
+
+    @staticmethod
+    def __read_existing_entries(list_path: Path) -> List[str]:
+        if not list_path.exists():
+            return []
+
+        with list_path.open('r', encoding='utf-8') as handle:
+            lines = [line.rstrip('\n') for line in handle]
+
+        if not lines:
+            return []
+
+        header = lines[0]
+        if not header.startswith(sys_def.LAST_MODEL_NAME):
+            log.warning('The checkpoint list is malformed. Rewriting from scratch.')
+            return []
+
+        return lines
+
+    @classmethod
+    def __build_entry_list(cls, existing_lines: List[str], file_name: str) -> List[str]:
+        new_entries = [f'{sys_def.LAST_MODEL_NAME}{file_name}']
+        if existing_lines:
+            # Skip the previous "latest" marker (index 0) but keep history.
+            new_entries.extend(existing_lines[1:])
+        new_entries.append(file_name)
+        return new_entries
+
+    @staticmethod
+    def __write_entries(list_path: Path, entries: Iterable[str]) -> None:
+        temp_path = list_path.with_suffix(list_path.suffix + '.tmp')
+        with temp_path.open('w', encoding='utf-8') as handle:
+            for entry in entries:
+                handle.write(f'{entry}\n')
+        temp_path.replace(list_path)
+
+    # ------------------------------------------------------------------
+    @classmethod
+    def __write_checkpoint_metadata(cls, directory: Path, file_name: str) -> None:
+        list_path = cls.__checkpoint_list_path(directory)
+        cls.__consume_first_save(list_path)
+        existing = cls.__read_existing_entries(list_path)
+        entries = cls.__build_entry_list(existing, file_name)
+        cls.__write_entries(list_path, entries)
+
+    @staticmethod
+    def __load_model_folder(path: Path) -> Optional[str]:
+        log.info(f'Begin loading checkpoint from this folder: {path}')
+        list_path = path / sys_def.CHECK_POINT_LIST_NAME
+        if not list_path.is_file():
+            log.warning(f"Checkpoint list file not found: {list_path}")
             return None
 
-        fd_checkpoint_list = FileHandler.open_file(file_dir + sys_def.CHECK_POINT_LIST_NAME)
-        fd_checkpoint_list = ModelSaver.__check_list(file_dir, fd_checkpoint_list)
-        return fd_checkpoint_list
+        try:
+            checkpoint_name = ModelSaver.__get_model_name(list_path)
+        except ValueError as exc:
+            log.error(str(exc))
+            return None
+
+        checkpoint_path = path / checkpoint_name
+        log.info(f'Get the path of model: {checkpoint_path}')
+        return str(checkpoint_path)
 
     @staticmethod
-    def __write_new_check_point_file(file_dir: str, file_name: str) -> None:
-        fd_checkpoint_list = FileHandler.open_file(file_dir + sys_def.CHECK_POINT_LIST_NAME)
-        FileHandler.write_file(fd_checkpoint_list, sys_def.LAST_MODEL_NAME + file_name)
-        FileHandler.write_file(fd_checkpoint_list, file_name)
-        FileHandler.close_file(fd_checkpoint_list)
+    def __load_model_path(path: Path) -> str:
+        log.info(f'Begin loading checkpoint from this file: {path}')
+        return str(path)
+
+    # Public API -------------------------------------------------------
+    @staticmethod
+    def get_check_point_path(path: str) -> Optional[str]:
+        target = Path(path)
+        if target.is_file():
+            return ModelSaver.__load_model_path(target)
+        return ModelSaver.__load_model_folder(target)
 
     @staticmethod
-    def __write_old_check_point_file(fd_checkpoint_list: object,
-                                     file_dir: str, file_name: str) -> None:
-        fd_checkpoint_temp_list = FileHandler.open_file(
-            file_dir + sys_def.CHECK_POINT_LIST_NAME + '.temp')
-
-        FileHandler.write_file(fd_checkpoint_temp_list, sys_def.LAST_MODEL_NAME + file_name)
-        FileHandler.copy_file(fd_checkpoint_list, fd_checkpoint_temp_list, 1)
-        FileHandler.write_file(fd_checkpoint_temp_list, file_name)
-
-        FileHandler.close_file(fd_checkpoint_list)
-        FileHandler.close_file(fd_checkpoint_temp_list)
-
-        os.remove(file_dir + sys_def.CHECK_POINT_LIST_NAME)
-        os.rename(file_dir + sys_def.CHECK_POINT_LIST_NAME + '.temp',
-                  file_dir + sys_def.CHECK_POINT_LIST_NAME)
-
-    @staticmethod
-    def __load_model_folder(path: str) -> str:
-        log.info(f"Begin loading checkpoint from this folder: {path}")
-        checkpoint_list_file = path + sys_def.CHECK_POINT_LIST_NAME
-        if not os.path.isfile(checkpoint_list_file):
-            log.warning(f"We don't find the checkpoint list file: {checkpoint_list_file}!")
-            checkpoint_path = None
-        else:
-            checkpoint_path = path + ModelSaver.__get_model_name(checkpoint_list_file)
-            log.info(f"Get the path of model: {checkpoint_path}")
-        return checkpoint_path
-
-    @staticmethod
-    def __load_model_path(path: str) -> str:
-        log.info(f"Begin loading checkpoint from this file: {path}")
-        return path
-
-    @staticmethod
-    def get_check_point_path(path: str) -> str:
-        return (ModelSaver.__load_model_path(path) if os.path.isfile(path)
-                else ModelSaver.__load_model_folder(path))
-
-    @staticmethod
-    def load_checkpoint(file_path: str, rank: object = None) -> object:
+    def load_checkpoint(file_path: str, rank: Optional[int] = None) -> Dict:
         map_location = {'cuda:0': f'cuda:{rank}'} if rank is not None else None
-        return torch.load(file_path, map_location)
+        return torch.load(file_path, map_location=map_location)
 
     @staticmethod
-    def load_model(model: object, checkpoint: dict, model_id: int) -> None:
-        model_name = f'model_{model_id}'
-        model.load_state_dict(checkpoint[model_name], strict=True)
-        log.info("Model loaded successfully")
+    def load_model(model: object, checkpoint: Dict, model_id: int) -> None:
+        key = f'model_{model_id}'
+        if key not in checkpoint:
+            raise KeyError(f'Model state `{key}` not found in checkpoint.')
+        model.load_state_dict(checkpoint[key], strict=True)
+        log.info('Model loaded successfully')
 
     @staticmethod
-    def load_opt(opt: object, checkpoint: dict, model_id: int) -> None:
-        opt_name = f'opt_{model_id}'
-        opt.load_state_dict(checkpoint[opt_name])
-        log.info("opt loaded successfully")
+    def load_opt(opt: object, checkpoint: Dict, model_id: int) -> None:
+        key = f'opt_{model_id}'
+        if key not in checkpoint:
+            raise KeyError(f'Optimizer state `{key}` not found in checkpoint.')
+        opt.load_state_dict(checkpoint[key])
+        log.info('Optimizer loaded successfully')
 
     @staticmethod
-    def construct_model_dict(epoch: int, model_list: list, opt_list: list) -> dict:
-        assert len(model_list) == len(opt_list)
-        model_dict = {'epoch': epoch}
-        for i, _ in enumerate(model_list):
-            model_name = f'model_{i}'
-            opt_name = f'opt_{i}'
-            model_dict[model_name] = model_list[i].state_dict()
-            model_dict[opt_name] = opt_list[i].state_dict()
+    def construct_model_dict(epoch: int, model_list: List[object], opt_list: List[object]) -> Dict[str, object]:
+        if len(model_list) != len(opt_list):
+            raise ValueError('Model and optimizer lists must be the same length.')
+
+        model_dict: Dict[str, object] = {'epoch': epoch}
+        for index, (model, opt) in enumerate(zip(model_list, opt_list)):
+            model_dict[f'model_{index}'] = model.state_dict()
+            model_dict[f'opt_{index}'] = opt.state_dict()
         return model_dict
 
-    @staticmethod
-    def save(file_dir: str, file_name: str, model_dict: dict) -> None:
-        torch.save(model_dict, file_dir + file_name)
-        log.info(f"Save model in : {file_dir + file_name}")
-        ModelSaver.write_check_point_list(file_dir, file_name)
+    @classmethod
+    def save(cls, file_dir: str, file_name: str, model_dict: Dict[str, object]) -> None:
+        directory = cls.__normalize_dir(file_dir)
+        checkpoint_path = directory / file_name
+        torch.save(model_dict, checkpoint_path)
+        log.info(f'Save model in : {checkpoint_path}')
+        cls.__write_checkpoint_metadata(directory, file_name)
 
-    @staticmethod
-    def write_check_point_list(file_dir: str, file_name: str) -> None:
-        fd_checkpoint_list = ModelSaver.__write_check_point_list_title(file_dir)
-        if fd_checkpoint_list is None:
-            ModelSaver.__write_new_check_point_file(file_dir, file_name)
-        else:
-            ModelSaver.__write_old_check_point_file(fd_checkpoint_list, file_dir, file_name)
+    @classmethod
+    def write_check_point_list(cls, file_dir: str, file_name: str) -> None:
+        directory = cls.__normalize_dir(file_dir)
+        cls.__write_checkpoint_metadata(directory, file_name)

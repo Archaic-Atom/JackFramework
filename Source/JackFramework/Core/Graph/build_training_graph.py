@@ -16,8 +16,8 @@ class BuildTrainingGraph(MetaOps, ResultContainer):
 
     def __calculation_process(self, model_item: object, input_data: list, label_data: list,
                               model_id: int, is_training: bool = True) -> tuple:
-        output_data, loss, acc = self.__init_calculation_result()
         output_data = self.user_inference(model_item, input_data, model_id)
+        loss, acc = None, None
         if is_training:
             loss = self.user_loss(output_data, label_data, model_id)
             acc = self.user_accuracy(output_data, label_data, model_id)
@@ -30,6 +30,8 @@ class BuildTrainingGraph(MetaOps, ResultContainer):
         return input_data, label_data
 
     def __update_model(self, loss: list, model_id: int) -> None:
+        if not loss:
+            return
         loss[self.OPT_LOSS_ID].backward()
         self._opt[model_id].step()
 
@@ -38,7 +40,8 @@ class BuildTrainingGraph(MetaOps, ResultContainer):
             torch.cuda.synchronize()
 
     def _train_model(self, input_data: list, label_data: list) -> None:
-        assert len(self._model) == len(self._opt)
+        if not self._model or not self._opt:
+            raise RuntimeError('Model or optimizer has not been initialised.')
         self.init_tower_loss_and_tower_acc()
         input_data, label_data = self.__pass_input_label2device(input_data, label_data)
 
@@ -50,6 +53,8 @@ class BuildTrainingGraph(MetaOps, ResultContainer):
             self.__synchronize_data()
 
     def _val_model(self, input_data: list, label_data: list) -> None:
+        if not self._model:
+            raise RuntimeError('Model has not been initialised.')
         self.init_tower_loss_and_tower_acc()
         input_data, label_data = self.__pass_input_label2device(input_data, label_data)
         with torch.no_grad():
@@ -64,8 +69,3 @@ class BuildTrainingGraph(MetaOps, ResultContainer):
             self._train_model(input_data, label_data)
         else:
             self._val_model(input_data, label_data)
-
-    @staticmethod
-    def __init_calculation_result():
-        output_data, loss, acc = None, None, None
-        return output_data, loss, acc

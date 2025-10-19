@@ -1,37 +1,32 @@
 # -*- coding: utf-8 -*-
+"""Template class that user-facing interfaces should extend."""
+
 import argparse
 from abc import ABCMeta, abstractmethod
+from typing import Tuple
 
 
-class NetWorkInferenceTemplate(object):
-    __metaclass__ = ABCMeta
+class NetWorkInferenceTemplate(object, metaclass=ABCMeta):
     __NETWORK_INFERENCE = None
 
-    def __init__(self):
-        pass
-
-    def __new__(cls, *args: str, **kwargs: str) -> object:
+    def __new__(cls, *args: object, **kwargs: object) -> 'NetWorkInferenceTemplate':
         if cls.__NETWORK_INFERENCE is None:
-            cls.__NETWORK_INFERENCE = object.__new__(cls)
+            cls.__NETWORK_INFERENCE = super().__new__(cls)
         return cls.__NETWORK_INFERENCE
 
     @abstractmethod
-    def inference(self, args: object) -> object:
-        # get model and dataloader
-        # return model, dataloader
-        pass
+    def inference(self, args: object) -> Tuple[object, object]:
+        """Return instantiated (ModelHandlerTemplate, DataHandlerTemplate)."""
 
     @abstractmethod
-    def user_parser(self, parser: object) -> object:
-        # parser.add_argument('--phase', default='train', help='train or test')
-        # return parser
-        pass
+    def user_parser(self, parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+        """Optionally extend the default CLI parser with user arguments."""
 
     @staticmethod
     def _str2bool(arg: str) -> bool:
-        if arg.lower() in {'yes', 'true', 't', 'y', '1'}:
+        lowered = arg.lower()
+        if lowered in {'yes', 'true', 't', 'y', '1'}:
             return True
-        elif arg.lower() in {'no', 'false', 'f', 'n', '0'}:
+        if lowered in {'no', 'false', 'f', 'n', '0'}:
             return False
-        else:
-            raise argparse.ArgumentTypeError('Boolean value expected.')
+        raise argparse.ArgumentTypeError('Boolean value expected.')

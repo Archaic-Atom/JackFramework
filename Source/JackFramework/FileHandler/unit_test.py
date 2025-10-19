@@ -1,62 +1,62 @@
 # -*- coding: utf-8 -*-
-import os
-import sys
+"""Smoke tests for the file handler and checkpoint utilities."""
 
-try:
-    from .file_handler import FileHandler
-    from .model_saver import ModelSaver
-except ImportError:
-    from file_handler import FileHandler
-    from model_saver import ModelSaver
+import importlib.util
+import tempfile
+from pathlib import Path
+
+MODULE_DIR = Path(__file__).resolve().parent
+
+
+def _load_module(qualname: str, path: Path):
+    spec = importlib.util.spec_from_file_location(qualname, path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f'Unable to load module `{qualname}` from `{path}`.')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)  # type: ignore[attr-defined]
+    return module
+
+
+FileHandler = _load_module('JackFramework.FileHandler.file_handler', MODULE_DIR / 'file_handler.py').FileHandler
+ModelSaver = _load_module('JackFramework.FileHandler.model_saver', MODULE_DIR / 'model_saver.py').ModelSaver
 
 
 class FileHandlerUnitTestFramework(object):
     CHECK_POINT_LIST_NAME = 'checkpoint.list'
-    LAST_MODEL_NAME = 'last model name:'
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     @staticmethod
     def _test_model_saver() -> None:
-        sys.path.append(os.path.join(os.path.dirname(__file__), '../../JackFramework'))
-        print(sys.path)
-        ModelSaver.write_check_point_list('./Checkpoint/', 'test_model_1_epoch_100.pth')
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            ModelSaver.write_check_point_list(tmp_dir, 'test_model_epoch_1.pth')
+            ModelSaver.write_check_point_list(tmp_dir, 'test_model_epoch_2.pth')
 
-    def _test_file_handler(self) -> None:
-        file_dir = './Checkpoint/'
-        file_name = 'checkpoint.list'
-        fd_checkpoint_list = FileHandler.open_file(file_dir + file_name)
-        str_line = FileHandler.get_line_fd(fd_checkpoint_list, 0)
-        print(str_line)
-        test_file_name = "test_model_1_epoch_%d.pth"
+            list_path = Path(tmp_dir) / FileHandlerUnitTestFramework.CHECK_POINT_LIST_NAME
+            print(list_path.read_text().splitlines())
 
-        # Checkpoint's list file
-        for i in range(50):
-            fd_checkpoint_list = FileHandler.open_file(file_dir + self.CHECK_POINT_LIST_NAME)
-            str_line = FileHandler.get_line_fd(fd_checkpoint_list, 0)
-            file_name = test_file_name % i
-            if str_line[: len(self.LAST_MODEL_NAME)] != self.LAST_MODEL_NAME:
-                FileHandler.close_file(fd_checkpoint_list)
-                fd_checkpoint_list = None
-                os.remove(file_dir + self.CHECK_POINT_LIST_NAME)
+    @staticmethod
+    def _test_file_handler() -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            base_path = Path(tmp_dir)
+            source_path = base_path / 'source.txt'
+            dest_path = base_path / 'dest.txt'
 
-            if fd_checkpoint_list is None:
-                fd_checkpoint_list = FileHandler.open_file(file_dir + self.CHECK_POINT_LIST_NAME)
-                FileHandler.write_file(fd_checkpoint_list, self.LAST_MODEL_NAME + file_name)
-                FileHandler.write_file(fd_checkpoint_list, file_name)
-                FileHandler.close_file(fd_checkpoint_list)
-            else:
-                fd_checkpoint_temp_list = FileHandler.open_file(
-                    file_dir + self.CHECK_POINT_LIST_NAME + '.temp')
-                FileHandler.write_file(fd_checkpoint_temp_list, self.LAST_MODEL_NAME + file_name)
-                FileHandler.copy_file(fd_checkpoint_list, fd_checkpoint_temp_list, 1)
-                FileHandler.write_file(fd_checkpoint_temp_list, file_name)
-                FileHandler.close_file(fd_checkpoint_list)
-                FileHandler.close_file(fd_checkpoint_temp_list)
-                os.remove(file_dir + self.CHECK_POINT_LIST_NAME)
-                os.rename(file_dir + self.CHECK_POINT_LIST_NAME + '.temp',
-                          file_dir + self.CHECK_POINT_LIST_NAME)
+            source = FileHandler.open_file(str(source_path), is_continue=False)
+            FileHandler.write_file(source, 'header')
+            FileHandler.write_file(source, 'line_a')
+            FileHandler.write_file(source, 'line_b')
+            FileHandler.close_file(source)
+
+            source = FileHandler.open_file(str(source_path))
+            dest = FileHandler.open_file(str(dest_path), is_continue=False)
+            FileHandler.write_file(dest, 'header')
+            FileHandler.copy_file(source, dest, 1)
+            FileHandler.close_file(source)
+            FileHandler.close_file(dest)
+
+            print(dest_path.read_text().splitlines())
 
     def test(self) -> None:
         self._test_model_saver()

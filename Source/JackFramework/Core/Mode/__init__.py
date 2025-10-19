@@ -1,28 +1,31 @@
 # -*- coding: UTF-8 -*-
-from collections.abc import Callable
+"""Mode selection helpers for the Application entry point."""
 
-from JackFramework.SysBasic.switch import Switch
+from collections.abc import Callable
+from typing import Dict, Type
+
 from JackFramework.SysBasic.log_handler import LogHandler as log
 
+from .background import BackGround
 from .test_proc import TestProc
 from .train_proc import TrainProc
-from .background import BackGround
 from .web_proc import WebProc
 
 
-def _get_mode_dict() -> dict:
-    return {
-        'train': TrainProc,
-        'test': TestProc,
-        'background': BackGround,
-        'online': None,
-        'reinforcement_learning': None,
-        'web': WebProc,
-    }
+MODE_REGISTRY: Dict[str, Type] = {
+    'train': TrainProc,
+    'test': TestProc,
+    'background': BackGround,
+    'web': WebProc,
+}
 
 
 def mode_selection(args: object, user_inference_func: object, mode_name: str) -> Callable:
-    mode_dict = _get_mode_dict()
-    assert mode_name in mode_dict
-    log.info(f'Enter {mode_name} mode')
-    return mode_dict[mode_name](args, user_inference_func).exec
+    try:
+        mode_cls = MODE_REGISTRY[mode_name]
+    except KeyError as exc:
+        available = ', '.join(sorted(MODE_REGISTRY))
+        raise ValueError(f'Unknown mode `{mode_name}`. Available modes: {available}.') from exc
+
+    log.info(f'Entering {mode_name} mode')
+    return mode_cls(args, user_inference_func).exec
