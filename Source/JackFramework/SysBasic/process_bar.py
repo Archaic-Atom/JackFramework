@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 """Tools for rendering textual progress bars in the terminal."""
 
+import os
 import shutil
 import sys
 from typing import Optional, Sequence, Tuple, Union
@@ -9,9 +10,9 @@ from typing import Optional, Sequence, Tuple, Union
 class ShowProcess(object):
     """Render a simple textual progress bar with optional metadata."""
 
-    DEFAULT_BAR_WIDTH = 30
+    DEFAULT_BAR_WIDTH = 10
     MIN_BAR_WIDTH = 10
-    MAX_BAR_WIDTH = 60
+    MAX_BAR_WIDTH = 10
     FILL_CHAR = '#'
     EMPTY_CHAR = '-'
     POINTER_CHAR = '>'
@@ -26,17 +27,23 @@ class ShowProcess(object):
         self.__counter = 0
         self.__info_done = info_done
         self.__spinner_index = 0
+        self.__custom_bar_width = bar_width is not None
+        self.__term_columns = None
         self.__bar_width = self.__resolve_bar_width(bar_width)
 
     def __resolve_bar_width(self, requested_width: Optional[int]) -> int:
+        columns = self.__detect_columns()
+        self.__term_columns = columns
         if requested_width is not None:
             return max(self.MIN_BAR_WIDTH, min(self.MAX_BAR_WIDTH, requested_width))
 
-        columns = shutil.get_terminal_size((80, 20)).columns
-        adaptive_width = max(self.MIN_BAR_WIDTH, min(int(columns * 0.35), self.MAX_BAR_WIDTH))
-        if self.__target_steps > 0:
-            adaptive_width = min(adaptive_width, max(self.MIN_BAR_WIDTH, self.__target_steps))
-        return adaptive_width
+        return self.DEFAULT_BAR_WIDTH
+
+    def __refresh_layout(self) -> None:
+        columns = self.__detect_columns()
+        self.__term_columns = columns
+        if not self.__custom_bar_width:
+            self.__bar_width = self.DEFAULT_BAR_WIDTH
 
     def __count(self, start_counter: Optional[int]) -> None:
         if start_counter is not None:
@@ -74,6 +81,7 @@ class ShowProcess(object):
     def show_process(self, start_counter: Optional[int] = None, show_info: str = '',
                      rest_time: Union[str, float] = '', duration: Union[str, float] = '',
                      queue_size: Union[str, int] = '') -> None:
+        self.__refresh_layout()
         self.__count(start_counter)
         num_filled, num_empty, percent = self.__cal_bar()
         info_done = self.__generate_info_done()
@@ -81,11 +89,12 @@ class ShowProcess(object):
         spinner = self.__next_spinner()
 
         detail_segments = self.__compose_detail_segments(show_info, queue_size, rest_time, duration)
-        detail_str = f" :: {' | '.join(detail_segments)}" if detail_segments else ''
+        base_prefix = (f"[{self.__info}] {spinner} |{bar_repr}| "
+                       f"{self.__counter}/{self.__max_steps} {percent:.1f}%")
+        detail_str = self.__format_detail(detail_segments)
+        detail_str = self.__clip_detail(detail_str, base_prefix, info_done)
 
-        process_str = (f"[{self.__info}] {spinner} |{bar_repr}| "
-                       f"{self.__counter:>4} / {self.__max_steps:<4} {percent:6.2f}%"
-                       f"{detail_str}{info_done}    \r")
+        process_str = f"{base_prefix}{detail_str}{info_done}    \r"
         self.__print(process_str)
 
     def close(self) -> None:
@@ -137,6 +146,63 @@ class ShowProcess(object):
             details.append(f"step: {duration_str}")
 
         return tuple(details)
+
+    @staticmethod
+    def __format_detail(segments: Tuple[str, ...]) -> str:
+        if not segments:
+            return ''
+        normalized = []
+        for segment in segments:
+            stripped = segment.strip()
+            if not stripped:
+                continue
+            normalized.append(' '.join(stripped.split()))
+        if not normalized:
+            return ''
+        return ' :: ' + ' | '.join(normalized)
+
+    def __clip_detail(self, detail: str, base_prefix: str, info_done: str) -> str:
+        if not detail or self.__term_columns is None:
+            return detail
+
+        available = self.__term_columns - len(base_prefix) - len(info_done) - 4
+        if available <= len(' :: '):
+            return ''
+
+        if len(detail) <= available:
+            return detail
+
+        trimmed = detail[:max(available - 3, len(' :: '))]
+        if len(trimmed) <= len(' :: '):
+            return ''
+        trimmed = trimmed.rstrip()
+        if len(trimmed) + len('...') <= available:
+            return trimmed + '...'
+        final = trimmed[:max(available - len('...'), len(' :: '))].rstrip()
+        if len(final) <= len(' :: '):
+            return ''
+        return final + '...'
+
+    @staticmethod
+    def __detect_columns() -> int:
+        fallback = shutil.get_terminal_size((80, 20)).columns
+        for stream in (sys.__stdout__, sys.__stderr__, sys.__stdin__):
+            if stream is None:
+                continue
+            try:
+                size = os.get_terminal_size(stream.fileno())
+            except (OSError, ValueError):
+                continue
+            fallback = max(fallback, size.columns)
+        env_override = (os.environ.get('JF_PROGRESS_COLUMNS') or
+                        os.environ.get('COLUMNS'))
+        if env_override:
+            try:
+                override_value = int(env_override)
+                fallback = max(override_value, fallback)
+            except ValueError:
+                pass
+        return fallback
 
     @staticmethod
     def __print(process_str: str) -> None:

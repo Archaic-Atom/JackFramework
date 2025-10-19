@@ -45,26 +45,26 @@ class CDAccuracy(MetaAccuracy):
     def oa_score(cls, accumulate: bool = False) -> torch.Tensor:
         cm = cls._select_cm(accumulate)
         tp = torch.diag(cm)
-        return tp.sum() / (cm.sum() + cls.epsilon)
+        return tp.sum() / (cm.sum() + MetaAccuracy.ACC_EPSILON)
 
     @classmethod
     def precision_score(cls, accumulate: bool = False) -> torch.Tensor:
         cm = cls._select_cm(accumulate)
         tp = torch.diag(cm)
-        return tp / (cm.sum(dim=0) + cls.epsilon)
+        return tp / (cm.sum(dim=0) + MetaAccuracy.ACC_EPSILON)
 
     @classmethod
     def recall_score(cls, accumulate: bool = False) -> torch.Tensor:
         cm = cls._select_cm(accumulate)
         tp = torch.diag(cm)
-        return tp / (cm.sum(dim=1) + cls.epsilon)
+        return tp / (cm.sum(dim=1) + MetaAccuracy.ACC_EPSILON)
 
     @classmethod
     def iou_miou_score(cls, accumulate: bool = False) -> Tuple[torch.Tensor, torch.Tensor]:
         cm = cls._select_cm(accumulate)
         tp = torch.diag(cm)
         each_class_counts = cm.sum(dim=1) + cm.sum(dim=0) - tp
-        iou = tp / (each_class_counts + cls.epsilon)
+        iou = tp / (each_class_counts + MetaAccuracy.ACC_EPSILON)
         miou = torch.mean(iou)
         return iou, miou
 
@@ -72,8 +72,8 @@ class CDAccuracy(MetaAccuracy):
     def f_score(cls, accumulate: bool = False, beta: int = 1) -> torch.Tensor:
         cm = cls._select_cm(accumulate)
         tp = torch.diag(cm)
-        precision = tp / (cm.sum(dim=0) + cls.epsilon)
-        recall = tp / (cm.sum(dim=1) + cls.epsilon)
+        precision = tp / (cm.sum(dim=0) + MetaAccuracy.ACC_EPSILON)
+        recall = tp / (cm.sum(dim=1) + MetaAccuracy.ACC_EPSILON)
         beta_sq = beta ** 2
         return ((1 + beta_sq) * precision * recall /
-                (precision * beta_sq + recall + cls.epsilon))
+                (precision * beta_sq + recall + MetaAccuracy.ACC_EPSILON))

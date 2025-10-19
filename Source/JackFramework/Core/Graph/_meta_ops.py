@@ -86,8 +86,16 @@ class MetaOps(UserModel):
         res = []
         for data_item in data:
             if self.__args.dist:
-                log_data = self._reduce_tensor(data_item.clone().detach_() / self.__args.gpu)
-                res.append(log_data.item())
+                if not torch.is_tensor(data_item):
+                    raise TypeError('Distributed aggregation expects tensor inputs.')
+                tensor = data_item.clone().detach()
+                if not tensor.is_cuda:
+                    if self.rank is None:
+                        raise RuntimeError('Distributed aggregation without rank assignment.')
+                    tensor = tensor.to(torch.device('cuda', self.rank))
+                reduced = self._reduce_tensor(tensor)
+                world_size = max(self.__args.gpu, 1)
+                res.append((reduced / world_size).item())
             else:
                 res.append(data_item.item())
         return res

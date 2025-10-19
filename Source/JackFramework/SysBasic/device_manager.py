@@ -57,6 +57,9 @@ class DeviceManager(object):
 
         os.environ['MASTER_ADDR'] = self.__args.ip
         os.environ['MASTER_PORT'] = str(self.__args.port)
+        os.environ['RANK'] = str(rank)
+        os.environ.setdefault('LOCAL_RANK', str(rank))
+        os.environ.setdefault('WORLD_SIZE', str(self.__args.gpu))
         self.__init_cudnn(True)
         dist.init_process_group('nccl', rank=rank, world_size=self.__args.gpu)
         torch.cuda.set_device(rank)

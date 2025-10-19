@@ -74,6 +74,9 @@ Switch modes via `--mode <train|test|background|web>` when invoking your entry s
 
 Run `python your_entry.py --help` to see the full list (plus any custom flags you add in `user_parser`).
 
+**Environment Tweaks**
+- `JF_PROGRESS_COLUMNS`: override the detected terminal width (useful for `nohup`/non-TTY runs) so the progress bar can expand to the specified column count.
+
 ## Project Layout
 ```
 .
@@ -105,9 +108,19 @@ Run `python your_entry.py --help` to see the full list (plus any custom flags yo
 - TensorBoard logs write to `--log`. Launch with `tensorboard --logdir <log_dir>`.
 - Named-pipe based modes (`background`) require a POSIX environment.
 
-## Changelog
-- **2024-09-15** (current): runtime validation hardened, device/mode guards improved, README refreshed for the PyTorch 2.4 stack, version synced to `0.1.1`.
-- **2021-07-01**: initial public README, GitHub Actions, installer scripts.
-- **2021-05-28**: project bootstrap, packaging script.
+- **2025-09-18**
+  - Hardened runtime validation (replaced assertions with explicit errors across graph/mode/device helpers).
+  - Synchronized versioning in code and packaging (`0.1.1`).
+  - Refined installation/build/clean scripts for pip-based workflows and safer defaults.
+  - Refactored `setup.py` to auto-load version and README metadata.
+  - Refresh progress bar rendering (terminal-aware truncation + dynamic width detection).
+- **2025-09-15**
+  - README refreshed for the PyTorch 2.4 toolchain.
+  - Initial defensive checks after refactoring the NN blocks.
+- **2021-07-01**
+  - Added GitHub Actions CI and first public README iteration.
+  - Installation helper scripts introduced.
+- **2021-05-28**
+  - Project bootstrap with packaging scaffold.
 
 JackFramework is released under the MIT License.
