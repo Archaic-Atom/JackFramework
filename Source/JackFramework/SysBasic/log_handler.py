@@ -61,28 +61,28 @@ class LogHandler(object):
         logger.disabled = False
 
     @classmethod
-    def _log(cls, level: str, message: str) -> None:
+    def _log(cls, level: str, message: str, *args: object, **kwargs: object) -> None:
         logger = logging.getLogger(cls.LOGGER_NAME)
         if not logger.handlers:
             logging.basicConfig(level=logging.INFO, format=cls.LOG_FORMAT,
                                 datefmt=cls.LOG_DATE_FORMAT)
-        getattr(logger, level)(message)
+        getattr(logger, level)(message, *args, **kwargs)
 
     @classmethod
-    def info(cls, data_str: str) -> None:
-        cls._log('info', data_str)
+    def info(cls, data_str: str, *args: object, **kwargs: object) -> None:
+        cls._log('info', data_str, *args, **kwargs)
 
     @classmethod
-    def debug(cls, data_str: str) -> None:
-        cls._log('debug', data_str)
+    def debug(cls, data_str: str, *args: object, **kwargs: object) -> None:
+        cls._log('debug', data_str, *args, **kwargs)
 
     @classmethod
-    def warning(cls, data_str: str) -> None:
-        cls._log('warning', data_str)
+    def warning(cls, data_str: str, *args: object, **kwargs: object) -> None:
+        cls._log('warning', data_str, *args, **kwargs)
 
     @classmethod
-    def error(cls, data_str: str) -> None:
-        cls._log('error', data_str)
+    def error(cls, data_str: str, *args: object, **kwargs: object) -> None:
+        cls._log('error', data_str, *args, **kwargs)
 
     class _ConsoleFormatter(logging.Formatter):
         def __init__(self, fmt: str, datefmt: Optional[str]) -> None:

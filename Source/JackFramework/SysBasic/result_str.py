@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Formatting helpers for human-readable training logs."""
 
-from typing import List, Sequence
+from typing import List, Optional, Sequence
 
 DEFAULT_MAX_DECIMAL_PLACES = 6
 DEFAULT_MIN_DECIMAL_PLACES = 2
@@ -15,11 +15,12 @@ class ResultStr(object):
         self.__arg = arg
 
     def training_result_str(self, epoch: int, loss: Sequence[float], acc: Sequence[float],
-                            duration: float, training: bool = True) -> str:
+                            duration: Optional[float], training: bool = True) -> str:
         loss_str = self.loss2str(loss, decimal_places=DEFAULT_MAX_DECIMAL_PLACES)
         acc_str = self.acc2str(acc, decimal_places=DEFAULT_MAX_DECIMAL_PLACES)
         training_state = '[TrainProcess] ' if training else '[ValProcess] '
-        return f"{training_state}e: {epoch}, {loss_str}, {acc_str} ({duration:.3f} s/epoch)"
+        duration_str = 'N/A s/epoch' if duration is None else f'{duration:.3f} s/epoch'
+        return f"{training_state}e: {epoch}, {loss_str}, {acc_str} ({duration_str})"
 
     def testing_result_str(self, acc: Sequence[float], info_str: Sequence[str] = None) -> str:
         acc_str = self.acc2str(acc, info_str, decimal_places=DEFAULT_MAX_DECIMAL_PLACES)

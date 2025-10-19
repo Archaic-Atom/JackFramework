@@ -3,7 +3,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Optional
+from typing import Optional, Tuple
 
 import torch.multiprocessing as mp
 
@@ -76,10 +76,13 @@ class Application(object):
             mode_func(rank)
             return
 
-        def _wrapped(local_rank: int) -> None:
-            global_rank = node_rank * gpu_num + local_rank
-            os.environ['LOCAL_RANK'] = str(local_rank)
-            os.environ['RANK'] = str(global_rank)
-            mode_func(global_rank)
+        spawn_args: Tuple[Callable, int, int] = (mode_func, node_rank, gpu_num)
+        mp.spawn(_spawn_mode_worker, nprocs=gpu_num, join=True, args=spawn_args)
 
-        mp.spawn(_wrapped, nprocs=gpu_num, join=True)
+
+def _spawn_mode_worker(local_rank: int, mode_func: Callable, node_rank: int, gpu_num: int) -> None:
+    """Entry point for spawned worker processes."""
+    global_rank = node_rank * gpu_num + local_rank
+    os.environ['LOCAL_RANK'] = str(local_rank)
+    os.environ['RANK'] = str(global_rank)
+    mode_func(global_rank)
