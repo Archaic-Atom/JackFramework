@@ -94,7 +94,7 @@ class MetaOps(UserModel):
                         raise RuntimeError('Distributed aggregation without rank assignment.')
                     tensor = tensor.to(torch.device('cuda', self.rank))
                 reduced = self._reduce_tensor(tensor)
-                world_size = max(self.__args.gpu, 1)
+                world_size = max(int(os.environ.get('WORLD_SIZE', self.__args.gpu)), 1)
                 res.append((reduced / world_size).item())
             else:
                 res.append(data_item.item())

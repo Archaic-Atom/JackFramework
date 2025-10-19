@@ -36,6 +36,8 @@ class InitProgram(object):
             'log': args.log,
             'gpu': args.gpu,
             'dist': args.dist,
+            'nodes': getattr(args, 'nodes', 1),
+            'node_rank': getattr(args, 'node_rank', 0),
             'dataloaderNum': args.dataloaderNum,
             'auto_save_num': args.auto_save_num,
             'sampleNum': args.sampleNum,

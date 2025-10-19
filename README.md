@@ -65,6 +65,8 @@ Switch modes via `--mode <train|test|background|web>` when invoking your entry s
 |------|---------|-------|
 | `--gpu` | 2 | Number of GPUs. Set to `0` for CPU. |
 | `--dist` | `True` | Enable DistributedDataParallel. Falls back to DP/CPU when GPUs < requested. |
+| `--nodes` | 1 | Number of nodes participating in distributed execution. |
+| `--node_rank` | 0 | Rank of this node in the multi-node job (0-based). |
 | `--batchSize` | 64 | Per-device batch size. |
 | `--maxEpochs` | 100 | Training epochs. |
 | `--auto_save_num` | 1 | Checkpoint frequency (epochs). Set `0` to disable. |
@@ -76,6 +78,29 @@ Run `python your_entry.py --help` to see the full list (plus any custom flags yo
 
 **Environment Tweaks**
 - `JF_PROGRESS_COLUMNS`: override the detected terminal width (useful for `nohup`/non-TTY runs) so the progress bar can expand to the specified column count.
+- `MASTER_ADDR` / `MASTER_PORT`: override the rendezvous endpoint used by distributed jobs (defaults to `--ip` / `--port`).
+- `RANK`, `LOCAL_RANK`, `WORLD_SIZE`: honoured when launching with `torchrun`/elastic training; set automatically for single-node launches.
+
+### Distributed Launch Notes
+- **Single GPU**
+  ```bash
+  python your_entry.py --dist false --gpu 1
+  ```
+- **Single node, multi-GPU** (framework default via `mp.spawn`):
+  ```bash
+  python your_entry.py --dist true --gpu 4
+  ```
+- **Single node, multi-GPU (torchrun)**: to align with multi-node launch workflow:
+  ```bash
+  torchrun --nproc_per_node=4 your_entry.py --dist true --gpu 4
+  ```
+- **Multi node, multi-GPU**: use `torchrun` (or any launcher that populates `RANK` / `LOCAL_RANK` / `WORLD_SIZE`) on every node:
+  ```bash
+  torchrun --nnodes=2 --nproc_per_node=4 \
+    --node_rank=${NODE_RANK} --master_addr=${MASTER_ADDR} --master_port=29500 \
+    your_entry.py --dist true --gpu 4 --nodes 2 --node_rank ${NODE_RANK}
+  ```
+  The framework reuses these environment variables; only rank 0 prints console logs while every rank still writes to `output.log`.
 
 ## Project Layout
 ```

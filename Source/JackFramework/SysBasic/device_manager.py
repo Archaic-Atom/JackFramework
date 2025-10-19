@@ -21,6 +21,7 @@ class DeviceManager(object):
     def __init__(self, args: object) -> None:
         super().__init__()
         self.__args = args
+        self.__world_size = int(os.environ.get('WORLD_SIZE', max(args.gpu, 1)))
         self.__device = None if args.dist else self.__init_device()
 
     def __new__(cls, *args: str, **kwargs: str) -> object:
@@ -59,7 +60,7 @@ class DeviceManager(object):
         os.environ['MASTER_PORT'] = str(self.__args.port)
         os.environ['RANK'] = str(rank)
         os.environ.setdefault('LOCAL_RANK', str(rank))
-        os.environ.setdefault('WORLD_SIZE', str(self.__args.gpu))
+        os.environ.setdefault('WORLD_SIZE', str(self.__world_size))
         self.__init_cudnn(True)
         dist.init_process_group('nccl', rank=rank, world_size=self.__args.gpu)
         torch.cuda.set_device(rank)
