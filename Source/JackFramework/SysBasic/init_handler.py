@@ -89,8 +89,7 @@ class InitProgram(object):
         log.info('Begin to check the env')
         return DeviceManager.check_cuda(self.__args)
 
-    @staticmethod
-    def __configure_runtime_logging() -> None:
+    def __configure_runtime_logging(self) -> None:
         """Apply environment-driven logging and warning controls.
 
         Supported env vars (set before init):
@@ -106,6 +105,7 @@ class InitProgram(object):
         """
 
         env = os.environ
+        args = self.__args
 
         # Torch C++ logs (covers Gloo/NCCL warnings emitted via PyTorch C++)
         val = env.get('JACK_TORCH_CPP_LOG_LEVEL')
@@ -113,6 +113,10 @@ class InitProgram(object):
             env['TORCH_CPP_LOG_LEVEL'] = val
         elif env.get('JACK_SILENCE_TORCH_CPP') == '1':
             env.setdefault('TORCH_CPP_LOG_LEVEL', 'ERROR')
+        else:
+            # Apply sensible defaults based on --debug if user did not set JACK_* or TORCH_CPP_LOG_LEVEL
+            if 'TORCH_CPP_LOG_LEVEL' not in env:
+                env['TORCH_CPP_LOG_LEVEL'] = 'INFO' if getattr(args, 'debug', False) else 'ERROR'
 
         # NCCL library logs
         val = env.get('JACK_NCCL_DEBUG')
@@ -120,6 +124,9 @@ class InitProgram(object):
             env['NCCL_DEBUG'] = val
         elif env.get('JACK_SILENCE_NCCL') == '1':
             env.setdefault('NCCL_DEBUG', 'ERROR')
+        else:
+            if 'NCCL_DEBUG' not in env:
+                env['NCCL_DEBUG'] = 'INFO' if getattr(args, 'debug', False) else 'ERROR'
 
         if env.get('JACK_NCCL_DEBUG_FILE'):
             env['NCCL_DEBUG_FILE'] = env['JACK_NCCL_DEBUG_FILE']
@@ -134,6 +141,11 @@ class InitProgram(object):
         if env.get('JACK_SUPPRESS_MESHGRID_WARNING') == '1':
             warnings.filterwarnings('ignore', category=UserWarning,
                                     message=r'.*torch\.meshgrid:.*indexing.*')
+        else:
+            # Default: suppress the meshgrid indexing deprecation when not debugging
+            if not getattr(args, 'debug', False):
+                warnings.filterwarnings('ignore', category=UserWarning,
+                                        message=r'.*torch\.meshgrid:.*indexing.*')
 
         # Allow custom warning filters via env if not already provided by user
         if env.get('JACK_PY_WARNINGS') and not env.get('PYTHONWARNINGS'):

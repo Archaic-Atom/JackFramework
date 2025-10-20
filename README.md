@@ -144,6 +144,13 @@ Common CLI flags
     - `JACK_SUPPRESS_MESHGRID_WARNING=1` — ignore the specific `torch.meshgrid(..., indexing=...)` deprecation warning
     - Advanced: use `PYTHONWARNINGS` directly (e.g., `PYTHONWARNINGS=ignore:::torch.functional`)
 
+Debug flag
+- `--debug true` sets sensible verbose defaults if you do not specify env vars:
+  - `TORCH_CPP_LOG_LEVEL=INFO`, `NCCL_DEBUG=INFO`, and Python warnings shown.
+- `--debug false` (default) applies quieter defaults:
+  - `TORCH_CPP_LOG_LEVEL=ERROR`, `NCCL_DEBUG=ERROR`, and suppress `torch.meshgrid` indexing warning.
+- Any `JACK_*` or low-level env vars you set explicitly will take precedence over these defaults.
+
 ## Project Structure
 ```
 .
