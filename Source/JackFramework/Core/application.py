@@ -38,6 +38,12 @@ class Application(object):
             raise RuntimeError('User interface has not been configured for the application.')
 
         args = self.__parse_args()
+        # Apply logging/warning controls and stderr filter as early as possible
+        try:
+            from JackFramework.SysBasic.init_handler import InitProgram
+            InitProgram.apply_runtime_logging(args)
+        except Exception:
+            pass
         if not InitProgram(args).init_program():
             log.error('Initialisation failed; aborting application start.')
             return

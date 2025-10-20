@@ -203,3 +203,7 @@ Debug flag
 
 ## License
 MIT License
+  - Terminal-only C++ print filtering (best-effort):
+    - `JACK_SUPPRESS_GLOO_CONNECT=1` — hide lines like "[Gloo] Rank X is connected to Y peer ranks."
+    - `JACK_SUPPRESS_NCCL_DESTROY_WARNING=1` — hide the ProcessGroupNCCL destroy warning on exit
+    - `JACK_STDERR_FILTER="regex1|regex2|..."` — drop matching stderr lines by regex (applied early in process)

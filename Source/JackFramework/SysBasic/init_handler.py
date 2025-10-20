@@ -3,6 +3,10 @@
 
 import os
 import warnings
+import re
+import sys
+import atexit
+import threading
 from typing import Dict
 
 from JackFramework.SysBasic.log_handler import LogHandler as log
@@ -160,6 +164,100 @@ class InitProgram(object):
         # Allow custom warning filters via env if not already provided by user
         if env.get('JACK_PY_WARNINGS') and not env.get('PYTHONWARNINGS'):
             env['PYTHONWARNINGS'] = env['JACK_PY_WARNINGS']
+
+        # Optional: install a stderr filter to drop specific C++ prints that
+        # are not controlled by log-level envs (best-effort, terminal only)
+        self.__install_stderr_filter()
+
+    def __install_stderr_filter(self) -> None:
+        env = os.environ
+        debug = getattr(self.__args, 'debug', False)
+
+        # Build suppression patterns
+        patterns = []
+        # Default: hide Gloo peer connection info when not debugging
+        if env.get('JACK_SUPPRESS_GLOO_CONNECT') == '1' or not debug:
+            patterns.append(r"^\[Gloo\] Rank \d+ is connected to \d+ peer ranks\.")
+        # Optional: hide NCCL destroy_process_group timing warning
+        if env.get('JACK_SUPPRESS_NCCL_DESTROY_WARNING') == '1':
+            patterns.append(r"ProcessGroupNCCL\.cpp:.*destroy_process_group\(\).*")
+        # User-provided additional regex filters (separated by '|')
+        user_filter = env.get('JACK_STDERR_FILTER')
+        if user_filter:
+            for pat in user_filter.split('|'):
+                pat = pat.strip()
+                if pat:
+                    patterns.append(pat)
+
+        if not patterns:
+            return
+
+        try:
+            compiled = [re.compile(p) for p in patterns]
+        except re.error:
+            # Invalid regex; do nothing
+            return
+
+        # If stderr already redirected by outer env, skip
+        if not hasattr(sys.stderr, 'fileno'):
+            return
+
+        try:
+            orig_fd = os.dup(sys.stderr.fileno())
+        except Exception:
+            return
+
+        r_fd, w_fd = os.pipe()
+        try:
+            os.dup2(w_fd, sys.stderr.fileno())
+        except Exception:
+            # Restore and abandon
+            os.close(r_fd)
+            os.close(w_fd)
+            os.close(orig_fd)
+            return
+
+        stop_flag = threading.Event()
+
+        def _pump():
+            buf = b''
+            try:
+                while not stop_flag.is_set():
+                    try:
+                        chunk = os.read(r_fd, 4096)
+                        if not chunk:
+                            break
+                        buf += chunk
+                        while b'\n' in buf:
+                            line, buf = buf.split(b'\n', 1)
+                            text = line.decode(errors='ignore')
+                            if any(p.search(text) for p in compiled):
+                                continue
+                            os.write(orig_fd, line + b'\n')
+                    except InterruptedError:
+                        continue
+            finally:
+                if buf:
+                    text = buf.decode(errors='ignore')
+                    if not any(p.search(text) for p in compiled):
+                        os.write(orig_fd, buf)
+                os.close(r_fd)
+                os.close(orig_fd)
+
+        t = threading.Thread(target=_pump, name='jf-stderr-filter', daemon=True)
+        t.start()
+
+        def _cleanup():
+            try:
+                stop_flag.set()
+                try:
+                    os.close(w_fd)
+                except Exception:
+                    pass
+            except Exception:
+                pass
+
+        atexit.register(_cleanup)
 
     def init_program(self) -> bool:
         args = self.__args
