@@ -20,11 +20,11 @@ class ShowProcess(object):
     # ANSI styles
     _RESET = '\033[0m'
     _STYLE = {
-        'info': '\033[1;36m',          # bold cyan
+        'info': '\033[1;35m',          # bold magenta
         'spinner': '\033[1;33m',       # bold yellow
-        'bar_fill': '\033[1;32m',      # bold green
+        'bar_fill': '\033[1;34m',      # bold blue
         'bar_empty': '\033[90m',       # bright black (dim)
-        'bar_pointer': '\033[1;35m',   # bold magenta
+        'bar_pointer': '\033[1;36m',   # bold cyan
         'count': '\033[1;37m',         # bold white
         'percent': '\033[1;36m',       # bold cyan
         'sep': '\033[90m',             # dim separator
@@ -68,9 +68,17 @@ class ShowProcess(object):
         if env.get('JF_PROGRESS_COLOR') == '1':
             return True
         try:
-            return sys.stdout.isatty()
+            if hasattr(sys, 'stdout') and sys.stdout and sys.stdout.isatty():
+                return True
+            # Fallback to original stdout, useful if fd 1 is temporarily piped
+            if hasattr(sys, '__stdout__') and sys.__stdout__ and sys.__stdout__.isatty():
+                return True
         except Exception:
-            return False
+            pass
+        # If a pre-filter captured TTY state, trust it
+        if os.environ.get('JF_STDOUT_WAS_TTY') == '1':
+            return True
+        return False
 
     def __fmt(self, text: str, style_key: Optional[str]) -> str:
         if not self.__use_color or not style_key:

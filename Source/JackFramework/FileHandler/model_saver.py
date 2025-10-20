@@ -156,8 +156,52 @@ class ModelSaver(object):
         key = f'model_{model_id}'
         if key not in checkpoint:
             raise KeyError(f'Model state `{key}` not found in checkpoint.')
-        model.load_state_dict(checkpoint[key], strict=True)
-        log.info('Model loaded successfully')
+        state_dict = checkpoint[key]
+
+        def _has_module_prefix(sd_keys: Iterable[str]) -> bool:
+            for k in sd_keys:
+                if k.startswith('module.'):
+                    return True
+            return False
+
+        # First try strict load
+        try:
+            model.load_state_dict(state_dict, strict=True)
+            log.info('Model loaded successfully')
+            return
+        except RuntimeError as exc:
+            log.warning(f'Strict load_state_dict failed: {exc}. Attempting prefix adaptation...')
+
+        # Adapt key prefixes between {plain <-> module.} when switching DP/DDP/CPU
+        model_keys = model.state_dict().keys()
+        dest_has_module = _has_module_prefix(model_keys)
+        src_has_module = _has_module_prefix(state_dict.keys())
+
+        if dest_has_module and not src_has_module:
+            adapted = {f'module.{k}': v for k, v in state_dict.items()}
+        elif not dest_has_module and src_has_module:
+            adapted = {k[len('module.'):]: v for k, v in state_dict.items() if k.startswith('module.')}
+        else:
+            adapted = None
+
+        if adapted is not None:
+            try:
+                model.load_state_dict(adapted, strict=True)
+                log.info('Model loaded successfully (after prefix adaptation)')
+                return
+            except RuntimeError as exc2:
+                log.warning(f'Prefix adaptation strict load failed: {exc2}. Falling back to non-strict load...')
+                try:
+                    model.load_state_dict(adapted, strict=False)
+                    log.info('Model loaded with non-strict mode (after prefix adaptation)')
+                    return
+                except Exception as exc3:  # pragma: no cover
+                    log.error(f'Non-strict load failed after adaptation: {exc3}')
+                    raise
+
+        # Final fallback: non-strict load without adaptation
+        model.load_state_dict(state_dict, strict=False)
+        log.info('Model loaded with non-strict mode (no adaptation)')
 
     @staticmethod
     def load_opt(opt: object, checkpoint: Dict, model_id: int) -> None:

@@ -52,12 +52,19 @@ class MetaOps(UserModel):
 
     def _init_dp_model(self) -> None:
         if self._model is None:
-            raise RuntimeError('Model must be initialised before wrapping with DataParallel.')
-        for i, model_item in enumerate(self._model):
-            self._model[i] = nn.DataParallel(model_item)
+            raise RuntimeError('Model must be initialised before wrapping or moving to device.')
 
-        for i, model_item in enumerate(self._model):
-            self._model[i].to(self.__device)
+        use_cuda = (self.__args.gpu > 0) and torch.cuda.is_available()
+        # If multiple GPUs requested and CUDA available, wrap with DataParallel.
+        # For single GPU or CPU, keep the raw module and move to the resolved device.
+        if use_cuda and max(self.__args.gpu, 0) > 1:
+            for i, model_item in enumerate(self._model):
+                self._model[i] = nn.DataParallel(model_item)
+            for i, _ in enumerate(self._model):
+                self._model[i].to(self.__device)
+        else:
+            for i, model_item in enumerate(self._model):
+                self._model[i] = model_item.to(self.__device)
 
     def _pass_model2device(self) -> None:
         log.info("Loading model to GPUs!")

@@ -2,6 +2,8 @@
 """GPU and distributed device utilities."""
 
 import os
+import re
+import threading
 import atexit
 import socket
 from typing import Optional, Tuple
@@ -59,13 +61,17 @@ class DeviceManager(object):
         if rank is None or self.__args.gpu <= 0:
             raise ValueError('Distributed initialisation requires a valid rank and GPU count > 0.')
 
-        os.environ['MASTER_ADDR'] = self.__args.ip
-        os.environ['MASTER_PORT'] = str(self.__args.port)
-        os.environ['RANK'] = str(rank)
-        os.environ.setdefault('LOCAL_RANK', str(rank))
-        os.environ.setdefault('WORLD_SIZE', str(self.__world_size))
+        # Respect torchrun/elastic env if present; only provide defaults otherwise
+        env = os.environ
+        env.setdefault('MASTER_ADDR', str(self.__args.ip))
+        env.setdefault('MASTER_PORT', str(self.__args.port))
+        env.setdefault('WORLD_SIZE', str(self.__world_size))
+        if env.get('RANK') is None:
+            env['RANK'] = str(rank)
+        if env.get('LOCAL_RANK') is None:
+            env['LOCAL_RANK'] = str(rank)
         self.__init_cudnn(True)
-        dist.init_process_group('nccl', rank=rank, world_size=self.__world_size)
+        dist.init_process_group('nccl', rank=rank, world_size=int(env.get('WORLD_SIZE', self.__world_size)))
         try:
             local_rank_env = os.environ.get('LOCAL_RANK')
             local_rank = int(local_rank_env) if local_rank_env is not None else rank

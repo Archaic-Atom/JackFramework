@@ -169,6 +169,11 @@ class InitProgram(object):
         # are not controlled by log-level envs (best-effort, terminal only)
         self.__install_stderr_filter()
 
+        # Default to coloured progress bars unless explicitly disabled
+        # (set JF_PROGRESS_COLOR=0 or NO_COLOR to override).
+        if 'JF_PROGRESS_COLOR' not in env and 'NO_COLOR' not in env:
+            env['JF_PROGRESS_COLOR'] = '1'
+
     def __install_stderr_filter(self) -> None:
         env = os.environ
         debug = getattr(self.__args, 'debug', False)
@@ -177,8 +182,8 @@ class InitProgram(object):
         patterns = []
         # Default: hide Gloo peer connection info when not debugging
         if env.get('JACK_SUPPRESS_GLOO_CONNECT') == '1' or not debug:
-            # Match both the short form and the extended form with expected count suffix
-            patterns.append(r"^\[Gloo\] Rank \d+ is connected to \d+ peer ranks.*")
+            # Match variants with or without leading spaces/prefix
+            patterns.append(r".*\[Gloo\] Rank \d+ is connected to \d+ peer ranks.*")
         # Optional: hide NCCL destroy_process_group timing warning
         if env.get('JACK_SUPPRESS_NCCL_DESTROY_WARNING') == '1':
             patterns.append(r"ProcessGroupNCCL\.cpp:.*destroy_process_group\(\).*")
@@ -199,8 +204,8 @@ class InitProgram(object):
             # Invalid regex; do nothing
             return
 
-        # Install filter only for stderr to avoid interfering with live stdout
-        # rendering (e.g., progress bars) and TTY colour detection.
+        # Filter only stderr to avoid interfering with live stdout rendering
+        # (e.g., progress bars) and to preserve TTY colour detection.
         self.__install_stream_filter(sys.stderr, compiled, name='stderr')
 
     @staticmethod
@@ -211,6 +216,13 @@ class InitProgram(object):
             orig_fd = os.dup(stream.fileno())
         except Exception:
             return
+
+        # Preserve color capability hint when filtering stdout
+        try:
+            if name == 'stdout' and os.isatty(orig_fd):
+                os.environ['JF_STDOUT_WAS_TTY'] = '1'
+        except Exception:
+            pass
 
         r_fd, w_fd = os.pipe()
         try:
@@ -232,12 +244,23 @@ class InitProgram(object):
                         if not chunk:
                             break
                         buf += chunk
-                        while b'\n' in buf:
-                            line, buf = buf.split(b'\n', 1)
+                        # Process by either newline or carriage return to keep live bars
+                        while True:
+                            nl = buf.find(b'\n')
+                            cr = buf.find(b'\r')
+                            if nl == -1 and cr == -1:
+                                break
+                            # choose earliest delimiter
+                            if nl == -1 or (cr != -1 and cr < nl):
+                                idx, delim = cr, b'\r'
+                            else:
+                                idx, delim = nl, b'\n'
+                            line = buf[:idx]
+                            buf = buf[idx+1:]
                             text = line.decode(errors='ignore')
                             if any(p.search(text) for p in compiled_patterns):
                                 continue
-                            os.write(orig_fd, line + b'\n')
+                            os.write(orig_fd, line + delim)
                     except InterruptedError:
                         continue
             finally:

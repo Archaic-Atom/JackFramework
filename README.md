@@ -108,6 +108,34 @@ Switch modes via `--mode <train|test|background|web>` when invoking your entry s
   ```
   The framework reuses `RANK` / `LOCAL_RANK` / `WORLD_SIZE`; only rank 0 prints to the terminal by default, while all ranks write `output.log`.
 
+## Smoke Test
+Run a dependency‑free minimal training to verify your environment end‑to‑end.
+
+- Minimal entrypoint
+  - `Example/Minimal/main.py` and `Example/Minimal/minimal_interface.py`
+  - Uses a tiny MLP on random data; no real datasets needed.
+
+- One‑command launcher
+  - `bash Scripts/run_minimal.sh`
+  - Defaults: CPU single‑process, `imgNum=32`, `batchSize=8`, `maxEpochs=1`, lists → `/dev/null`.
+  - Environment overrides:
+    - `DIST=true GPUS=2` for DDP (torchrun preferred, fallback to mp.spawn)
+    - `NOHUP=true LOG=run.log` to background with log file (colours enabled by default)
+    - `PASSTHRU="--your extra --flags"` appends flags to the Python command
+    - `TRAIN_LIST` / `VAL_LIST` to change list paths (default `/dev/null`)
+
+- Examples
+  - CPU: `bash Scripts/run_minimal.sh`
+  - Single‑node 2 GPUs (torchrun): `GPUS=2 DIST=true bash Scripts/run_minimal.sh`
+  - Background run: `NOHUP=true LOG=run.log bash Scripts/run_minimal.sh`
+
+- DDP troubleshooting tips
+  - Prefer `torchrun`; set explicit local IP/port if needed: `PASSTHRU="--ip 127.0.0.1 --port 29515"`
+  - Restrict visible GPUs: `CUDA_VISIBLE_DEVICES=0,1`
+  - If NCCL init hangs on some systems, try: `NCCL_IB_DISABLE=1 NCCL_P2P_DISABLE=1`
+  - See logs from all ranks: `JACK_LOG_ALL_RANKS=1`
+
+
 Common CLI flags
 | Flag | Default | Notes |
 |------|---------|-------|
