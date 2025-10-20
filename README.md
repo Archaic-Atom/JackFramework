@@ -125,6 +125,8 @@ Common CLI flags
 ## Observability & Logging
 - TensorBoard writes to `--log`; launch with `tensorboard --logdir <log_dir>`.
 - Progress bars auto-adjust to terminal width; override via `JF_PROGRESS_COLUMNS`.
+  - Colourised progress bars are enabled by default in TTY. Control via:
+    - `JF_PROGRESS_COLOR=1|0` (force enable/disable), or set `NO_COLOR` to disable colours.
 - Environment variables
   - `JACK_LOG_ALL_RANKS=1`: print console logs from every rank (default: only rank 0). File logging is always enabled for all ranks.
     - torchrun example: `JACK_LOG_ALL_RANKS=1 torchrun --nproc_per_node=4 your_entry.py --dist true --gpu 4`

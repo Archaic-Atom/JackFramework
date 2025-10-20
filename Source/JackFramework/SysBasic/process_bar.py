@@ -17,6 +17,20 @@ class ShowProcess(object):
     EMPTY_CHAR = '-'
     POINTER_CHAR = '>'
     SPINNER_FRAMES: Sequence[str] = ('|', '/', '-', '\\')
+    # ANSI styles
+    _RESET = '\033[0m'
+    _STYLE = {
+        'info': '\033[1;36m',          # bold cyan
+        'spinner': '\033[1;33m',       # bold yellow
+        'bar_fill': '\033[1;32m',      # bold green
+        'bar_empty': '\033[90m',       # bright black (dim)
+        'bar_pointer': '\033[1;35m',   # bold magenta
+        'count': '\033[1;37m',         # bold white
+        'percent': '\033[1;36m',       # bold cyan
+        'sep': '\033[90m',             # dim separator
+        'label': '\033[34m',           # blue labels (eta/step)
+        'value': '\033[97m',           # bright white values
+    }
 
     def __init__(self, max_steps: int, info: str = '', info_done: str = 'Done',
                  bar_width: Optional[int] = None) -> None:
@@ -30,6 +44,7 @@ class ShowProcess(object):
         self.__custom_bar_width = bar_width is not None
         self.__term_columns = None
         self.__bar_width = self.__resolve_bar_width(bar_width)
+        self.__use_color = self.__detect_color_support()
 
     def __resolve_bar_width(self, requested_width: Optional[int]) -> int:
         columns = self.__detect_columns()
@@ -44,6 +59,26 @@ class ShowProcess(object):
         self.__term_columns = columns
         if not self.__custom_bar_width:
             self.__bar_width = self.DEFAULT_BAR_WIDTH
+
+    def __detect_color_support(self) -> bool:
+        # Allow forcing via env: JF_PROGRESS_COLOR=0/1; respect NO_COLOR
+        env = os.environ
+        if env.get('JF_PROGRESS_COLOR') == '0' or env.get('NO_COLOR'):
+            return False
+        if env.get('JF_PROGRESS_COLOR') == '1':
+            return True
+        try:
+            return sys.stdout.isatty()
+        except Exception:
+            return False
+
+    def __fmt(self, text: str, style_key: Optional[str]) -> str:
+        if not self.__use_color or not style_key:
+            return text
+        style = self._STYLE.get(style_key)
+        if not style:
+            return text
+        return f"{style}{text}{self._RESET}"
 
     def __count(self, start_counter: Optional[int]) -> None:
         if start_counter is not None:
@@ -85,16 +120,48 @@ class ShowProcess(object):
         self.__count(start_counter)
         num_filled, num_empty, percent = self.__cal_bar()
         info_done = self.__generate_info_done()
-        bar_repr = self.__build_bar(num_filled, num_empty)
         spinner = self.__next_spinner()
 
+        # Build uncoloured components for correct width calculation
+        uncolored_bar = self.__build_bar(num_filled, num_empty)
+        uncolored_prefix = (f"[{self.__info}] {spinner} |{uncolored_bar}| "
+                            f"{self.__counter}/{self.__max_steps} {percent:.1f}%")
         detail_segments = self.__compose_detail_segments(show_info, queue_size, rest_time, duration)
-        base_prefix = (f"[{self.__info}] {spinner} |{bar_repr}| "
-                       f"{self.__counter}/{self.__max_steps} {percent:.1f}%")
-        detail_str = self.__format_detail(detail_segments)
-        detail_str = self.__clip_detail(detail_str, base_prefix, info_done)
+        detail_uncolored = self.__format_detail(detail_segments)
+        detail_uncolored = self.__clip_detail(detail_uncolored, uncolored_prefix, info_done)
 
-        process_str = f"{base_prefix}{detail_str}{info_done}    \r"
+        # Apply colour to each segment when enabled
+        colored_spinner = self.__fmt(spinner, 'spinner')
+        pointer_present = (num_filled != 0 and num_filled != self.__bar_width)
+        fill_count = max(num_filled - (1 if pointer_present else 0), 0)
+        fill_str = self.FILL_CHAR * fill_count
+        empty_str = self.EMPTY_CHAR * num_empty
+        colored_bar = (
+            self.__fmt(fill_str, 'bar_fill') +
+            (self.__fmt(self.POINTER_CHAR, 'bar_pointer') if pointer_present else '') +
+            self.__fmt(empty_str, 'bar_empty')
+        )
+
+        # Colour counts and percent
+        colored_count = self.__fmt(f"{self.__counter}", 'count')
+        colored_max = self.__fmt(f"{self.__max_steps}", 'count')
+        colored_percent = self.__fmt(f"{percent:.1f}%", 'percent')
+        colored_info = self.__fmt(f"[{self.__info}]", 'info')
+        sep_bar = self.__fmt('|', 'sep')
+
+        # Colour detail: colon labels (eta/step/queue) and separators
+        detail_colored = detail_uncolored
+        if self.__use_color and detail_uncolored:
+            # Replace separators
+            detail_colored = detail_colored.replace(' :: ', f" {self.__fmt('::', 'sep')} ")
+            detail_colored = detail_colored.replace(' | ', f" {self.__fmt('|', 'sep')} ")
+            # Highlight common labels
+            for lbl in ('eta:', 'step:', 'queue:'):
+                detail_colored = detail_colored.replace(lbl, self.__fmt(lbl, 'label'))
+
+        base_prefix_colored = (f"{colored_info} {colored_spinner} {sep_bar}{colored_bar}{sep_bar} "
+                               f"{colored_count}/{colored_max} {colored_percent}")
+        process_str = f"{base_prefix_colored}{detail_colored}{info_done}    \r"
         self.__print(process_str)
 
     def close(self) -> None:
