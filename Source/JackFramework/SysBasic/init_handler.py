@@ -177,7 +177,8 @@ class InitProgram(object):
         patterns = []
         # Default: hide Gloo peer connection info when not debugging
         if env.get('JACK_SUPPRESS_GLOO_CONNECT') == '1' or not debug:
-            patterns.append(r"^\[Gloo\] Rank \d+ is connected to \d+ peer ranks\.")
+            # Match both the short form and the extended form with expected count suffix
+            patterns.append(r"^\[Gloo\] Rank \d+ is connected to \d+ peer ranks.*")
         # Optional: hide NCCL destroy_process_group timing warning
         if env.get('JACK_SUPPRESS_NCCL_DESTROY_WARNING') == '1':
             patterns.append(r"ProcessGroupNCCL\.cpp:.*destroy_process_group\(\).*")
@@ -198,20 +199,23 @@ class InitProgram(object):
             # Invalid regex; do nothing
             return
 
-        # If stderr already redirected by outer env, skip
-        if not hasattr(sys.stderr, 'fileno'):
-            return
+        # Install filter for both stderr and stdout to be robust
+        self.__install_stream_filter(sys.stderr, compiled, name='stderr')
+        self.__install_stream_filter(sys.stdout, compiled, name='stdout')
 
+    @staticmethod
+    def __install_stream_filter(stream, compiled_patterns, name: str = 'stderr') -> None:
+        if not hasattr(stream, 'fileno'):
+            return
         try:
-            orig_fd = os.dup(sys.stderr.fileno())
+            orig_fd = os.dup(stream.fileno())
         except Exception:
             return
 
         r_fd, w_fd = os.pipe()
         try:
-            os.dup2(w_fd, sys.stderr.fileno())
+            os.dup2(w_fd, stream.fileno())
         except Exception:
-            # Restore and abandon
             os.close(r_fd)
             os.close(w_fd)
             os.close(orig_fd)
@@ -231,7 +235,7 @@ class InitProgram(object):
                         while b'\n' in buf:
                             line, buf = buf.split(b'\n', 1)
                             text = line.decode(errors='ignore')
-                            if any(p.search(text) for p in compiled):
+                            if any(p.search(text) for p in compiled_patterns):
                                 continue
                             os.write(orig_fd, line + b'\n')
                     except InterruptedError:
@@ -239,12 +243,12 @@ class InitProgram(object):
             finally:
                 if buf:
                     text = buf.decode(errors='ignore')
-                    if not any(p.search(text) for p in compiled):
+                    if not any(p.search(text) for p in compiled_patterns):
                         os.write(orig_fd, buf)
                 os.close(r_fd)
                 os.close(orig_fd)
 
-        t = threading.Thread(target=_pump, name='jf-stderr-filter', daemon=True)
+        t = threading.Thread(target=_pump, name=f'jf-{name}-filter', daemon=True)
         t.start()
 
         def _cleanup():
