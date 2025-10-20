@@ -2,6 +2,7 @@
 """Program bootstrap utilities."""
 
 import os
+import warnings
 from typing import Dict
 
 from JackFramework.SysBasic.log_handler import LogHandler as log
@@ -88,8 +89,60 @@ class InitProgram(object):
         log.info('Begin to check the env')
         return DeviceManager.check_cuda(self.__args)
 
+    @staticmethod
+    def __configure_runtime_logging() -> None:
+        """Apply environment-driven logging and warning controls.
+
+        Supported env vars (set before init):
+        - JACK_TORCH_CPP_LOG_LEVEL: one of TRACE|DEBUG|INFO|WARN|ERROR (sets TORCH_CPP_LOG_LEVEL)
+        - JACK_SILENCE_TORCH_CPP=1: force TORCH_CPP_LOG_LEVEL=ERROR
+        - JACK_NCCL_DEBUG: one of TRACE|INFO|WARN|ERROR (sets NCCL_DEBUG)
+        - JACK_SILENCE_NCCL=1: force NCCL_DEBUG=ERROR
+        - JACK_NCCL_DEBUG_FILE: redirect NCCL logs to the given file (sets NCCL_DEBUG_FILE)
+        - JACK_SILENCE_PY_WARNINGS=1: ignore all Python warnings
+        - JACK_SILENCE_TORCH_WARNINGS=1: ignore torch.* UserWarning
+        - JACK_SUPPRESS_MESHGRID_WARNING=1: suppress meshgrid indexing deprecation warning
+        - JACK_PY_WARNINGS: pass-through to PYTHONWARNINGS if not already set
+        """
+
+        env = os.environ
+
+        # Torch C++ logs (covers Gloo/NCCL warnings emitted via PyTorch C++)
+        val = env.get('JACK_TORCH_CPP_LOG_LEVEL')
+        if val:
+            env['TORCH_CPP_LOG_LEVEL'] = val
+        elif env.get('JACK_SILENCE_TORCH_CPP') == '1':
+            env.setdefault('TORCH_CPP_LOG_LEVEL', 'ERROR')
+
+        # NCCL library logs
+        val = env.get('JACK_NCCL_DEBUG')
+        if val:
+            env['NCCL_DEBUG'] = val
+        elif env.get('JACK_SILENCE_NCCL') == '1':
+            env.setdefault('NCCL_DEBUG', 'ERROR')
+
+        if env.get('JACK_NCCL_DEBUG_FILE'):
+            env['NCCL_DEBUG_FILE'] = env['JACK_NCCL_DEBUG_FILE']
+
+        # Python warnings
+        if env.get('JACK_SILENCE_PY_WARNINGS') == '1':
+            warnings.filterwarnings('ignore')
+
+        if env.get('JACK_SILENCE_TORCH_WARNINGS') == '1':
+            warnings.filterwarnings('ignore', category=UserWarning, module=r'^torch')
+
+        if env.get('JACK_SUPPRESS_MESHGRID_WARNING') == '1':
+            warnings.filterwarnings('ignore', category=UserWarning,
+                                    message=r'.*torch\.meshgrid:.*indexing.*')
+
+        # Allow custom warning filters via env if not already provided by user
+        if env.get('JACK_PY_WARNINGS') and not env.get('PYTHONWARNINGS'):
+            env['PYTHONWARNINGS'] = env['JACK_PY_WARNINGS']
+
     def init_program(self) -> bool:
         args = self.__args
+        # Apply runtime logging knobs (must be early)
+        self.__configure_runtime_logging()
         self.__build_result_directory()
         log().init_log(args.outputDir, args.pretrain)
         log.info('Welcome to use the JackFramework')

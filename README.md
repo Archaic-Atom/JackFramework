@@ -131,6 +131,18 @@ Common CLI flags
     - spawn example: `JACK_LOG_ALL_RANKS=1 python your_entry.py --dist true --gpu 4`
   - `MASTER_ADDR` / `MASTER_PORT`: rendezvous endpoint for DDP.
   - `RANK`, `LOCAL_RANK`, `WORLD_SIZE`: honoured for torchrun/elastic launches.
+  - Torch C++ log filtering (covers c10d/Gloo/NCCL messages printed by PyTorch):
+    - `JACK_TORCH_CPP_LOG_LEVEL=ERROR` (or `DEBUG|INFO|WARN|TRACE`) — sets `TORCH_CPP_LOG_LEVEL`
+    - `JACK_SILENCE_TORCH_CPP=1` — shortcut for `TORCH_CPP_LOG_LEVEL=ERROR`
+  - NCCL library logs:
+    - `JACK_NCCL_DEBUG=ERROR` (or `WARN|INFO|TRACE`) — sets `NCCL_DEBUG`
+    - `JACK_SILENCE_NCCL=1` — shortcut for `NCCL_DEBUG=ERROR`
+    - `JACK_NCCL_DEBUG_FILE=/path/to/nccl.log` — redirect NCCL logs to file
+  - Python warnings:
+    - `JACK_SILENCE_PY_WARNINGS=1` — ignore all Python warnings
+    - `JACK_SILENCE_TORCH_WARNINGS=1` — ignore `torch.*` UserWarning (e.g., meshgrid deprecations)
+    - `JACK_SUPPRESS_MESHGRID_WARNING=1` — ignore the specific `torch.meshgrid(..., indexing=...)` deprecation warning
+    - Advanced: use `PYTHONWARNINGS` directly (e.g., `PYTHONWARNINGS=ignore:::torch.functional`)
 
 ## Project Structure
 ```
@@ -181,4 +193,3 @@ Common CLI flags
 
 ## License
 MIT License
-
