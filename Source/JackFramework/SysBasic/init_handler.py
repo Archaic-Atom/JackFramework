@@ -128,6 +128,16 @@ class InitProgram(object):
             if 'NCCL_DEBUG' not in env:
                 env['NCCL_DEBUG'] = 'INFO' if getattr(args, 'debug', False) else 'ERROR'
 
+        # Gloo library logs (some c10d prints originate from Gloo directly)
+        val = env.get('JACK_GLOO_LOG_LEVEL')
+        if val:
+            env['GLOO_LOG_LEVEL'] = val
+        elif env.get('JACK_SILENCE_GLOO') == '1':
+            env.setdefault('GLOO_LOG_LEVEL', 'ERROR')
+        else:
+            if 'GLOO_LOG_LEVEL' not in env:
+                env['GLOO_LOG_LEVEL'] = 'INFO' if getattr(args, 'debug', False) else 'ERROR'
+
         if env.get('JACK_NCCL_DEBUG_FILE'):
             env['NCCL_DEBUG_FILE'] = env['JACK_NCCL_DEBUG_FILE']
 

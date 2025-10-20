@@ -134,6 +134,9 @@ Common CLI flags
   - Torch C++ log filtering (covers c10d/Gloo/NCCL messages printed by PyTorch):
     - `JACK_TORCH_CPP_LOG_LEVEL=ERROR` (or `DEBUG|INFO|WARN|TRACE`) — sets `TORCH_CPP_LOG_LEVEL`
     - `JACK_SILENCE_TORCH_CPP=1` — shortcut for `TORCH_CPP_LOG_LEVEL=ERROR`
+  - Gloo library logs (some c10d messages originate from Gloo directly):
+    - `JACK_GLOO_LOG_LEVEL=ERROR` (or `WARN|INFO|DEBUG|TRACE`) — sets `GLOO_LOG_LEVEL`
+    - `JACK_SILENCE_GLOO=1` — shortcut for `GLOO_LOG_LEVEL=ERROR`
   - NCCL library logs:
     - `JACK_NCCL_DEBUG=ERROR` (or `WARN|INFO|TRACE`) — sets `NCCL_DEBUG`
     - `JACK_SILENCE_NCCL=1` — shortcut for `NCCL_DEBUG=ERROR`
