@@ -199,9 +199,9 @@ class InitProgram(object):
             # Invalid regex; do nothing
             return
 
-        # Install filter for both stderr and stdout to be robust
+        # Install filter only for stderr to avoid interfering with live stdout
+        # rendering (e.g., progress bars) and TTY colour detection.
         self.__install_stream_filter(sys.stderr, compiled, name='stderr')
-        self.__install_stream_filter(sys.stdout, compiled, name='stdout')
 
     @staticmethod
     def __install_stream_filter(stream, compiled_patterns, name: str = 'stderr') -> None:
