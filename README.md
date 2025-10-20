@@ -1,17 +1,40 @@
-[![build test](https://github.com/Archaic-Atom/JackFramework/actions/workflows/build%20test.yml/badge.svg?event=push)](https://github.com/Archaic-Atom/JackFramework/actions/workflows/build%20test.yml)
+![Build](https://github.com/Archaic-Atom/JackFramework/actions/workflows/build%20test.yml/badge.svg?event=push)
 ![Python 3.10](https://img.shields.io/badge/python-3.10-green.svg?style=plastic)
 ![PyTorch 2.4](https://img.shields.io/badge/PyTorch-2.4-orange.svg?style=plastic)
 ![cuDNN 9.1](https://img.shields.io/badge/cuDNN-9.1-blue.svg?style=plastic)
-![License MIT](https://img.shields.io/badge/license-MIT-green.svg?style=plastic)
+![MIT](https://img.shields.io/badge/license-MIT-green.svg?style=plastic)
 
-> JackFramework is a lightweight training orchestration layer on top of PyTorch. It standardises data/model wiring, distributed execution, logging and persistence so you can focus on modelling. A runnable template project lives at https://github.com/Archaic-Atom/Template-jf. Questions? raoxi36@foxmail.com
+# JackFramework
+A lightweight, production-friendly orchestration layer on top of PyTorch. JackFramework standardizes model/data wiring, distributed execution, logging, and persistence so you can focus on modelling and experimentation — not boilerplate.
 
-## Highlights
+- Template project: https://github.com/Archaic-Atom/Template-jf
+- Contact: raoxi36@foxmail.com
+
+## Table of Contents
+- Overview
+- Features
+- Requirements
+- Quick Start
+- Installation
+- Using JackFramework
+- Execution Modes
+- Distributed Training
+- Observability & Logging
+- Project Structure
+- Templates & Examples
+- Troubleshooting
+- Changelog
+- License
+
+## Overview
+JackFramework wraps common training infrastructure concerns (device management, DDP/DP, logging, progress bars, checkpointing, and mode control) behind a small set of clear interfaces, leaving you to implement just your model and data logic.
+
+## Features
 - PyTorch 2.x ready with both DataParallel and DistributedDataParallel paths.
-- Clean separation between user code and framework glue through `ModelHandlerTemplate`, `DataHandlerTemplate`, and `NetWorkInferenceTemplate`.
-- Multiple execution modes (`train`, `test`, `background`, `web`) controlled by a unified application entrypoint.
-- Rich observability: colourised logging, TensorBoard scalars, progress bars, resumable checkpoints.
-- Safer runtime: explicit argument validation, defensive error handling, and clearer failure modes after the latest refactor.
+- Clean separation of user code via `ModelHandlerTemplate`, `DataHandlerTemplate`, and `NetWorkInferenceTemplate`.
+- Multiple execution modes (`train`, `test`, `background`, `web`) via a unified application entrypoint.
+- Rich observability: colourised logs, TensorBoard scalars, progress bars, resumable checkpoints.
+- Safer runtime: explicit argument validation and defensive error handling.
 
 ## Requirements
 | Component | Recommended |
@@ -21,7 +44,17 @@
 | PyTorch   | 2.4.1 with CUDA 11.8 / cuDNN 9.1 |
 | Optional  | TensorBoard for visualisation, Django for the web mode |
 
-For an exact reproducible environment use the provided Conda spec (`environment.yml`).
+For a reproducible environment use the included Conda spec (`environment.yml`).
+
+## Quick Start
+```python
+from JackFramework import Application
+from your_project.interface import UserInterface
+
+if __name__ == '__main__':
+    Application(UserInterface(), application_name='StereoDepth').start()
+```
+Run modes by switching `--mode <train|test|background|web>`.
 
 ## Installation
 ```bash
@@ -35,77 +68,71 @@ conda activate JackFramework-torch2.3.1
 # sanity check
 python -c "import JackFramework as jf; print(jf.version())"
 ```
+Clean artifacts (logs, checkpoints, build outputs) with `./clean.sh`.
 
-To remove generated artifacts (logs, checkpoints, build outputs) run `./clean.sh`.
+## Using JackFramework
+1. Implement your interface by subclassing `NetWorkInferenceTemplate`.
+2. Return your `ModelHandlerTemplate` and `DataHandlerTemplate` from `inference`.
+3. Optionally extend the CLI in `user_parser` for domain-specific flags.
 
-## Usage Overview
-1. **Implement the user interface** by subclassing `NetWorkInferenceTemplate`. Return your `ModelHandlerTemplate` and `DataHandlerTemplate` implementations from `inference`, and extend the CLI parser if you need custom flags.
-2. **Instantiate the framework** with your interface and kick off a mode:
-    ```python
-    from JackFramework import Application
-    from your_project.interface import UserInterface
+These templates provide model construction, optimizers/schedulers, loss/metric computation, data loading/splitting, and result persistence hooks.
 
-    if __name__ == '__main__':
-        Application(UserInterface(), application_name='StereoDepth').start()
-    ```
-3. **Provide dataset/model handlers** by extending the templates in `JackFramework/UserTemplate`. These supply model construction, optimisation, loss/metric computation, data loading, and result persistence hooks.
-
-### Supported Modes
+## Execution Modes
 | Mode | Description |
 | ---- | ----------- |
-| `train` | Runs the training + optional validation loop, supports DP/DDP, TensorBoard, auto checkpointing. |
-| `test` | Restores the latest checkpoint and performs evaluation / result dumping. |
-| `background` | Pipe-driven inference server (single GPU, batch size 1) backed by named pipes. |
-| `web` | Boots the bundled Django server (see `args.web_cmd`) for browser-based demos. |
+| `train` | Training with optional validation. Supports DP/DDP, TensorBoard, auto checkpoints. |
+| `test` | Restore latest checkpoint and evaluate/dump results. |
+| `background` | Pipe-driven inference server (single GPU, batch size 1). |
+| `web` | Launch the bundled Django server (see `args.web_cmd`) for browser demos. |
 
 Switch modes via `--mode <train|test|background|web>` when invoking your entry script.
 
-### Frequently Used CLI Flags
-| Flag | Default | Notes |
-|------|---------|-------|
-| `--gpu` | 2 | Number of GPUs. Set to `0` for CPU. |
-| `--dist` | `True` | Enable DistributedDataParallel. Falls back to DP/CPU when GPUs < requested. |
-| `--nodes` | 1 | Number of nodes participating in distributed execution. |
-| `--node_rank` | 0 | Rank of this node in the multi-node job (0-based). |
-| `--batchSize` | 64 | Per-device batch size. |
-| `--maxEpochs` | 100 | Training epochs. |
-| `--auto_save_num` | 1 | Checkpoint frequency (epochs). Set `0` to disable. |
-| `--trainListPath` / `--valListPath` | CSV stubs | Dataset manifest locations. |
-| `--outputDir`, `--modelDir`, `--resultImgDir`, `--log` | ./Result/ etc. | Output folders are created automatically. |
-| `--debug` | `False` | Extra logging hints (e.g., unused parameters during DDP). |
-
-Run `python your_entry.py --help` to see the full list (plus any custom flags you add in `user_parser`).
-
-**Environment Tweaks**
-- `JF_PROGRESS_COLUMNS`: override the detected terminal width (useful for `nohup`/non-TTY runs) so the progress bar can expand to the specified column count.
-- `MASTER_ADDR` / `MASTER_PORT`: override the rendezvous endpoint used by distributed jobs (defaults to `--ip` / `--port`).
-- `RANK`, `LOCAL_RANK`, `WORLD_SIZE`: honoured when launching with `torchrun`/elastic training; set automatically for single-node launches.
-- `JACK_LOG_ALL_RANKS`: set to `1` to enable console logs from every rank (by default only rank 0 prints to the terminal). File logging is always enabled for all ranks.
-  - Example (torchrun): `JACK_LOG_ALL_RANKS=1 torchrun --nproc_per_node=4 your_entry.py --dist true --gpu 4`
-  - Example (single node spawn): `JACK_LOG_ALL_RANKS=1 python your_entry.py --dist true --gpu 4`
-
-### Distributed Launch Notes
-- **Single GPU**
+## Distributed Training
+- Single GPU
   ```bash
   python your_entry.py --dist false --gpu 1
   ```
-- **Single node, multi-GPU** (framework default via `mp.spawn`):
+- Single node, multi-GPU (framework default via `mp.spawn`)
   ```bash
   python your_entry.py --dist true --gpu 4
   ```
-- **Single node, multi-GPU (torchrun)**: to align with multi-node launch workflow:
+- Single node, multi-GPU (torchrun)
   ```bash
   torchrun --nproc_per_node=4 your_entry.py --dist true --gpu 4
   ```
-- **Multi node, multi-GPU**: use `torchrun` (or any launcher that populates `RANK` / `LOCAL_RANK` / `WORLD_SIZE`) on every node:
+- Multi node, multi-GPU (torchrun on each node)
   ```bash
   torchrun --nnodes=2 --nproc_per_node=4 \
     --node_rank=${NODE_RANK} --master_addr=${MASTER_ADDR} --master_port=29500 \
     your_entry.py --dist true --gpu 4 --nodes 2 --node_rank ${NODE_RANK}
   ```
-  The framework reuses these environment variables; only rank 0 prints console logs while every rank still writes to `output.log`.
+  The framework reuses `RANK` / `LOCAL_RANK` / `WORLD_SIZE`; only rank 0 prints to the terminal by default, while all ranks write `output.log`.
 
-## Project Layout
+Common CLI flags
+| Flag | Default | Notes |
+|------|---------|-------|
+| `--gpu` | 2 | Number of GPUs. Use `0` for CPU. |
+| `--dist` | `True` | Enable DDP. Falls back to DP/CPU when GPUs < requested. |
+| `--nodes` | 1 | Number of nodes (for multi-node DDP). |
+| `--node_rank` | 0 | Rank of this node (0-based). |
+| `--batchSize` | 64 | Per-device batch size. |
+| `--maxEpochs` | 100 | Training epochs. |
+| `--auto_save_num` | 1 | Checkpoint frequency (epochs). Set `0` to disable. |
+| `--trainListPath` / `--valListPath` | CSV | Dataset manifest paths. |
+| `--outputDir`, `--modelDir`, `--resultImgDir`, `--log` | ./Result/ | Output folders. |
+| `--debug` | `False` | Extra logging hints (e.g., unused params in DDP). |
+
+## Observability & Logging
+- TensorBoard writes to `--log`; launch with `tensorboard --logdir <log_dir>`.
+- Progress bars auto-adjust to terminal width; override via `JF_PROGRESS_COLUMNS`.
+- Environment variables
+  - `JACK_LOG_ALL_RANKS=1`: print console logs from every rank (default: only rank 0). File logging is always enabled for all ranks.
+    - torchrun example: `JACK_LOG_ALL_RANKS=1 torchrun --nproc_per_node=4 your_entry.py --dist true --gpu 4`
+    - spawn example: `JACK_LOG_ALL_RANKS=1 python your_entry.py --dist true --gpu 4`
+  - `MASTER_ADDR` / `MASTER_PORT`: rendezvous endpoint for DDP.
+  - `RANK`, `LOCAL_RANK`, `WORLD_SIZE`: honoured for torchrun/elastic launches.
+
+## Project Structure
 ```
 .
 ├── Source
@@ -127,28 +154,31 @@ Run `python your_entry.py --help` to see the full list (plus any custom flags yo
 ```
 
 ## Templates & Examples
-- **Framework Template**: https://github.com/Archaic-Atom/Template-jf (recommended starting point for new projects).
-- **Demo Project**: https://github.com/Archaic-Atom/Demo-jf (shows an end-to-end training pipeline).
+- Framework Template: https://github.com/Archaic-Atom/Template-jf
+- Demo Project: https://github.com/Archaic-Atom/Demo-jf
 
-## Troubleshooting & Tips
-- JackFramework now performs explicit input validation (assertions were removed). If something fails fast, revisit your arguments and template implementations.
-- Distributed launches rely on `--ip`, `--port`, and `--gpu`. When port collisions are detected we auto-probe free ports and log the choice.
-- TensorBoard logs write to `--log`. Launch with `tensorboard --logdir <log_dir>`.
-- Named-pipe based modes (`background`) require a POSIX environment.
+## Troubleshooting
+- Fast failures usually mean argument or template issues; revisit your implementations and CLI.
+- DDP launches require consistent `--ip`, `--port`, `--gpu`. Port collisions are auto-probed and logged.
+- Named-pipe modes (`background`) require a POSIX environment.
+- About NCCL “destroy_process_group was not called” warnings: JackFramework explicitly tears down DDP across ranks at process exit. The warning may still appear on stderr in rare timing cases and can be ignored if every rank logs destruction as expected. You can temporarily silence C++ warnings via `TORCH_CPP_LOG_LEVEL=ERROR`.
 
-- **2025-09-18**
-  - Hardened runtime validation (replaced assertions with explicit errors across graph/mode/device helpers).
-  - Synchronized versioning in code and packaging (`0.1.1`).
-  - Refined installation/build/clean scripts for pip-based workflows and safer defaults.
-  - Refactored `setup.py` to auto-load version and README metadata.
-  - Refresh progress bar rendering (terminal-aware truncation + dynamic width detection).
-- **2025-09-15**
+## Changelog
+- 2025-09-18
+  - Hardened runtime validation across graph/mode/device helpers.
+  - Synced packaging version info (`0.1.1`).
+  - Refined install/build/clean scripts.
+  - Auto-load metadata in `setup.py`.
+  - Progress bar rendering improvements.
+- 2025-09-15
   - README refreshed for the PyTorch 2.4 toolchain.
-  - Initial defensive checks after refactoring the NN blocks.
-- **2021-07-01**
-  - Added GitHub Actions CI and first public README iteration.
-  - Installation helper scripts introduced.
-- **2021-05-28**
-  - Project bootstrap with packaging scaffold.
+  - Defensive checks around NN blocks.
+- 2021-07-01
+  - Added GitHub Actions CI and first README.
+  - Installation helper scripts.
+- 2021-05-28
+  - Project bootstrap.
 
-JackFramework is released under the MIT License.
+## License
+MIT License
+
