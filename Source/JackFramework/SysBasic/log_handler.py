@@ -97,6 +97,9 @@ class LogHandler(object):
 
     @staticmethod
     def __should_enable_console() -> bool:
+        # Debug override: show logs from all ranks when set
+        if os.environ.get('JACK_LOG_ALL_RANKS', '0') == '1':
+            return True
         rank_env = (os.environ.get('RANK') or
                     os.environ.get('LOCAL_RANK') or
                     os.environ.get('PROCESS_RANK'))

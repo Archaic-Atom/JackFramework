@@ -80,6 +80,9 @@ Run `python your_entry.py --help` to see the full list (plus any custom flags yo
 - `JF_PROGRESS_COLUMNS`: override the detected terminal width (useful for `nohup`/non-TTY runs) so the progress bar can expand to the specified column count.
 - `MASTER_ADDR` / `MASTER_PORT`: override the rendezvous endpoint used by distributed jobs (defaults to `--ip` / `--port`).
 - `RANK`, `LOCAL_RANK`, `WORLD_SIZE`: honoured when launching with `torchrun`/elastic training; set automatically for single-node launches.
+- `JACK_LOG_ALL_RANKS`: set to `1` to enable console logs from every rank (by default only rank 0 prints to the terminal). File logging is always enabled for all ranks.
+  - Example (torchrun): `JACK_LOG_ALL_RANKS=1 torchrun --nproc_per_node=4 your_entry.py --dist true --gpu 4`
+  - Example (single node spawn): `JACK_LOG_ALL_RANKS=1 python your_entry.py --dist true --gpu 4`
 
 ### Distributed Launch Notes
 - **Single GPU**

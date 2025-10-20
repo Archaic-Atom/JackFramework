@@ -125,6 +125,18 @@ class MetaOps(UserModel):
                 self.show_lr_scheduler_info(i)
 
     def cleanup(self):
+        # Try to complete outstanding CUDA work before teardown
+        try:
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
+        except Exception:
+            pass
+        # Release model/optimizers so DDP wrappers can be GC'ed prior to PG destroy
+        try:
+            self.free_model()
+        except Exception:
+            pass
+        # Finally, destroy the process group/backend
         self.__device_manager.cleanup()
 
     def restore_model(self) -> None:

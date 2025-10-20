@@ -3,7 +3,7 @@
 
 import math
 from abc import ABCMeta, abstractmethod
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 
 from JackFramework.Core.Graph import dataloader_selection, graph_selection
 from JackFramework.SysBasic.show_handler import ShowHandler
@@ -75,14 +75,14 @@ class MetaMode(ShowHandler, metaclass=ABCMeta):
             self._graph.save_model(epoch)
 
     @ShowHandler.show_method
-    def _write_epoch_log(self, epoch: int) -> None:
+    def _write_epoch_log(self, epoch: int, duration: Optional[float] = None) -> None:
         if self._data_manager is None or self._graph is None:
             return
         self._data_manager.user_show_training_info(
             epoch,
             self._graph.ave_tower_loss,
             self._graph.ave_tower_acc,
-            self.duration(),
+            duration if duration is not None else self.duration(),
             self._is_training,
         )
 

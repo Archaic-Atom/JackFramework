@@ -2,6 +2,7 @@
 """GPU and distributed device utilities."""
 
 import os
+import atexit
 import socket
 from typing import Optional, Tuple
 
@@ -9,6 +10,7 @@ import torch
 import torch.distributed as dist
 
 from JackFramework.SysBasic.log_handler import LogHandler as log
+from JackFramework.SysBasic._show_manager import ShowManager
 
 
 class DeviceManager(object):
@@ -17,6 +19,7 @@ class DeviceManager(object):
     DEFAULT_OUTPUT_DEVICE = 'cuda:0'
     DEFAULT_CPU = 'cpu'
     __DEVICE_MANAGER = None
+    __ATEEXIT_REGISTERED = False
 
     def __init__(self, args: object) -> None:
         super().__init__()
@@ -62,12 +65,48 @@ class DeviceManager(object):
         os.environ.setdefault('LOCAL_RANK', str(rank))
         os.environ.setdefault('WORLD_SIZE', str(self.__world_size))
         self.__init_cudnn(True)
-        dist.init_process_group('nccl', rank=rank, world_size=self.__args.gpu)
-        torch.cuda.set_device(rank)
+        dist.init_process_group('nccl', rank=rank, world_size=self.__world_size)
+        try:
+            local_rank_env = os.environ.get('LOCAL_RANK')
+            local_rank = int(local_rank_env) if local_rank_env is not None else rank
+        except ValueError:
+            local_rank = rank
+        torch.cuda.set_device(local_rank)
+        log.info(f'Initialised distributed (backend=nccl) rank={rank}, world_size={self.__world_size}, local_rank={local_rank}')
+
+        # Best-effort: ensure PG is destroyed on any interpreter exit path
+        if not DeviceManager.__ATEEXIT_REGISTERED:
+            def _dist_cleanup_on_exit() -> None:
+                try:
+                    if dist.is_initialized():
+                        try:
+                            dist.destroy_process_group()
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+
+            atexit.register(_dist_cleanup_on_exit)
+            DeviceManager.__ATEEXIT_REGISTERED = True
 
     def cleanup(self) -> None:
         if self.__args.dist and dist.is_initialized():
-            dist.destroy_process_group()
+            rank = ShowManager.get_rank()
+            # Optional alignment for safety; upstream callers also align.
+            try:
+                if hasattr(dist, 'monitored_barrier'):
+                    from datetime import timedelta
+                    dist.monitored_barrier(timeout=timedelta(seconds=60))
+                else:
+                    dist.barrier()
+            except Exception:
+                pass
+            log.info(f'Destroying process group (rank={rank})')
+            try:
+                dist.destroy_process_group()
+                log.info(f'Destroyed process group (rank={rank})')
+            except Exception as exc:
+                log.warning(f'Process group shutdown failed on rank={rank}: {exc}')
 
     @staticmethod
     def check_cuda(args: object) -> bool:

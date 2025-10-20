@@ -6,6 +6,7 @@ from collections.abc import Callable
 from typing import Optional, Tuple
 
 import torch.multiprocessing as mp
+import torch.distributed as dist
 
 from JackFramework.SysBasic.args_parser import ArgsParser
 from JackFramework.SysBasic.init_handler import InitProgram
