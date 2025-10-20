@@ -163,3 +163,13 @@ class InitProgram(object):
         if not res:
             log.error('Failed in the init programs')
         return res
+
+    # Expose a helper so spawned workers can apply logging knobs early
+    @staticmethod
+    def apply_runtime_logging(args: object) -> None:
+        try:
+            helper = InitProgram(args)
+            helper._InitProgram__configure_runtime_logging()
+        except Exception:
+            # Best-effort; do not crash on logging configuration
+            pass

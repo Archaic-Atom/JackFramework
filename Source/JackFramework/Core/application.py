@@ -77,12 +77,18 @@ class Application(object):
             mode_func(rank)
             return
 
-        spawn_args: Tuple[Callable, int, int] = (mode_func, node_rank, gpu_num)
+        spawn_args: Tuple[Callable, int, int, object] = (mode_func, node_rank, gpu_num, args)
         mp.spawn(_spawn_mode_worker, nprocs=gpu_num, join=True, args=spawn_args)
 
 
-def _spawn_mode_worker(local_rank: int, mode_func: Callable, node_rank: int, gpu_num: int) -> None:
+def _spawn_mode_worker(local_rank: int, mode_func: Callable, node_rank: int, gpu_num: int, args: object) -> None:
     """Entry point for spawned worker processes."""
+    # Apply logging/warnings controls early in the child process
+    try:
+        from JackFramework.SysBasic.init_handler import InitProgram
+        InitProgram.apply_runtime_logging(args)
+    except Exception:
+        pass
     global_rank = node_rank * gpu_num + local_rank
     os.environ['LOCAL_RANK'] = str(local_rank)
     os.environ['RANK'] = str(global_rank)
