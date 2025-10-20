@@ -62,3 +62,9 @@ class UserModel(ShowHandler):
         log.info("Loading user's optimizer!")
         self.__opt, self.__sch = self.__jf_model.optimizer(self.__model, self.__args.lr)
         log.info("Successfully get user's optimizer!")
+
+    # Framework-side release to allow DDP modules to be GC'ed before PG destroy
+    def free_model(self) -> None:
+        self.__model = None
+        self.__opt = None
+        self.__sch = None

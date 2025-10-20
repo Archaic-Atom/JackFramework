@@ -86,8 +86,16 @@ class MetaOps(UserModel):
         res = []
         for data_item in data:
             if self.__args.dist:
-                log_data = self._reduce_tensor(data_item.clone().detach_() / self.__args.gpu)
-                res.append(log_data.item())
+                if not torch.is_tensor(data_item):
+                    raise TypeError('Distributed aggregation expects tensor inputs.')
+                tensor = data_item.clone().detach()
+                if not tensor.is_cuda:
+                    if self.rank is None:
+                        raise RuntimeError('Distributed aggregation without rank assignment.')
+                    tensor = tensor.to(torch.device('cuda', self.rank))
+                reduced = self._reduce_tensor(tensor)
+                world_size = max(int(os.environ.get('WORLD_SIZE', self.__args.gpu)), 1)
+                res.append((reduced / world_size).item())
             else:
                 res.append(data_item.item())
         return res
@@ -117,6 +125,18 @@ class MetaOps(UserModel):
                 self.show_lr_scheduler_info(i)
 
     def cleanup(self):
+        # Try to complete outstanding CUDA work before teardown
+        try:
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
+        except Exception:
+            pass
+        # Release model/optimizers so DDP wrappers can be GC'ed prior to PG destroy
+        try:
+            self.free_model()
+        except Exception:
+            pass
+        # Finally, destroy the process group/backend
         self.__device_manager.cleanup()
 
     def restore_model(self) -> None:

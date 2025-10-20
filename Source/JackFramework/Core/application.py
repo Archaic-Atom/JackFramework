@@ -1,10 +1,12 @@
 # -*- coding: UTF-8 -*-
 """Entry point orchestration for JackFramework applications."""
 
+import os
 from collections.abc import Callable
-from typing import Optional
+from typing import Optional, Tuple
 
 import torch.multiprocessing as mp
+import torch.distributed as dist
 
 from JackFramework.SysBasic.args_parser import ArgsParser
 from JackFramework.SysBasic.init_handler import InitProgram
@@ -36,12 +38,19 @@ class Application(object):
             raise RuntimeError('User interface has not been configured for the application.')
 
         args = self.__parse_args()
+        # Apply logging/warning controls and stderr filter as early as possible
+        try:
+            from JackFramework.SysBasic.init_handler import InitProgram
+            InitProgram.apply_runtime_logging(args)
+        except Exception:
+            pass
         if not InitProgram(args).init_program():
             log.error('Initialisation failed; aborting application start.')
             return
 
         mode_func = mode_selection(args, self.__user_interface.inference, args.mode)
-        self._dist_app_start(mode_func, args.dist, args.gpu)
+        args.world_size = max(args.gpu, 1) * max(getattr(args, 'nodes', 1), 1)
+        self._dist_app_start(mode_func, args)
         log.info('The Application has finished successfully.')
 
     def __parse_args(self):
@@ -49,10 +58,44 @@ class Application(object):
         return ArgsParser().parse_args(self.__application_name, parser_callback)
 
     @staticmethod
-    def _dist_app_start(mode_func: Callable, dist: bool, gpu_num: int) -> None:
-        if dist:
-            if gpu_num <= 0:
-                raise ValueError('Distributed mode requires a positive `gpu` argument.')
-            mp.spawn(mode_func, nprocs=gpu_num, join=True)
-        else:
+    def _dist_app_start(mode_func: Callable, args: object) -> None:
+        if not getattr(args, 'dist', False):
             mode_func()
+            return
+
+        gpu_num = getattr(args, 'gpu', 0)
+        if gpu_num <= 0:
+            raise ValueError('Distributed mode requires a positive `gpu` argument.')
+
+        nodes = max(getattr(args, 'nodes', 1), 1)
+        node_rank = max(getattr(args, 'node_rank', 0), 0)
+        world_size = getattr(args, 'world_size', gpu_num * nodes)
+
+        os.environ.setdefault('MASTER_ADDR', str(args.ip))
+        os.environ.setdefault('MASTER_PORT', str(args.port))
+        os.environ.setdefault('WORLD_SIZE', str(world_size))
+
+        local_rank_env = os.environ.get('LOCAL_RANK')
+        rank_env = os.environ.get('RANK')
+        if local_rank_env is not None:
+            local_rank = int(local_rank_env)
+            rank = int(rank_env) if rank_env is not None else local_rank
+            mode_func(rank)
+            return
+
+        spawn_args: Tuple[Callable, int, int, object] = (mode_func, node_rank, gpu_num, args)
+        mp.spawn(_spawn_mode_worker, nprocs=gpu_num, join=True, args=spawn_args)
+
+
+def _spawn_mode_worker(local_rank: int, mode_func: Callable, node_rank: int, gpu_num: int, args: object) -> None:
+    """Entry point for spawned worker processes."""
+    # Apply logging/warnings controls early in the child process
+    try:
+        from JackFramework.SysBasic.init_handler import InitProgram
+        InitProgram.apply_runtime_logging(args)
+    except Exception:
+        pass
+    global_rank = node_rank * gpu_num + local_rank
+    os.environ['LOCAL_RANK'] = str(local_rank)
+    os.environ['RANK'] = str(global_rank)
+    mode_func(global_rank)

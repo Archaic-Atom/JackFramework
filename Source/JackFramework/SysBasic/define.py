@@ -33,6 +33,10 @@ LAST_MODEL_NAME = 'last model name:'
 PIPE_WRITE_PATH = '/tmp/jf_pipe.in'
 PIPE_READ_PATH = '/tmp/jf_pipe.out'
 
+# distributed defaults
+NODE_NUM = 1
+NODE_RANK = 0
+
 # image's setting
 # We use this data to crop the image in training process;
 # We ues this data to pad the image in testing process.

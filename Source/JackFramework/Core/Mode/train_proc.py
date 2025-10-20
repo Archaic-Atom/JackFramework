@@ -78,8 +78,9 @@ class TrainProc(MetaMode):
     @ShowHandler.show_method
     def _show_epoch_result(self, epoch: int, total_iteration: int,
                            planned_iteration: int, bar_info: str) -> None:
+        epoch_duration = self.duration()
         self.stop_show_setting()
-        self._write_epoch_log(epoch)
+        self._write_epoch_log(epoch, epoch_duration)
         self.write_tensorboard(epoch, self._graph.ave_tower_loss,
                                self._graph.ave_tower_acc, bar_info)
         if planned_iteration and total_iteration != planned_iteration:
@@ -87,7 +88,20 @@ class TrainProc(MetaMode):
                         total_iteration, planned_iteration)
 
     def __training_post_proc(self) -> None:
-        self._graph.cleanup()
+        # Align all ranks before destroying the process group to avoid
+        # destructor ordering issues on exit.
+        try:
+            if getattr(self._args, 'dist', False) and dist.is_initialized():
+                try:
+                    if hasattr(dist, 'monitored_barrier'):
+                        from datetime import timedelta
+                        dist.monitored_barrier(timeout=timedelta(seconds=60))
+                    else:
+                        dist.barrier()
+                except Exception:
+                    pass
+        finally:
+            self._graph.cleanup()
         log.info('Finish training process!')
 
     def __training_loop(self) -> None:
@@ -107,8 +121,15 @@ class TrainProc(MetaMode):
         self._graph.restore_model()
 
     def exec(self, rank: int = None) -> None:
-        self._init_data_model_handler(rank)
-        log.info('Start the training process!')
-        self.__preparation_proc()
-        self.__training_loop()
-        self.__training_post_proc()
+        # Ensure distributed shutdown even if exceptions occur
+        try:
+            self._init_data_model_handler(rank)
+            log.info('Start the training process!')
+            self.__preparation_proc()
+            self.__training_loop()
+        finally:
+            # Preferred path: run normal post-processing (includes model/resource cleanup)
+            try:
+                self.__training_post_proc()
+            except Exception:
+                pass

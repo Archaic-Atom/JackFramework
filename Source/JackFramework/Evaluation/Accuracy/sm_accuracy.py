@@ -26,18 +26,18 @@ class SMAccuracy(MetaAccuracy):
             for i in range(threshold_num):
                 threshold = start_threshold + i
                 exceed = (error > threshold) & (error > related_threshold)
-                error_rate = exceed.int().sum() / (total_num + SMAccuracy.epsilon)
+                error_rate = exceed.int().sum() / (total_num + MetaAccuracy.ACC_EPSILON)
                 error_rates.append(error_rate)
-            mae = error.sum() / (total_num + SMAccuracy.epsilon)
+            mae = error.sum() / (total_num + MetaAccuracy.ACC_EPSILON)
         return error_rates, mae
 
     @staticmethod
     def r2_score(res: torch.Tensor, gt: torch.Tensor) -> torch.Tensor:
         gt_mean = torch.mean(gt)
-        ss_tot = torch.sum((gt - gt_mean) ** 2) + SMAccuracy.epsilon
+        ss_tot = torch.sum((gt - gt_mean) ** 2) + MetaAccuracy.ACC_EPSILON
         ss_res = torch.sum((gt - res) ** 2)
         return ss_res / ss_tot
 
     @staticmethod
     def rmspe_score(res: torch.Tensor, gt: torch.Tensor) -> torch.Tensor:
-        return torch.sqrt(torch.mean((res - gt) ** 2 / (gt + SMAccuracy.epsilon)))
+        return torch.sqrt(torch.mean((res - gt) ** 2 / (gt + MetaAccuracy.ACC_EPSILON)))

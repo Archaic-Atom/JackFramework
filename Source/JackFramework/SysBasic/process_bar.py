@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 """Tools for rendering textual progress bars in the terminal."""
 
+import os
 import shutil
 import sys
 from typing import Optional, Sequence, Tuple, Union
@@ -9,13 +10,27 @@ from typing import Optional, Sequence, Tuple, Union
 class ShowProcess(object):
     """Render a simple textual progress bar with optional metadata."""
 
-    DEFAULT_BAR_WIDTH = 30
+    DEFAULT_BAR_WIDTH = 10
     MIN_BAR_WIDTH = 10
-    MAX_BAR_WIDTH = 60
+    MAX_BAR_WIDTH = 10
     FILL_CHAR = '#'
     EMPTY_CHAR = '-'
     POINTER_CHAR = '>'
     SPINNER_FRAMES: Sequence[str] = ('|', '/', '-', '\\')
+    # ANSI styles
+    _RESET = '\033[0m'
+    _STYLE = {
+        'info': '\033[1;36m',          # bold cyan
+        'spinner': '\033[1;33m',       # bold yellow
+        'bar_fill': '\033[1;32m',      # bold green
+        'bar_empty': '\033[90m',       # bright black (dim)
+        'bar_pointer': '\033[1;35m',   # bold magenta
+        'count': '\033[1;37m',         # bold white
+        'percent': '\033[1;36m',       # bold cyan
+        'sep': '\033[90m',             # dim separator
+        'label': '\033[34m',           # blue labels (eta/step)
+        'value': '\033[97m',           # bright white values
+    }
 
     def __init__(self, max_steps: int, info: str = '', info_done: str = 'Done',
                  bar_width: Optional[int] = None) -> None:
@@ -26,17 +41,44 @@ class ShowProcess(object):
         self.__counter = 0
         self.__info_done = info_done
         self.__spinner_index = 0
+        self.__custom_bar_width = bar_width is not None
+        self.__term_columns = None
         self.__bar_width = self.__resolve_bar_width(bar_width)
+        self.__use_color = self.__detect_color_support()
 
     def __resolve_bar_width(self, requested_width: Optional[int]) -> int:
+        columns = self.__detect_columns()
+        self.__term_columns = columns
         if requested_width is not None:
             return max(self.MIN_BAR_WIDTH, min(self.MAX_BAR_WIDTH, requested_width))
 
-        columns = shutil.get_terminal_size((80, 20)).columns
-        adaptive_width = max(self.MIN_BAR_WIDTH, min(int(columns * 0.35), self.MAX_BAR_WIDTH))
-        if self.__target_steps > 0:
-            adaptive_width = min(adaptive_width, max(self.MIN_BAR_WIDTH, self.__target_steps))
-        return adaptive_width
+        return self.DEFAULT_BAR_WIDTH
+
+    def __refresh_layout(self) -> None:
+        columns = self.__detect_columns()
+        self.__term_columns = columns
+        if not self.__custom_bar_width:
+            self.__bar_width = self.DEFAULT_BAR_WIDTH
+
+    def __detect_color_support(self) -> bool:
+        # Allow forcing via env: JF_PROGRESS_COLOR=0/1; respect NO_COLOR
+        env = os.environ
+        if env.get('JF_PROGRESS_COLOR') == '0' or env.get('NO_COLOR'):
+            return False
+        if env.get('JF_PROGRESS_COLOR') == '1':
+            return True
+        try:
+            return sys.stdout.isatty()
+        except Exception:
+            return False
+
+    def __fmt(self, text: str, style_key: Optional[str]) -> str:
+        if not self.__use_color or not style_key:
+            return text
+        style = self._STYLE.get(style_key)
+        if not style:
+            return text
+        return f"{style}{text}{self._RESET}"
 
     def __count(self, start_counter: Optional[int]) -> None:
         if start_counter is not None:
@@ -74,18 +116,52 @@ class ShowProcess(object):
     def show_process(self, start_counter: Optional[int] = None, show_info: str = '',
                      rest_time: Union[str, float] = '', duration: Union[str, float] = '',
                      queue_size: Union[str, int] = '') -> None:
+        self.__refresh_layout()
         self.__count(start_counter)
         num_filled, num_empty, percent = self.__cal_bar()
         info_done = self.__generate_info_done()
-        bar_repr = self.__build_bar(num_filled, num_empty)
         spinner = self.__next_spinner()
 
+        # Build uncoloured components for correct width calculation
+        uncolored_bar = self.__build_bar(num_filled, num_empty)
+        uncolored_prefix = (f"[{self.__info}] {spinner} |{uncolored_bar}| "
+                            f"{self.__counter}/{self.__max_steps} {percent:.1f}%")
         detail_segments = self.__compose_detail_segments(show_info, queue_size, rest_time, duration)
-        detail_str = f" :: {' | '.join(detail_segments)}" if detail_segments else ''
+        detail_uncolored = self.__format_detail(detail_segments)
+        detail_uncolored = self.__clip_detail(detail_uncolored, uncolored_prefix, info_done)
 
-        process_str = (f"[{self.__info}] {spinner} |{bar_repr}| "
-                       f"{self.__counter:>4} / {self.__max_steps:<4} {percent:6.2f}%"
-                       f"{detail_str}{info_done}    \r")
+        # Apply colour to each segment when enabled
+        colored_spinner = self.__fmt(spinner, 'spinner')
+        pointer_present = (num_filled != 0 and num_filled != self.__bar_width)
+        fill_count = max(num_filled - (1 if pointer_present else 0), 0)
+        fill_str = self.FILL_CHAR * fill_count
+        empty_str = self.EMPTY_CHAR * num_empty
+        colored_bar = (
+            self.__fmt(fill_str, 'bar_fill') +
+            (self.__fmt(self.POINTER_CHAR, 'bar_pointer') if pointer_present else '') +
+            self.__fmt(empty_str, 'bar_empty')
+        )
+
+        # Colour counts and percent
+        colored_count = self.__fmt(f"{self.__counter}", 'count')
+        colored_max = self.__fmt(f"{self.__max_steps}", 'count')
+        colored_percent = self.__fmt(f"{percent:.1f}%", 'percent')
+        colored_info = self.__fmt(f"[{self.__info}]", 'info')
+        sep_bar = self.__fmt('|', 'sep')
+
+        # Colour detail: colon labels (eta/step/queue) and separators
+        detail_colored = detail_uncolored
+        if self.__use_color and detail_uncolored:
+            # Replace separators
+            detail_colored = detail_colored.replace(' :: ', f" {self.__fmt('::', 'sep')} ")
+            detail_colored = detail_colored.replace(' | ', f" {self.__fmt('|', 'sep')} ")
+            # Highlight common labels
+            for lbl in ('eta:', 'step:', 'queue:'):
+                detail_colored = detail_colored.replace(lbl, self.__fmt(lbl, 'label'))
+
+        base_prefix_colored = (f"{colored_info} {colored_spinner} {sep_bar}{colored_bar}{sep_bar} "
+                               f"{colored_count}/{colored_max} {colored_percent}")
+        process_str = f"{base_prefix_colored}{detail_colored}{info_done}    \r"
         self.__print(process_str)
 
     def close(self) -> None:
@@ -137,6 +213,63 @@ class ShowProcess(object):
             details.append(f"step: {duration_str}")
 
         return tuple(details)
+
+    @staticmethod
+    def __format_detail(segments: Tuple[str, ...]) -> str:
+        if not segments:
+            return ''
+        normalized = []
+        for segment in segments:
+            stripped = segment.strip()
+            if not stripped:
+                continue
+            normalized.append(' '.join(stripped.split()))
+        if not normalized:
+            return ''
+        return ' :: ' + ' | '.join(normalized)
+
+    def __clip_detail(self, detail: str, base_prefix: str, info_done: str) -> str:
+        if not detail or self.__term_columns is None:
+            return detail
+
+        available = self.__term_columns - len(base_prefix) - len(info_done) - 4
+        if available <= len(' :: '):
+            return ''
+
+        if len(detail) <= available:
+            return detail
+
+        trimmed = detail[:max(available - 3, len(' :: '))]
+        if len(trimmed) <= len(' :: '):
+            return ''
+        trimmed = trimmed.rstrip()
+        if len(trimmed) + len('...') <= available:
+            return trimmed + '...'
+        final = trimmed[:max(available - len('...'), len(' :: '))].rstrip()
+        if len(final) <= len(' :: '):
+            return ''
+        return final + '...'
+
+    @staticmethod
+    def __detect_columns() -> int:
+        fallback = shutil.get_terminal_size((80, 20)).columns
+        for stream in (sys.__stdout__, sys.__stderr__, sys.__stdin__):
+            if stream is None:
+                continue
+            try:
+                size = os.get_terminal_size(stream.fileno())
+            except (OSError, ValueError):
+                continue
+            fallback = max(fallback, size.columns)
+        env_override = (os.environ.get('JF_PROGRESS_COLUMNS') or
+                        os.environ.get('COLUMNS'))
+        if env_override:
+            try:
+                override_value = int(env_override)
+                fallback = max(override_value, fallback)
+            except ValueError:
+                pass
+        return fallback
 
     @staticmethod
     def __print(process_str: str) -> None:

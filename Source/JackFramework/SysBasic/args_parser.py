@@ -51,6 +51,10 @@ class ArgsParser(object):
         parser.add_argument('--port', default=sys_define.PORT, help='master port for distributed mode')
         parser.add_argument('--dist', default=sys_define.DIST, type=ArgsParser.__str2bool,
                             help='enable distributed training')
+        parser.add_argument('--nodes', type=int, default=sys_define.NODE_NUM,
+                            help='number of nodes participating in distributed training')
+        parser.add_argument('--node_rank', type=int, default=sys_define.NODE_RANK,
+                            help='rank of the current node (0-based)')
         parser.add_argument('--debug', default=False, type=ArgsParser.__str2bool,
                             help='enable debug mode for verbose logging')
         parser.add_argument('--web_cmd', default='main.py runserver 0.0.0.0:8000',

@@ -37,6 +37,7 @@ class TestProc(MetaMode):
 
     @ShowHandler.show_method
     def _testing_post_proc(self) -> None:
+        # UI-only teardown/logging on default rank
         self.stop_show_setting()
         log.info('Finish testing process!')
 
@@ -58,8 +59,36 @@ class TestProc(MetaMode):
         self._graph.restore_model()
 
     def exec(self, rank: int = None) -> None:
-        self._init_data_model_handler(rank)
-        log.info('Start the testing process!')
-        self.__preparation_proc()
-        self.__test_loop()
-        self._testing_post_proc()
+        # Ensure distributed shutdown even if exceptions occur
+        try:
+            self._init_data_model_handler(rank)
+            log.info('Start the testing process!')
+            self.__preparation_proc()
+            self.__test_loop()
+        finally:
+            # Cleanup must run on all ranks, not gated by show_method
+            try:
+                if self._graph is not None:
+                    # Pre-cleanup barrier to align shutdown order
+                    try:
+                        import torch.distributed as dist  # local import to avoid test-only dep at import time
+                        if getattr(self._args, 'dist', False) and dist.is_initialized():
+                            try:
+                                if hasattr(dist, 'monitored_barrier'):
+                                    from datetime import timedelta
+                                    dist.monitored_barrier(timeout=timedelta(seconds=60))
+                                else:
+                                    dist.barrier()
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
+                    self._graph.cleanup()
+            except Exception:
+                pass
+            # UI/logging only on default rank
+            try:
+                self._testing_post_proc()
+            except Exception:
+                pass
+            # No direct destroy here; centralized in DeviceManager.cleanup()
