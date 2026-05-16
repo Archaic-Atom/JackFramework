@@ -149,6 +149,9 @@ Common CLI flags
 | `--trainListPath` / `--valListPath` | CSV | Dataset manifest paths. |
 | `--outputDir`, `--modelDir`, `--resultImgDir`, `--log` | ./Result/ | Output folders. |
 | `--debug` | `False` | Extra logging hints (e.g., unused params in DDP). |
+| `--dataloaderType` | `mapstyle` | `mapstyle` (Dataset + DataLoader + DistributedSampler, default) or `iterable` (IterableDataset, e.g. WebDataset; skips sampler/shuffle). |
+| `--dataloaderNum` | 8 | Number of DataLoader workers per rank. In `iterable` mode `persistent_workers=True` is hard-coded to avoid re-warmup at every epoch boundary. |
+| `--size_magnification` | 1 | Feature-map magnification factor (used by user modules). |
 
 ## Observability & Logging
 - TensorBoard writes to `--log`; launch with `tensorboard --logdir <log_dir>`.
@@ -216,6 +219,14 @@ Debug flag
 - About NCCL “destroy_process_group was not called” warnings: JackFramework explicitly tears down DDP across ranks at process exit. The warning may still appear on stderr in rare timing cases and can be ignored if every rank logs destruction as expected. You can temporarily silence C++ warnings via `TORCH_CPP_LOG_LEVEL=ERROR`.
 
 ## Changelog
+- 2026-05-16
+  - Added `--dataloaderType {mapstyle, iterable}` CLI flag and a separate
+    `__build_iterable_dataloader` path that omits `sampler`/`shuffle`
+    (PyTorch's `DistributedSampler` is a no-op on `IterableDataset`).
+  - Set `persistent_workers=True` on the iterable DataLoader so workers
+    survive across framework epochs — important for WebDataset-style
+    pipelines whose per-worker shuffle buffer is expensive to re-fill.
+  - Added `--nodes`, `--node_rank`, `--size_magnification`.
 - 2025-09-18
   - Hardened runtime validation across graph/mode/device helpers.
   - Synced packaging version info (`0.1.1`).
