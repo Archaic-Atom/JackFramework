@@ -4,8 +4,39 @@
 from abc import ABCMeta, abstractmethod
 from typing import List, Sequence, Tuple
 
+from JackFramework.UserTemplate._hook_validator import validate_hook_names
+
 
 class ModelHandlerTemplate(object, metaclass=ABCMeta):
+    # Optional hooks JF dispatches via getattr; subclasses MAY override
+    # any subset. Listed here so ``__init_subclass__`` can catch typos
+    # at class-definition time (e.g. ``postprocess`` vs ``post_process``).
+    # 框架可选 hook 名册，写错时 __init_subclass__ 报错。
+    _OPTIONAL_HOOKS = frozenset({
+        'pretreatment', 'post_process',
+        'load_model', 'load_opt', 'save_model',
+    })
+    # Hard typo blacklist (names we've actually seen in real projects).
+    # 硬黑名单：踩过的拼写错。
+    _HOOK_NAME_TYPOS = {
+        'postprocess':    'post_process',
+        'postProcess':    'post_process',
+        'preprocess':     'pretreatment',
+        'pretrain':       'pretreatment',
+        'loadmodel':      'load_model',
+        'savemodel':      'save_model',
+        'load_optimizer': 'load_opt',
+    }
+
+    def __init_subclass__(cls, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+        validate_hook_names(
+            cls,
+            optional_hooks=cls._OPTIONAL_HOOKS,
+            typo_map=cls._HOOK_NAME_TYPOS,
+            template_name='ModelHandlerTemplate',
+        )
+
     def __init__(self, args: object) -> None:
         super().__init__()
         self._args = args

@@ -4,8 +4,33 @@
 from abc import ABCMeta, abstractmethod
 from typing import List, Tuple
 
+from JackFramework.UserTemplate._hook_validator import validate_hook_names
+
 
 class DataHandlerTemplate(object, metaclass=ABCMeta):
+    # Optional hooks JF dispatches via getattr; subclasses MAY override.
+    # 框架可选 hook 名册，写错时 __init_subclass__ 报错。
+    _OPTIONAL_HOOKS = frozenset({
+        'load_test_data', 'save_test_data',
+    })
+    # Hard typo blacklist.
+    # 硬黑名单。
+    _HOOK_NAME_TYPOS = {
+        'loadtestdata': 'load_test_data',
+        'savetestdata': 'save_test_data',
+        'load_testdata': 'load_test_data',
+        'save_testdata': 'save_test_data',
+    }
+
+    def __init_subclass__(cls, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+        validate_hook_names(
+            cls,
+            optional_hooks=cls._OPTIONAL_HOOKS,
+            typo_map=cls._HOOK_NAME_TYPOS,
+            template_name='DataHandlerTemplate',
+        )
+
     def __init__(self, args: object) -> None:
         super().__init__()
         self._args = args
