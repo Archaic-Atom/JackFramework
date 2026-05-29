@@ -83,12 +83,11 @@ class DeviceManager(object):
         # Best-effort: ensure PG is destroyed on any interpreter exit path
         if not DeviceManager.__ATEEXIT_REGISTERED:
             def _dist_cleanup_on_exit() -> None:
+                # Best-effort: tear down the process group on any exit path.
+                # 尽力而为：在任意退出路径上销毁进程组。
                 try:
                     if dist.is_initialized():
-                        try:
-                            dist.destroy_process_group()
-                        except Exception:
-                            pass
+                        dist.destroy_process_group()
                 except Exception:
                     pass
 

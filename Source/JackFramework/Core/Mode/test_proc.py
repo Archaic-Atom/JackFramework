@@ -14,7 +14,9 @@ class TestProc(MetaMode):
         if self._graph is None or self._data_manager is None:
             raise RuntimeError('Graph or data manager not initialised before testing loop.')
 
-        self._graph.set_model_mode(True)
+        # Test always runs in eval mode; the (test) loader is fetched via the
+        # is_training=True slot, then the model is switched to eval once.
+        # 测试一律 eval 模式：经 is_training=True 槽位取（测试）loader，随后置 eval。
         dataloader = self._data_manager.get_dataloader(True)
         if dataloader is None:
             log.warning('No testing dataloader available; skipping test execution.')

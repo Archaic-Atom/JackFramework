@@ -55,8 +55,10 @@ class MetaMode(ShowHandler, metaclass=ABCMeta):
     def _get_img_id(self, iteration: int) -> int:
         if self.rank is None:
             return iteration
-        per_rank = self._args.batchSize * max(self._args.gpu, 1)
-        return self.rank + iteration * per_rank
+        # Global stride per optimisation step across all ranks: batch x gpu.
+        # 每个优化步跨所有 rank 的全局步长：batch x gpu。
+        step_stride = self._args.batchSize * max(self._args.gpu, 1)
+        return self.rank + iteration * step_stride
 
     def _save_result(self, iteration: int, outputs_data: list, supplement: list) -> None:
         if self._data_manager is None:

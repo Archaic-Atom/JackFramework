@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Utility helpers for common list-based tensor aggregations."""
 
-from typing import Iterable, List, Sequence
+from typing import List, Sequence
 
 
 class ListHandler(object):

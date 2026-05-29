@@ -10,9 +10,15 @@ class Switch(object):
         self.__fall = False
 
     def __iter__(self) -> Iterator:
-        """Return the match method once, then stop."""
+        """Yield the match callable once, then stop iteration.
+
+        产出一次 match 可调用对象后即停止迭代。
+        """
+        # A generator naturally raises StopIteration when exhausted; no
+        # explicit return value is needed (and `return StopIteration` would
+        # wrongly set the class object as the generator's return value).
+        # 生成器耗尽时会自动抛出 StopIteration，无需显式返回值。
         yield self.match
-        return StopIteration
 
     def match(self, *args: Any) -> bool:
         """Indicate whether to enter a case suite."""

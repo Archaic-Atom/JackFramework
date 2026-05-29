@@ -55,12 +55,21 @@ class TrainProc(MetaMode):
     def __executor_training_proc(self, epoch: int) -> None:
         if self._training_iteration > 0:
             total_iteration = self.__run_epoch(epoch, self._training_iteration, 'Train', True)
-            self.set_training_iteration(total_iteration)
+            # Only adopt the measured count when the epoch actually produced
+            # batches; an empty loader (0 batches) must not latch training off
+            # for every later epoch.
+            # 只有真正跑出 batch 时才采用实测迭代数；空 loader（0 batch）不能把后续
+            # 所有 epoch 都静默关掉。
+            if total_iteration > 0:
+                self.set_training_iteration(total_iteration)
 
     def __executor_val_proc(self, epoch: int) -> None:
         if self._val_iteration > 0:
             total_iteration = self.__run_epoch(epoch, self._val_iteration, 'Val', False)
-            self.set_val_iteration(total_iteration)
+            # Same guard as training: don't let an empty val epoch disable later ones.
+            # 与训练同理：空的验证 epoch 不应关闭后续验证。
+            if total_iteration > 0:
+                self.set_val_iteration(total_iteration)
 
     def _adjust_lr_scheduler_and_post_proc(self, epoch: int, is_training: bool) -> None:
         if is_training:

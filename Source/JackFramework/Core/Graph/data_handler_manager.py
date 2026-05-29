@@ -71,7 +71,7 @@ class DataHandlerManager(UserDataloader):
         log.info("Finish constructing the training dataloader")
         return training_dataloader, training_sampler
 
-    def __check_val_dataloader(self) -> object:
+    def __check_val_dataloader(self) -> tuple:
         log.info("Begin loading the val dataset")
         if self.__args.valImgNum > 0:
             val_dataloader, val_sampler = self.__init_val_dataloader()

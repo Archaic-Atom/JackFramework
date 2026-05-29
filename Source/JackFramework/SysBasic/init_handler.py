@@ -18,6 +18,16 @@ from .device_manager import DeviceManager
 class InitProgram(object):
     """Prepare directories, logging, and device sanity checks."""
 
+    # Per-process guard: the stderr filter must be installed at most once.
+    # start() and init_program() both call __configure_runtime_logging(); a
+    # class flag (NOT an env var) de-duplicates within a process while still
+    # letting each spawned worker — which re-imports this module with the flag
+    # reset to False — install exactly once.
+    # 单进程内 stderr 过滤器最多安装一次的标志。start() 与 init_program() 都会
+    # 触发安装；用类标志（而非环境变量）在进程内去重，同时让每个 spawn 子进程
+    # （重新导入本模块、标志复位为 False）各自恰好安装一次。
+    __STDERR_FILTER_INSTALLED = False
+
     def __init__(self, args) -> None:
         super().__init__()
         self.__args = args
@@ -175,6 +185,12 @@ class InitProgram(object):
             env['JF_PROGRESS_COLOR'] = '1'
 
     def __install_stderr_filter(self) -> None:
+        # Install at most once per process; a second call (start() then
+        # init_program()) would leak an fd pair + a pump thread.
+        # 每个进程最多安装一次；第二次调用（start() 后再 init_program()）会
+        # 泄漏一对 fd 和一个 pump 线程。
+        if InitProgram.__STDERR_FILTER_INSTALLED:
+            return
         env = os.environ
         debug = getattr(self.__args, 'debug', False)
 
@@ -206,16 +222,28 @@ class InitProgram(object):
 
         # Filter only stderr to avoid interfering with live stdout rendering
         # (e.g., progress bars) and to preserve TTY colour detection.
-        self.__install_stream_filter(sys.stderr, compiled, name='stderr')
+        # Mark installed only on success so a failed attempt can still retry.
+        # 仅在成功后置位标志，失败的尝试仍可重试。
+        if self.__install_stream_filter(sys.stderr, compiled, name='stderr'):
+            InitProgram.__STDERR_FILTER_INSTALLED = True
 
     @staticmethod
-    def __install_stream_filter(stream, compiled_patterns, name: str = 'stderr') -> None:
+    def __install_stream_filter(stream, compiled_patterns, name: str = 'stderr') -> bool:
+        """Redirect ``stream`` through a regex drop-filter pump thread.
+
+        把 ``stream`` 经一个正则丢弃过滤的 pump 线程做重定向。
+
+        Returns:
+            True if the filter was installed, False if it bailed out early
+            (no fileno / dup / dup2 failure).
+            成功安装返回 True；提前退出（无 fileno / dup / dup2 失败）返回 False。
+        """
         if not hasattr(stream, 'fileno'):
-            return
+            return False
         try:
             orig_fd = os.dup(stream.fileno())
         except Exception:
-            return
+            return False
 
         # Preserve color capability hint when filtering stdout
         try:
@@ -231,7 +259,7 @@ class InitProgram(object):
             os.close(r_fd)
             os.close(w_fd)
             os.close(orig_fd)
-            return
+            return False
 
         stop_flag = threading.Event()
 
@@ -285,6 +313,7 @@ class InitProgram(object):
                 pass
 
         atexit.register(_cleanup)
+        return True
 
     def init_program(self) -> bool:
         args = self.__args

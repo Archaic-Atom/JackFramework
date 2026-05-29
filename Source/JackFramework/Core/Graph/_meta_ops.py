@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 from abc import ABCMeta, abstractmethod
-from typing import TypeVar
 
 import torch
 from torch import nn
@@ -16,14 +15,12 @@ from JackFramework.FileHandler.model_saver import ModelSaver
 
 from ._user_model import UserModel
 
-ModelHandlerTemplate = TypeVar('ModelHandlerTemplate')
-
 
 class MetaOps(UserModel):
     __metaclass__ = ABCMeta
     __OPT_LR_GROUP_ID = 0
 
-    def __init__(self, args: object, jf_model: ModelHandlerTemplate) -> None:
+    def __init__(self, args: object, jf_model: object) -> None:
         super().__init__(args, jf_model)
         self.__args = args
         self.__device_manager = DeviceManager(args)
@@ -57,11 +54,11 @@ class MetaOps(UserModel):
         use_cuda = (self.__args.gpu > 0) and torch.cuda.is_available()
         # If multiple GPUs requested and CUDA available, wrap with DataParallel.
         # For single GPU or CPU, keep the raw module and move to the resolved device.
-        if use_cuda and max(self.__args.gpu, 0) > 1:
+        if use_cuda and self.__args.gpu > 1:
+            # Multi-GPU: wrap each model in DataParallel and move to device.
+            # 多卡：把每个模型包成 DataParallel 并移到设备。
             for i, model_item in enumerate(self._model):
-                self._model[i] = nn.DataParallel(model_item)
-            for i, _ in enumerate(self._model):
-                self._model[i].to(self.__device)
+                self._model[i] = nn.DataParallel(model_item).to(self.__device)
         else:
             for i, model_item in enumerate(self._model):
                 self._model[i] = model_item.to(self.__device)
