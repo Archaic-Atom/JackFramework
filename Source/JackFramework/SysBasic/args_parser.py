@@ -45,6 +45,12 @@ class ArgsParser(object):
                             help='number of checkpoints to keep automatically')
         parser.add_argument('--dataloaderNum', type=int, default=sys_define.DATA_LOADER_NUM,
                             help='the number of DataLoader workers')
+        parser.add_argument('--dataloaderType', default='mapstyle',
+                            choices=['mapstyle', 'iterable'],
+                            help='dataloader type: "mapstyle" (default, original '
+                                 'Dataset+DataLoader path) or "iterable" (for '
+                                 'WebDataset-style IterableDataset; shuffle/sampler '
+                                 'are not used in this mode)')
         parser.add_argument('--pretrain', default=False, type=ArgsParser.__str2bool,
                             help='load pretrained checkpoint if true')
         parser.add_argument('--ip', default=sys_define.IP, help='master address for distributed mode')

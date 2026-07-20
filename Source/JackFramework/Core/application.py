@@ -6,7 +6,6 @@ from collections.abc import Callable
 from typing import Optional, Tuple
 
 import torch.multiprocessing as mp
-import torch.distributed as dist
 
 from JackFramework.SysBasic.args_parser import ArgsParser
 from JackFramework.SysBasic.init_handler import InitProgram
@@ -40,7 +39,6 @@ class Application(object):
         args = self.__parse_args()
         # Apply logging/warning controls and stderr filter as early as possible
         try:
-            from JackFramework.SysBasic.init_handler import InitProgram
             InitProgram.apply_runtime_logging(args)
         except Exception:
             pass
@@ -91,7 +89,6 @@ def _spawn_mode_worker(local_rank: int, mode_func: Callable, node_rank: int, gpu
     """Entry point for spawned worker processes."""
     # Apply logging/warnings controls early in the child process
     try:
-        from JackFramework.SysBasic.init_handler import InitProgram
         InitProgram.apply_runtime_logging(args)
     except Exception:
         pass

@@ -10,7 +10,16 @@ DEFAULT_MIN_DECIMAL_PLACES = 2
 class ResultStr(object):
     """Generate pre-formatted log strings for losses and metrics."""
 
-    def __init__(self, arg=None) -> None:
+    def __init__(self, arg: Optional[object] = None) -> None:
+        """Create a result formatter.
+
+        创建结果格式化器。
+
+        Args:
+            arg: Reserved for future configuration; accepted for API
+                compatibility but currently unused.
+                预留的配置参数，仅为兼容接口而保留，目前未使用。
+        """
         super().__init__()
         self.__arg = arg
 

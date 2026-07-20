@@ -31,6 +31,8 @@ class DataHandlerManager(UserDataloader):
 
     def __init_training_dataloader(self, is_training: bool) -> tuple:
         training_dataset = self.user_get_train_dataset(is_training)
+        if self.__is_iterable_mode():
+            return self.__build_iterable_dataloader(training_dataset), None
         training_sampler, dataloader_shuffle = self.__get_sampler_shuffle(training_dataset,
                                                                           is_training)
         training_dataloader = torch.utils.data.DataLoader(
@@ -41,11 +43,22 @@ class DataHandlerManager(UserDataloader):
 
     def __init_val_dataloader(self) -> tuple:
         val_dataset = self.user_get_val_dataset()
+        if self.__is_iterable_mode():
+            return self.__build_iterable_dataloader(val_dataset), None
         val_sampler, _ = self.__get_sampler_shuffle(val_dataset, False)
         val_dataloader = torch.utils.data.DataLoader(
             val_dataset, batch_size=self.__args.batchSize, num_workers=self.__args.dataloaderNum,
             pin_memory=True, sampler=val_sampler, collate_fn=self.__collate_fn(val_dataset))
         return val_dataloader, val_sampler
+
+    def __is_iterable_mode(self) -> bool:
+        return getattr(self.__args, 'dataloaderType', 'mapstyle') == 'iterable'
+
+    def __build_iterable_dataloader(self, dataset: object) -> object:
+        return torch.utils.data.DataLoader(
+            dataset, batch_size=self.__args.batchSize,
+            num_workers=self.__args.dataloaderNum, pin_memory=True, persistent_workers=True,
+            collate_fn=self.__collate_fn(dataset))
 
     def __check_training_dataloader(self) -> tuple:
         log.info("Begin loading the training dataset")
@@ -58,7 +71,7 @@ class DataHandlerManager(UserDataloader):
         log.info("Finish constructing the training dataloader")
         return training_dataloader, training_sampler
 
-    def __check_val_dataloader(self) -> object:
+    def __check_val_dataloader(self) -> tuple:
         log.info("Begin loading the val dataset")
         if self.__args.valImgNum > 0:
             val_dataloader, val_sampler = self.__init_val_dataloader()

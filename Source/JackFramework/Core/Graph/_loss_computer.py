@@ -44,7 +44,7 @@ class ResultContainer(object):
         self._tower_loss = ListHandler.double_list_add(self._tower_loss_iteration, self._tower_loss)
         self._ave_tower_loss = ListHandler.double_list_div(self._tower_loss, total_iteration)
 
-    def cal_acc(self, total_iteration) -> None:
+    def cal_acc(self, total_iteration: int) -> None:
         self._tower_acc = ListHandler.double_list_add(self._tower_acc_iteration, self._tower_acc)
         self._ave_tower_acc = ListHandler.double_list_div(self._tower_acc, total_iteration)
 
