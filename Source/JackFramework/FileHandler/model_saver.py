@@ -47,9 +47,24 @@ class ModelSaver(object):
 
     @staticmethod
     def __normalize_dir(path: str) -> Path:
+        """Resolve *path* to the directory new checkpoints are written into.
+
+        把 *path* 归一化为新 checkpoint 的写入目录。
+
+        Args:
+            path: A directory, or a checkpoint file such as
+                ``--modelDir run/model_epoch_2.pth``. When a file is given, new
+                checkpoints are written **alongside it**, i.e. into its parent.
+                可以是目录，也可以是 checkpoint 文件（如
+                ``--modelDir run/model_epoch_2.pth``）；给文件时，新的 checkpoint
+                写入它的**同级目录**。
+
+        Returns:
+            The existing directory to write into. 可写入的目录（已确保存在）。
+        """
         target = Path(path).expanduser()
         if target.is_file():
-            raise ValueError(f'Expected directory path, received file: {target}')
+            target = target.parent
         target.mkdir(parents=True, exist_ok=True)
         return target
 

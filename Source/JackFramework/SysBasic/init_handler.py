@@ -35,6 +35,13 @@ class InitProgram(object):
     def __build_result_directory(self) -> None:
         for path in (self.__args.outputDir, self.__args.modelDir,
                      self.__args.resultImgDir, self.__args.log):
+            # `--modelDir` may point straight at a checkpoint file to load; the
+            # directory that has to exist is then the one holding that file.
+            # `--modelDir` 允许直接指向要加载的 checkpoint 文件；此时需要存在的是
+            # 该文件所在的目录，而不是把文件名本身当目录去创建。
+            if os.path.isfile(path):
+                FileHandler.mkdir(os.path.dirname(os.path.abspath(path)))
+                continue
             FileHandler.mkdir(path)
 
     def __show_args(self) -> None:
@@ -87,7 +94,11 @@ class InitProgram(object):
                 if reporter is log.error:
                     result = False
 
-        for directory in ('outputDir', 'modelDir', 'resultImgDir', 'log'):
+        # `--modelDir` is deliberately exempt: it accepts either a directory
+        # (holding a checkpoint.list) or a checkpoint file to load directly.
+        # `--modelDir` 特意豁免：既可以是目录（内含 checkpoint.list），也可以直接
+        # 是要加载的 checkpoint 文件。
+        for directory in ('outputDir', 'resultImgDir', 'log'):
             value = getattr(self.__args, directory)
             if os.path.isfile(value):
                 log.error(f'A file was passed as `--{directory}`, please pass a directory!')
