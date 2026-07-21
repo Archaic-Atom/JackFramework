@@ -22,6 +22,7 @@ A lightweight, production-friendly orchestration layer on top of PyTorch. JackFr
 - Observability & Logging
 - Project Structure
 - Templates & Examples
+- Claude Code Skill
 - Troubleshooting
 - Changelog
 - License
@@ -211,6 +212,28 @@ Debug flag
 ## Templates & Examples
 - Framework Template: https://github.com/Archaic-Atom/Template-jf
 - Demo Project: https://github.com/Archaic-Atom/Demo-jf
+
+## Claude Code Skill
+A [Claude Code](https://claude.com/claude-code) skill ships in this repo, teaching an
+assistant how JackFramework actually behaves: the hook contract and its list-wrapping
+rule, which CLI flags are the framework's versus a project's, checkpoint and
+`checkpoint.list` semantics, and a symptom-to-cause catalog for the failure modes that
+are silent or point the traceback somewhere unrelated.
+
+Install as a plugin (gets updates):
+
+```bash
+/plugin marketplace add Archaic-Atom/JackFramework
+/plugin install jackframework
+```
+
+Or copy the skill directory:
+
+```bash
+cp -r plugins/jackframework/skills/jackframework ~/.claude/skills/
+```
+
+Details: [`plugins/jackframework/README.md`](plugins/jackframework/README.md)
 
 ## Troubleshooting
 - Fast failures usually mean argument or template issues; revisit your implementations and CLI.
