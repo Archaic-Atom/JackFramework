@@ -1,0 +1,26 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "jackframework",
+  "description": "Claude Code extensions for JackFramework, a PyTorch training framework that owns the training loop, DDP launcher and checkpoint I/O.",
+  "owner": {
+    "name": "Archaic-Atom",
+    "url": "https://github.com/Archaic-Atom"
+  },
+  "plugins": [
+    {
+      "name": "jackframework",
+      "description": "Build on, launch, and debug JackFramework: the hook contract (inference / loss / accuracy / post_process / get_train_dataset / save_result), the CLI flags, checkpoint and checkpoint.list semantics, and a symptom-to-cause catalog for the framework's silent failure modes.",
+      "author": {
+        "name": "Archaic-Atom"
+      },
+      "category": "development",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/Archaic-Atom/JackFramework.git",
+        "path": "plugins/jackframework",
+        "ref": "master"
+      },
+      "homepage": "https://github.com/Archaic-Atom/JackFramework/tree/master/plugins/jackframework"
+    }
+  ]
+}

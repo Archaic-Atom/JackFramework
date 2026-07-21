@@ -1,0 +1,9 @@
+{
+  "name": "jackframework",
+  "description": "Build on, launch, and debug JackFramework: the hook contract, CLI flags, checkpoint semantics, and a symptom-to-cause catalog for the framework's silent failure modes.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Archaic-Atom"
+  },
+  "homepage": "https://github.com/Archaic-Atom/JackFramework"
+}
