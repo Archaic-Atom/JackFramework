@@ -1,0 +1,56 @@
+# Slow lane — full conda environment verification.
+# 慢车道 —— 完整 conda 环境安装验证。
+#
+# Proves the documented environment.yml still installs. Worth knowing,
+# but dependency drift happens on a WEEKLY timescale — gating every commit
+# on a CUDA-pinned conda solve spends the highest possible frequency
+# detecting the lowest-frequency event.
+# 验证文档里的 environment.yml 还装得起来。这值得知道，但依赖漂移是
+# **按周**发生的 —— 让每次提交都等一遍锁定 CUDA 的 conda 求解，
+# 等于用最高频率检测最低频事件。
+name: Build env (full conda)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 18 * * 0'        # every Sunday 18:00 UTC / 每周日 UTC 18:00
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  build-env:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The env name is read from environment.yml. The previous version of
+      # this workflow hardcoded `JackFramework-torch1.7.1` while the file
+      # declared a different name, so it updated one environment and
+      # activated another.
+      # 环境名从 environment.yml 里读取。旧版这里硬编码了
+      # `JackFramework-torch1.7.1`，而文件里声明的是另一个名字 ——
+      # 更新的是一个环境，激活的是另一个。
+      - name: Install the documented conda environment
+        run: |
+          set -e
+          export PATH="$CONDA/bin:$PATH"
+          ENV_NAME=$(grep '^name:' environment.yml | awk '{print $2}')
+          echo "environment.yml declares env: ${ENV_NAME}"
+          conda env update --file environment.yml --name "${ENV_NAME}"
+          echo "ENV_NAME=${ENV_NAME}" >> $GITHUB_ENV
+
+      - name: Install JackFramework into that environment
+        run: |
+          export PATH="$CONDA/bin:$PATH"
+          source activate "${ENV_NAME}"
+          pip install ./Source
+
+      - name: Verify it imports
+        run: |
+          export PATH="$CONDA/bin:$PATH"
+          source activate "${ENV_NAME}"
+          python -c "import JackFramework as jf; print('JackFramework OK in', '${ENV_NAME}')"
