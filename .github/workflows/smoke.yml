@@ -31,6 +31,12 @@ jobs:
         with:
           python-version: '3.11'
           cache: pip
+          # This repo has no requirements.txt / pyproject.toml — the
+          # dependency set lives in setup.py, which is the correct cache
+          # key anyway: the cache invalidates exactly when deps change.
+          # 本仓库没有 requirements.txt / pyproject.toml —— 依赖写在
+          # setup.py 里，用它做缓存 key 反而更准确：依赖一变缓存才失效。
+          cache-dependency-path: Source/setup.py
 
       # CPU-only torch: the default PyPI wheel drags in ~2.5GB of CUDA that
       # a GPU-less runner can never use. Installed first so the resolver
