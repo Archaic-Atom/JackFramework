@@ -1,0 +1,70 @@
+# Fast lane — runs on every push and PR.
+# 快车道 —— 每次 push 和 PR 都跑。
+#
+# The central question for a library is: after `pip install`, does it
+# actually work? That is exactly what install_requires exists to guarantee,
+# so this workflow installs the package ALONE — no manually pre-installed
+# dependencies — and then imports it. If install_requires is incomplete,
+# this fails, which is the point.
+# 对一个库来说，核心问题是：`pip install` 之后它到底能不能用？这正是
+# install_requires 要保证的事。所以本 workflow **只装这个包本身** ——
+# 不手动预装任何依赖 —— 然后导入它。install_requires 若不完整，这里就会
+# 失败，而这正是我们想要的。
+name: Smoke test
+
+on: [push, pull_request]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      # CPU-only torch: the default PyPI wheel drags in ~2.5GB of CUDA that
+      # a GPU-less runner can never use. Installed first so the resolver
+      # treats the CPU build as already satisfying install_requires.
+      # CPU 版 torch：PyPI 默认轮子会带进约 2.5GB 的 CUDA，而没有 GPU 的
+      # runner 永远用不上。先装它，让解析器认为 install_requires 里的
+      # torch 已被满足。
+      - name: Install CPU torch
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      # Deliberately no other dependencies here — install_requires must
+      # carry them. 这里故意不装别的依赖 —— 必须由 install_requires 带进来。
+      - name: Install JackFramework (dependencies come from install_requires)
+        run: pip install ./Source
+
+      - name: Verify it imports
+        run: python -c "import JackFramework as jf; print('JackFramework', jf.__path__)"
+
+      - name: Lint
+        run: |
+          pip install flake8
+          flake8 Source --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 Source --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      # Importing proves the dependency set; running proves the framework.
+      # 能导入只证明依赖齐了；能跑起来才证明框架本身没坏。
+      - name: Run the minimal example end to end
+        run: |
+          cd Example/Minimal
+          python -u main.py \
+            --mode train --dist False --gpu 0 --batchSize 4 \
+            --imgNum 16 --valImgNum 8 --maxEpochs 2 --auto_save_num 1 \
+            --dataloaderNum 0 \
+            --modelDir ./ci_model --outputDir ./ci_out --log ./ci_log \
+            --dataset x --modelName x
