@@ -1,4 +1,5 @@
-![Build](https://github.com/Archaic-Atom/JackFramework/actions/workflows/build%20test.yml/badge.svg?event=push)
+[![Smoke test](https://github.com/Archaic-Atom/JackFramework/actions/workflows/smoke.yml/badge.svg?branch=master)](https://github.com/Archaic-Atom/JackFramework/actions/workflows/smoke.yml)
+[![Build env](https://github.com/Archaic-Atom/JackFramework/actions/workflows/build_env.yml/badge.svg)](https://github.com/Archaic-Atom/JackFramework/actions/workflows/build_env.yml)
 ![Python 3.10](https://img.shields.io/badge/python-3.10-green.svg?style=plastic)
 ![PyTorch 2.4](https://img.shields.io/badge/PyTorch-2.4-orange.svg?style=plastic)
 ![cuDNN 9.1](https://img.shields.io/badge/cuDNN-9.1-blue.svg?style=plastic)
