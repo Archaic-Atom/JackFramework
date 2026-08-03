@@ -11,8 +11,9 @@ description: >-
   failed. Trigger it even when JF is never named — e.g. "training silently skips my loss
   function", "dies with an empty ProcessRaisedException", "the progress bar never reaches
   100%", "checkpoint list file not found", "the eval finished but there's no output csv",
-  "how do I resume from epoch 4". Most JF failures are silent, or put the traceback
-  nowhere near the real cause, so consult this before guessing at a fix.
+  "how do I resume from epoch 4", "TypeError: ... dispatches `post_process`". JF failures
+  are usually either silent or reported nowhere near the real cause, so consult this
+  before guessing at a fix.
 ---
 
 # JackFramework (JF)
@@ -23,9 +24,28 @@ logging, progress bar and resume**, and in exchange you implement a **model-inte
 class**, a **dataloader class**, and a thin launcher script.
 
 That deal has one sharp edge that causes most of the pain: **JF finds your code by
-string name via `getattr`, with no abstract base class and no validation.** A method
-you spelled slightly wrong is not an error — it is silently never called. Keep that
-in mind and most JF debugging becomes tractable.
+string name via `getattr`.** A method you spelled slightly wrong is not called.
+
+**The templates now catch the common slips at class-definition time.**
+`ModelHandlerTemplate` and `DataHandlerTemplate` are `ABCMeta` subclasses whose
+`__init_subclass__` runs `validate_hook_names` against a roster of optional hooks and a
+blacklist of spellings seen in real projects. Get one wrong and you get an immediate,
+explicit failure that names the fix:
+
+```
+TypeError: YourModelInterface defines method `postprocess`, but
+ModelHandlerTemplate dispatches `post_process`. Rename to fix silent skip.
+```
+
+Required hooks are `@abstractmethod`, so omitting one fails at instantiation rather
+than running quietly.
+
+**This does not make every misspelling safe.** The validator knows the blacklist
+(`postprocess`, `preprocess`, `loadmodel`, `savemodel`, `load_optimizer`, …) and the
+optional-hook roster; a *novel* misspelling of an optional hook still slips through as
+"the user didn't implement it". The habit still holds — copy signatures from a working
+example rather than retyping them — but the classic `postprocess` trap now announces
+itself instead of costing you an afternoon.
 
 The framework is installed separately from the project that uses it. Confirm which
 copy is actually imported before debugging framework behavior — a stale `.egg` next

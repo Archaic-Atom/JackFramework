@@ -23,14 +23,33 @@ because that is what you actually have when you arrive.
 **Symptom** — training proceeds but your loss/metric/post-processing clearly never
 executes. No error anywhere.
 
-**Cause** — JF dispatches user methods by string name with `getattr`. There is no ABC
-and no validation, so a misspelling is indistinguishable from "the user didn't
-implement this hook". The classic is `postprocess` vs the correct `post_process`; wrong
-case and singular/plural slips do the same thing. Because the template base class
-supplies a no-op default, the call still succeeds — it just runs the empty parent.
+**First check whether the class even loads.** The templates validate hook names in
+`__init_subclass__`, so the common slips no longer reach this symptom at all — they
+raise at *class-definition* time, before any training starts:
+
+```
+TypeError: YourModelInterface defines method `postprocess`, but
+ModelHandlerTemplate dispatches `post_process`. Rename to fix silent skip.
+```
+
+If you got that, the fix is in the message. `validate_hook_names` covers a blacklist of
+spellings seen in real projects — `postprocess`/`postProcess` → `post_process`,
+`preprocess`/`pretrain` → `pretreatment`, `loadmodel` → `load_model`, `savemodel` →
+`save_model`, `load_optimizer` → `load_opt` — plus the optional-hook roster itself.
+Required hooks are `@abstractmethod`, so omitting one fails at instantiation.
+
+**Cause, when the symptom is real** — JF still dispatches by string name with `getattr`,
+and the validator only knows the names above. A *novel* misspelling of an optional hook
+is still indistinguishable from "the user didn't implement this hook", and because the
+base class supplies a no-op default the call succeeds — it just runs the empty parent.
 
 **Fix** — diff your method names against a working example rather than against memory.
-If you want a guardrail, assert on `hasattr` in your own `__init__`.
+If you want a guardrail beyond the built-in validation, assert on `hasattr` in your own
+`__init__`.
+
+> Older JF copies predate `validate_hook_names`; there a misspelling really is silent.
+> Confirm which copy you import (`python -c "import JackFramework; print(JackFramework.__path__)"`)
+> before concluding that a name is fine because nothing complained.
 
 ## 2. `'<key>' not in output_data` forever
 
